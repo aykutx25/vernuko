@@ -40,7 +40,7 @@ Gösterim: ● var · ◐ kısıtlı / üst pakette / ek ücretli · ○ yok · 
 | Bekleme listesi | ● | ● | ? | ? | ? | ● | ● | ● | ? | ○ (P1) |
 | Online randevu | ● | ● | ● | ● | ● | ● | ● | ● | ● | ○ (P2, isteğe bağlı) |
 | Hatırlatma | ● | ● | ● (kredi) | ● (kredi) | ◐ Pro | ● | ● (kredi) | ● | ● | ◐ manuel WhatsApp; otomatik Faz 5 |
-| Rol / işlem bazlı yetki | ◐ Team | ? | ● | ◐ | ◐ | ● | ● | ● | ? | ● 28 izin, 7 rol |
+| Rol / işlem bazlı yetki | ◐ Team | ? | ● | ◐ | ◐ | ● | ● | ● | ? | ● 34 izin, 7 rol |
 | Gizli notlar (yazar bazlı) | ? | ? | ● | ? | ? | ? | ● | ● | ? | ◐ izin hazır, modül Faz 3 |
 | Kasa / tahsilat | ● | ● | ● | ◐ | ◐ | ● | ● | ● | ● | ● (fatura değil) |
 | Komisyon/prim | ◐ Team | ? | ● | ? | ? | ● | ? | ◐ | ● | ○ (Faz 2, P1) |

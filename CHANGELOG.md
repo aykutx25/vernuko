@@ -2,6 +2,29 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.2.0] — 2026-11-12 — Faz 2 (Güzellik & Lazer operasyonları) + kurulum paketi (geliştirme sürümü)
+
+### Eklendi
+- **Prim / komisyon:** hizmet, paket satışı ve ürün satışı için kurallar (yüzde veya sabit tutar; personel + hizmet > personel > hizmet > genel). Satan ve uygulayan ayrı primlenir. Primler işlem anında hesaplanır, değiştirilemez (append-only); randevu geri alınınca ters kayıt. Ayarlar › Prim kuralları, Raporlar › Personel primleri (yalnızca finansal rapor yetkisiyle).
+- **Stok:** ürünler, stok girişi, gerekçeli sayım düzeltmesi, müşteriye ürün satışı (hemen tahsil veya borç), hizmet tamamlanınca otomatik malzeme düşümü ve geri almada iade, kritik stok uyarısı. Stok hareketleri append-only.
+- **Tekrarlayan randevu:** gün/hafta/ay aralıkla 2–52 tekrar; yerel saat korunur (yaz saati), ay sonu kuralı; çakışan tarihler kaydetmeden önce listelenir ve açık onayla atlanır. Seriyi "bu randevudan itibaren" taşıma veya iptal etme.
+- **Bekleme listesi:** müşteri, hizmet/personel tercihi, tarih aralığı; bir randevu iptal edilince uygun bekleyenler gösterilir (mesaj otomatik gitmez).
+- **Onam formları:** sürümlü metinler (Ayarlar › Onam formları), müşteri kartında onay kaydı (kâğıt/sözlü/ekranda), gerekçeli geri alma. Hukuki metin sağlanmaz.
+- **Şifreli müşteri dosyaları:** fotoğraf, imzalı onam taraması, belge; dosya başına AES-256-GCM, önizleme yalnızca bellekte, her görüntüleme denetim kaydında, ayrı yetki (sekreter göremez), yedeğe dahil ve yeni bilgisayarda kurtarma anahtarıyla açılır, anonimleştirmede silinir.
+- **Kurulum paketi ve güncelleme (Velopack):** kullanıcı başına kurulum (yönetici yetkisi yok), Ayarlar › Güncellemeler (yalnızca tıklayınca denetler/indirir, önce şifreli yedek alır), HTTPS'e sabitlenmiş güncelleme kaynağı, CI'da deneme kurulum paketi, etiketle taslak GitHub sürümü. Bkz. [docs/RELEASE.md](docs/RELEASE.md).
+- 6 yeni izin (toplam 34): stok görüntüleme/yönetme, ürün satışı, onam kaydı, dosya görüntüleme/yönetme.
+- Smoke test artık her sayfanın her sekmesini çizer.
+- 16 yeni test (toplam 136).
+
+### Değişti
+- Yedek doğrulama mesajı müşteri dosyalarının yedeğe dahil olduğunu belirtir (önceki "fotoğraf içermez" metni artık doğru değildi).
+- Veri klasörü adı `AppIdentity` sabitine taşındı; kurulum klasörü (`VernukoApp`) ile çakışmadığı testle güvence altında.
+
+### Bilinen sınırlar
+- Faz 2 ekranları ve kurulum paketi Windows'ta çalıştırılarak doğrulanmadı (Windows makinesi yok; Wine .NET 10'u çalıştıramıyor; CI sonuçlarına bu oturumdan erişilemedi).
+- Yükleyici imzasız (SmartScreen uyarısı verir); sertifika alınınca imzalanacak.
+- Otomatik SMS/WhatsApp, bulut yedek, lisans sunucusu ve diğer mesleklerin özel modülleri henüz yok.
+
 ## [0.1.0] — 2026-11-12 — Faz 0 + Faz 1 çekirdeği (geliştirme sürümü)
 
 ### Eklendi

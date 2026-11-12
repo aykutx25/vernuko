@@ -50,7 +50,7 @@ Kaynak: `src/Vernuko.BusinessProfiles/BusinessProfileCatalog.cs`. Yeni meslek ek
 
 ## Profil başına notlar ve sınırlar
 
-- **Güzellik & Lazer:** 8 seanslık paket, iptalde hak düşmez, tamamlamada düşer, bölge bazlı ayrı paket, aynı oda/cihaz çakışan saatte iki müşteriye atanamaz, seans değişiklikleri denetim günlüğünde. Fotoğraf ve onam formları özel nitelikli veri sayılabilir: Faz 2'de ayrı yetki ve şifreli dosya deposuyla eklenecek (hukuki inceleme gerekli).
+- **Güzellik & Lazer:** 8 seanslık paket, iptalde hak düşmez, tamamlamada düşer, bölge bazlı ayrı paket, aynı oda/cihaz çakışan saatte iki müşteriye atanamaz, seans değişiklikleri denetim günlüğünde. Fotoğraf ve onam formları özel nitelikli veri sayılabilir: Faz 2'de ayrı yetki (sekreter fotoğrafları göremez, onay kaydedebilir) ve şifreli dosya deposuyla eklendi; onam metinleri işletmenin hukuk danışmanıyla hazırlanmalıdır. Faz 2 ile ayrıca: hizmet tamamlanınca otomatik malzeme düşümü (ör. jel, tek kullanımlık örtü), ürün satışı, satan/uygulayan ayrı prim, tekrarlayan randevu (ör. 6 haftada bir), bekleme listesi.
 - **Doktor / Diş / Psikolog:** Faz 1–3'te yalnızca ön büro. Teşhis, reçete, tıbbi kayıt, e-Nabız/MBYS gibi özellikler mevzuat incelemesi yapılmadan **eklenmeyecek**. Sekreter, terapistin özel notlarını göremez (`PrivateNotesViewOwn` izni yalnızca uzman rolünde; not modülü Faz 3).
 - **Avukat:** Dava süresi hesaplama gibi hata riski yüksek otomasyonlar doğrulanmış mevzuat mantığı olmadan eklenmeyecek.
 - **Veteriner:** Hayvan sahip değiştirince klinik kayıt yeni sahibe, finansal kayıt eski sahipte kalmalı (ezyVet modeli, Faz 3).

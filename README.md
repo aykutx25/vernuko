@@ -2,8 +2,8 @@
 
 Windows için **çevrimdışı çalışan** randevu, sekreter ve işletme yönetim yazılımı. Türkiye öncelikli; güzellik ve lazer merkezlerinden kliniklere, kuaförlerden eğitim kurumlarına kadar farklı meslekler **tek bir randevu motorunu** kullanır.
 
-> **Durum: Faz 0 tamamlandı, Faz 1 çekirdeği çalışır durumda (v0.1.0, geliştirme sürümü — ticari kullanıma hazır değil).**
-> İş kuralları, veritabanı, yedekleme ve lisans istemcisi gerçek SQLite dosyaları üzerinde 120+ otomatik testle doğrulandı. WPF arayüzü derleniyor ve tüm bağlamaları statik olarak kontrol ediliyor, **ancak henüz Windows'ta çalıştırılarak görsel olarak doğrulanmadı** (bkz. "Bilinen sınırlar").
+> **Durum: Faz 0 ve Faz 1 tamamlandı, Faz 2 (Güzellik & Lazer operasyonları) eklendi, kurulum paketi hazır (v0.2.0, geliştirme sürümü — ticari kullanıma hazır değil).**
+> İş kuralları, veritabanı, yedekleme, lisans istemcisi ve ekranların view model'leri gerçek SQLite dosyaları üzerinde 136 otomatik testle doğrulandı. WPF arayüzü derleniyor, tüm bağlamaları statik olarak kontrol ediliyor ve kurulum paketi üretilebiliyor, **ancak henüz Windows'ta çalıştırılarak görsel olarak doğrulanmadı** (bkz. "Bilinen sınırlar").
 
 ## Ne çalışıyor (Faz 1)
 - **Kurulum sihirbazı** (10 adım, atlanabilir adımlar), 14 meslek profili; "Güzellik ve Lazer Merkezi" tek profil.
@@ -12,14 +12,22 @@ Windows için **çevrimdışı çalışan** randevu, sekreter ve işletme yönet
 - **Müşteriler:** Türkçe uyumlu arama (ı/İ/ş/ğ…), mükerrer kayıt uyarısı (otomatik birleştirme yok), arşiv, KVKK için tam JSON dışa aktarım ve anonimleştirme, CSV liste.
 - **Paket & seans:** satış, kalan hak, bölge, tamamlanınca düşme, iptalde korunma, geri alma, gerekçeli düzeltme, dondurma/uzatma, geçmiş.
 - **Ödemeler:** tahsilat, kapora, iade, indirim, ters kayıtla düzeltme (silme yok), çift tıklamaya dayanıklı kayıt, günlük kasa, açık bakiyeler. *Resmî fatura düzenlemez.*
-- **Güvenlik:** kullanıcılar, 7 rol, 28 işlem izni, PBKDF2 parola, hesap ve ekran kilidi, hash zincirli denetim günlüğü.
+- **Güvenlik:** kullanıcılar, 7 rol, 34 işlem izni, PBKDF2 parola, hesap ve ekran kilidi, hash zincirli denetim günlüğü.
 - **Şifreli yedekleme:** AES-256-GCM, kurtarma anahtarı, doğrulama, geri yükleme (yeni bilgisayarda dahil), 7/4/3 saklama, zamanlanmış ve kapanışta yedek.
 - **Lisans istemcisi:** ECDSA imzalı lisans belgesi, çevrimdışı tolerans, saat geri alma koruması; süre bitince **salt-okunur mod — veri asla silinmez**.
 - **Manuel WhatsApp** (wa.me) hatırlatma; "Entegrasyonlar ve Maliyetler" ekranı (tüm ücretli entegrasyonlar kapalı, limit 0 ₺).
 - **Demo modu** (`--demo`) ayrı veritabanında; **smoke test modu** (`--smoke-test`).
 
+## Faz 2 ile eklenenler
+- **Prim/komisyon:** hizmet, paket satışı, ürün satışı; satan ve uygulayan ayrı; en özel kural geçerli; değiştirilemez prim defteri; Raporlar › Personel primleri.
+- **Stok:** ürünler, giriş, sayım düzeltmesi, ürün satışı, hizmet tamamlanınca otomatik malzeme düşümü, kritik stok.
+- **Tekrarlayan randevu** (çakışan tarihler önceden listelenir), seriyi sonrakilerle birlikte taşıma/iptal.
+- **Bekleme listesi:** iptalde uygun bekleyen müşteriler gösterilir.
+- **Onam formları** (sürümlü) ve **şifreli müşteri fotoğrafları/belgeleri** (ayrı yetki, yedeğe dahil).
+- **Kurulum paketi ve güncelleme** (Velopack): yönetici yetkisi istemez, güncellemeden önce şifreli yedek alır, kaldırma verileri silmez — [docs/RELEASE.md](docs/RELEASE.md).
+
 ## Henüz olmayanlar
-Otomatik SMS/WhatsApp, Google Drive/OneDrive/Dropbox yedeği, lisans sunucusu ve satış, tekrarlayan randevu, bekleme listesi, komisyon/stok, onam/fotoğraf, diğer mesleklerin özel modülleri, çoklu bilgisayar, kurulum paketi ve otomatik güncelleme. Plan: [docs/ROADMAP.md](docs/ROADMAP.md).
+Otomatik SMS/WhatsApp, Google Drive/OneDrive/Dropbox yedeği, lisans sunucusu ve satış, diğer mesleklerin özel modülleri, çoklu bilgisayar, yükleyici imzası. Plan: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Gereksinimler
 - Çalıştırma: Windows 10 veya 11 (x64).
@@ -44,7 +52,7 @@ Tüm ekranların görüntüsünü alıp bağlama hatalarını denetleme (Windows
 ```bash
 dotnet run --project src/Vernuko.Desktop -- --smoke-test smoke-output
 ```
-Veriler: `%LOCALAPPDATA%\Vernuko\Data` (demo: `%LOCALAPPDATA%\Vernuko\Demo`). Varsayılan yedek klasörü: `Belgeler\Vernuko Yedekler` — harici disk önerilir.
+Veriler: `%LOCALAPPDATA%\Vernuko\Data` (demo: `%LOCALAPPDATA%\Vernuko\Demo`); müşteri dosyaları aynı klasörde `attachments\` altında şifreli. Kurulan program `%LOCALAPPDATA%\VernukoApp` altındadır; kaldırmak verileri silmez. Varsayılan yedek klasörü: `Belgeler\Vernuko Yedekler` — harici disk önerilir.
 
 ## Klavye kısayolları
 Ctrl+K arama · Ctrl+N yeni randevu · Ctrl+S kaydet · Ctrl+L kilitle · Esc kapat · F5 yenile · Alt+←/→ gün · Alt+T bugün.
@@ -58,7 +66,8 @@ src/
   Vernuko.Customers         müşteri kartı
   Vernuko.Appointments      randevu motoru
   Vernuko.Packages          seans paketleri ve defter
-  Vernuko.Payments          cari hesap / kasa
+  Vernuko.Payments          cari hesap / kasa, prim kuralları ve prim defteri
+  Vernuko.Inventory         ürün, stok hareketleri, hizmet malzemeleri
   Vernuko.Licensing         lisans belgesi ve değerlendirme
   Vernuko.Messaging         wa.me, şablonlar, SMS arayüzü
   Vernuko.Reporting         özetler
@@ -88,10 +97,12 @@ docs/                       mimari, kararlar ve araştırma
 | [docs/SECURITY.md](docs/SECURITY.md) | Güvenlik ve KVKK |
 | [docs/COST_MODEL.md](docs/COST_MODEL.md) | Maliyet modeli |
 | [docs/TEST_PLAN.md](docs/TEST_PLAN.md) | Test planı ve 30 senaryonun karşılığı |
+| [docs/RELEASE.md](docs/RELEASE.md) | Kurulum paketi, sürüm yayınlama, güncelleme, imzalama |
 | [CHANGELOG.md](CHANGELOG.md) | Sürüm notları |
 
 ## Bilinen sınırlar
-- **Arayüz Windows'ta çalıştırılarak doğrulanmadı.** Geliştirme ortamı Linux'tu; Wine 9 .NET 10'u çalıştıramadığı için ekran görüntüsü alınamadı. Windows CI işi ve `--smoke-test` bunu doğrulamak için hazır.
+- **Arayüz ve kurulum paketi Windows'ta çalıştırılarak doğrulanmadı.** Geliştirme ortamı Linux'tu; Wine 9 ve Wine 11 .NET 10'u çalıştıramadığı için ekran görüntüsü alınamadı. Windows CI işi ve `--smoke-test` (her sayfanın her sekmesi) bunu doğrulamak için hazır.
+- Yükleyici imzasız; Windows SmartScreen uyarı verir. Sertifika alınınca imzalanacak (bkz. [docs/RELEASE.md](docs/RELEASE.md)).
 - Yerel veritabanı dosyası şifreli değil (yedekler şifreli). BitLocker önerilir; veritabanı şifreleme P1.
 - Performans hedefleri gerçek cihazlarda ölçülmedi.
 - Hukuki konular (bulut yedek ve KVKK yurt dışı aktarım, İYS, sağlık verisi) avukat görüşü gerektirir — bkz. [docs/SECURITY.md](docs/SECURITY.md).

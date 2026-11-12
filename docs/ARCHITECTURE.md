@@ -9,7 +9,7 @@
 | DI / logging | Microsoft.Extensions.* (MIT), Serilog + Serilog.Sinks.File (Apache-2.0) | Günlükler 14 gün, 10 MB/dosya |
 | Kripto | Yalnızca .NET BCL: AES-GCM, HKDF, PBKDF2, ECDSA P-256, DPAPI | Üçüncü taraf kripto bağımlılığı yok |
 | Test | xUnit v3 (Apache-2.0), gerçek SQLite dosyaları | 120+ test |
-| Kurulum/güncelleme (Faz 8) | Velopack (MIT) önerilir; WiX gerekirse OSMF ücreti (10 $/ay) | bkz. research/licensing-payments-signing.md |
+| Kurulum/güncelleme | **Velopack 1.2.161 (MIT)** — kullanıcı başına kurulum (yönetici yetkisi yok), delta güncelleme, `Program.Main` içinde `VelopackApp.Run()`. Paket kimliği `VernukoApp` (veri klasörü `Vernuko` ile çakışmaz; kaldırma veriyi silmez). Ayrıntı: [RELEASE.md](RELEASE.md) | bkz. research/licensing-payments-signing.md |
 
 Tüm NuGet paketleri `Directory.Packages.props` içinde merkezi olarak sabitlenir; NuGet güvenlik denetimi (`NuGetAudit`, tüm bağımlılıklar, düşük seviye) açıktır. Analizörler en son önerilen seviyede ve uyarılar hata olarak derlenir.
 
@@ -38,12 +38,13 @@ Projeler ayrı servis değildir; tek süreçte çalışır. Sınırlar derleyici
 | Proje | Sorumluluk |
 |---|---|
 | Vernuko.Core | Ortak çekirdek: `Result/Error`, GUID v7, para (kuruş), telefon (E.164), Türkçe metin katlama, saat dilimi/DST, haftalık çalışma saatleri |
-| Vernuko.Security | Kullanıcı, rol, 28 işlem izni, PBKDF2 parola karması, parola politikası, hesap kilidi, boşta kilit politikası, denetim kaydı + hash zinciri |
+| Vernuko.Security | Kullanıcı, rol, 34 işlem izni, PBKDF2 parola karması, parola politikası, hesap kilidi, boşta kilit politikası, denetim kaydı + hash zinciri |
 | Vernuko.BusinessProfiles | 14 meslek profili kataloğu, işletme ayarları, şube |
-| Vernuko.Customers | Müşteri kartı, doğrulamalar, T.C. kimlik sağlaması, mükerrer tespiti, arşiv/anonimleştirme |
-| Vernuko.Appointments | Hizmet, personel, kaynak, izin/kapalı gün, randevu kümesi, durum kuralları, çakışma, müsaitlik |
+| Vernuko.Customers | Müşteri kartı, doğrulamalar, T.C. kimlik sağlaması, mükerrer tespiti, arşiv/anonimleştirme; onam formu/kaydı ve şifreli dosya meta verisi (Faz 2) |
+| Vernuko.Appointments | Hizmet, personel, kaynak, izin/kapalı gün, randevu kümesi, durum kuralları, çakışma, müsaitlik; tekrar kuralı ve bekleme listesi (Faz 2) |
 | Vernuko.Packages | Paket tanımı, müşteri paketi, append-only seans defteri |
-| Vernuko.Payments | Append-only cari hesap, bakiye/kasa hesabı, ters kayıt |
+| Vernuko.Payments | Append-only cari hesap, bakiye/kasa hesabı, ters kayıt; prim kuralları ve append-only prim defteri (Faz 2) |
+| Vernuko.Inventory | Ürün, append-only stok hareketleri, hizmet malzemeleri (Faz 2) |
 | Vernuko.Licensing | İmzalı lisans belgesi, ECDSA doğrulama, çevrimdışı durum değerlendirme |
 | Vernuko.Messaging | wa.me bağlantısı, şablon motoru (hassas profilde hizmet adı gizleme), SMS sağlayıcı arayüzü |
 | Vernuko.Reporting | Günlük özet, iptal/gelmeme oranları |
@@ -52,7 +53,7 @@ Projeler ayrı servis değildir; tek süreçte çalışır. Sınırlar derleyici
 | Vernuko.Application | Kullanım senaryoları (kurulum, kimlik, müşteri, katalog, randevu, paket, ödeme, rapor, ayar, mesaj, yedek, lisans, denetim, demo) |
 | Vernuko.Infrastructure | Windows'a özgü uygulamalar (DPAPI, MachineGuid özeti), veri yolları, günlük, DI bağlama |
 | Vernuko.Presentation | View model'ler, navigasyon, diyalog/platform arayüzleri |
-| Vernuko.Desktop | WPF görünümler, tasarım sistemi, pencere, kısayollar, otomatik kilit, smoke test |
+| Vernuko.Desktop | WPF görünümler, tasarım sistemi, pencere, kısayollar, otomatik kilit, smoke test, Velopack giriş noktası ve güncelleme servisi |
 | Vernuko.Tests | Domain, entegrasyon (gerçek SQLite), view model ve statik XAML kontrolleri |
 
 **Talimattaki listeden sapmalar:** `Vernuko.Packages` ayrı modül olarak eklendi (paketler ödeme değildir; seans defteri kendi kurallarına sahip). `Vernuko.Presentation` eklendi (view model'lerin Linux CI'da test edilebilmesi için).

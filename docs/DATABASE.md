@@ -36,7 +36,17 @@
 | `SessionLedger` | Seans defteri (append-only) | Kullanıldı (−1, randevuya bağlı), İade (+1), Düzeltme (±n, gerekçe zorunlu) |
 | `CustomerTransactions` | Cari hesap (append-only) | Tür (Borç/Tahsilat/İade/İndirim/Ters kayıt), tutar, saklanan bakiye etkisi, yöntem, kapora, randevu/paket bağlantısı, **IdempotencyKey unique**, `ReversesTransactionId` unique |
 | `AuditEntries` | Denetim günlüğü (append-only) | Sıra no (unique), kullanıcı, işlem, varlık, özet (kişisel veri içermez), **hash zinciri** (`PreviousHash`, `Hash`) |
-| `AppSettings` | Kurulum durumu (anahtar/değer) | Kurulum kimliği, lisans önbelleği ve yüksek su işareti, yedek ayarları, DPAPI ile korunan yedek anahtarı |
+| `AppSettings` | Kurulum durumu (anahtar/değer) | Kurulum kimliği, lisans önbelleği ve yüksek su işareti, yedek ayarları, DPAPI ile korunan yedek anahtarı, DPAPI ile ve yedek anahtarıyla sarılı dosya anahtarı |
+| `CommissionRules` *(Faz 2)* | Prim kuralları | Tür (hizmet/paket satışı/ürün satışı), personel (boş = herkes), hizmet/ürün (boş = hepsi), yüzde (baz puan) veya sabit tutar; en özel kural geçerli |
+| `CommissionEntries` *(Faz 2, append-only)* | Hesaplanmış primler | Personel, tür, kaynak (randevu/paket/satış), baz tutar, prim tutarı, **IdempotencyKey unique**, `ReversesEntryId` unique (iptal/geri almada ters kayıt) |
+| `Products` *(Faz 2)* | Ürün/malzeme | Ad, kod, birim, satış fiyatı, maliyet, kritik seviye — **stok saklanmaz, hareketlerden hesaplanır** |
+| `StockMovements` *(Faz 2, append-only)* | Stok hareketleri | Giriş, satış, hizmette kullanım, sayım düzeltmesi, iade, ters kayıt; randevu/müşteri bağlantısı; `ReversesMovementId` unique |
+| `ServiceMaterials` *(Faz 2)* | Hizmet malzemeleri | Hizmet tamamlanınca düşülecek ürün ve miktar |
+| `Waitlist` *(Faz 2)* | Bekleme listesi | Müşteri, hizmet/personel tercihi, tarih aralığı, tercih edilen zaman (serbest metin), durum |
+| `ConsentTemplates` *(Faz 2)* | Onam formları | Başlık, metin, **metin sürümü** (metin değişince artar) |
+| `CustomerConsents` *(Faz 2)* | Müşteri onayları | Form + kabul edilen sürüm ve metnin SHA-256 özeti, yöntem, tarih, kaydeden, geri alma tarihi/gerekçesi |
+| `CustomerFiles` *(Faz 2)* | Şifreli dosya meta verisi | Tür (fotoğraf/imzalı onam/belge), özgün ad, boyut, SHA-256, `StoredName` unique; içerik `attachments\` klasöründe AES-256-GCM ile |
+| `Appointments.SeriesId` *(Faz 2)* | Tekrarlayan seri | Aynı serideki randevular ortak kimlik taşır; seri iptali/taşıması yalnızca açık randevuları etkiler |
 
 İlişkiler: randevu → müşteri/hizmet/personel/paket/şube (Restrict: ana kayıt silinemez); randevu → booking/geçmiş (Cascade); paket → defter (Restrict).
 
@@ -44,7 +54,7 @@
 `src/Vernuko.Persistence/DatabaseTriggers.cs`, ilk migration ile kurulur:
 
 1. **Çakışma tetikleyicisi:** `AppointmentBookings` tablosunda aynı `ResourceId` için aktif ve özel kullanımlı iki kaydın zaman aralıkları kesişemez (INSERT ve UPDATE). İhlalde `VERNUKO_BOOKING_OVERLAP` hatası. Uygulama katmanındaki kontrol atlansa bile çift rezervasyon yazılamaz (test: `Database_trigger_blocks_overlaps_even_if_application_check_is_bypassed`).
-2. **Append-only:** `CustomerTransactions`, `SessionLedger`, `AuditEntries` tablolarında UPDATE/DELETE reddedilir (`VERNUKO_APPEND_ONLY`). Düzeltme yalnızca yeni kayıtla (ters kayıt / iade / düzeltme) yapılır.
+2. **Append-only:** `CustomerTransactions`, `SessionLedger`, `AuditEntries` (ilk migration) ve `CommissionEntries`, `StockMovements` (`Phase2Operations` migration'ı) tablolarında UPDATE/DELETE reddedilir (`VERNUKO_APPEND_ONLY`). İlk migration'daki tetikleyici listesi dondurulmuştur; yeni tablolar yeni migration ile eklenir. Düzeltme yalnızca yeni kayıtla (ters kayıt / iade / düzeltme) yapılır.
 3. **Benzersizlik:** ödeme idempotency anahtarı, bir işlemin yalnızca bir ters kaydı olabilmesi, kullanıcı adı, müşteri numarası, randevu başına kaynak.
 
 ## Migration (şema geçişi) güvenliği

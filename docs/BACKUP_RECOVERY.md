@@ -10,7 +10,7 @@ Kaynaklı API araştırması: [research/messaging-and-backup-apis.md](research/m
 | Saklama politikası (7 günlük / 4 haftalık / 3 aylık) | **Uygulandı ve test edildi** |
 | Zamanlanmış yedek (uygulama açıkken) ve kapanışta yedek | Uygulandı (masaüstü zamanlayıcısı; Windows'ta çalıştırılarak doğrulanmalı) |
 | Google Drive, OneDrive, Dropbox | **Yok — Faz 4.** Arayüzde "Kapalı / henüz mevcut değil" olarak gösterilir. |
-| Fotoğraf / ek dosyalar | Faz 1'de böyle veri yok; yedek bildirimi açıkça "fotoğraf/ek dosya içermez" der. |
+| Fotoğraf / ek dosyalar *(Faz 2)* | Müşteri fotoğrafları ve belgeleri, diskteki **şifreli** halleriyle (`att_<ad>` girdileri) arşive eklenir; arşiv ayrıca bütünüyle şifrelenir. Dosya anahtarı yedek anahtarıyla sarılı olarak veritabanında durduğu için yeni bilgisayarda kurtarma anahtarıyla geri yüklenince fotoğraflar da açılır (test: `Consents_and_encrypted_photos_with_permissions_backup_and_anonymization`). Geri yüklemede mevcut dosya klasörü önce güvenlik kopyası olarak kenara alınır. Doğrulama mesajı dosyaların dahil olup olmadığını söyler. |
 
 ## Akış
 ```

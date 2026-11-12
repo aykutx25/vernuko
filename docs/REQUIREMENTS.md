@@ -34,7 +34,7 @@ Kaynak: proje talimatı (Vernuko ana geliştirme talimatı). Bu belge talimatı 
 | R-7 | Geç gelen / gelmeyen; gelmeme politikası (seans düşülsün mü) | ✅ |
 | R-8 | Randevu notları, geçmiş, durum değişiklik geçmişi | ✅ |
 | R-9 | Hızlı müşteri arama, klavye kısayolları | ✅ VM / 🟡 ekran |
-| R-10 | Tekrarlayan randevu, bekleme listesi, randevu onayı akışı | Onay durumu ✅; tekrarlayan ve bekleme listesi ⬜ P1 |
+| R-10 | Tekrarlayan randevu, bekleme listesi, randevu onayı akışı | ✅ (Faz 2; ekranlar 🟡) |
 | R-11 | Sürükle-bırak | ⬜ P1 |
 | R-12 | Otomatik hatırlatma | ⬜ Faz 5 (manuel WhatsApp ✅) |
 
@@ -55,7 +55,10 @@ Kaynak: proje talimatı (Vernuko ana geliştirme talimatı). Bu belge talimatı 
 | F-2 | Nakit/kart/havale tahsilat kaydı, iade, indirim | ✅ |
 | F-3 | Günlük kasa, borçlu listesi, işlem geçmişi | ✅ |
 | F-4 | Sessiz silme yok; düzeltme ters kayıtla | ✅ (DB tetikleyicisi) |
-| F-5 | Personel primi | ⬜ P1 |
+| F-5 | Personel primi (hizmet, paket satışı, ürün satışı; satan ≠ uygulayan) | ✅ (Faz 2; ekranlar 🟡) |
+| F-7 | Ürün/malzeme stoku, hizmette otomatik malzeme düşümü, ürün satışı | ✅ (Faz 2; ekranlar 🟡) |
+| M-7 | Sürümlü onam formları ve müşteri onay kayıtları | ✅ (Faz 2; metinler ⚖️) |
+| M-8 | Şifreli müşteri fotoğrafları/belgeleri, ayrı yetki, yedeğe dahil | ✅ (Faz 2; ekranlar 🟡) |
 | F-6 | Resmî fatura/e-Arşiv düzenlenmez | ✅ (bilinçli) |
 | P-1 | Seans paketi: toplam/kullanılan/kalan, bölge, geçerlilik, dondurma, uzatma, düzeltme, geçmiş | ✅ |
 
@@ -66,7 +69,7 @@ Ayrıntılar: BACKUP_RECOVERY.md, INTEGRATIONS.md, LICENSING.md.
 | Kod | Gereksinim | Durum |
 |---|---|---|
 | Y-1 | Roller: sahip, yönetici, sekreter, uzman, personel, muhasebe, özel | ✅ |
-| Y-2 | İşlem bazlı izinler (28), rol varsayılanı + ek/çıkar | ✅ (ek/çıkar arayüzü ⬜ P1) |
+| Y-2 | İşlem bazlı izinler (34), rol varsayılanı + ek/çıkar | ✅ (ek/çıkar arayüzü ⬜ P1) |
 | Y-3 | Önemli işlemler denetim günlüğünde | ✅ |
 | Y-4 | Güçlü parola karması, oturum kilidi | ✅ |
 
