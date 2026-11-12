@@ -126,7 +126,7 @@
                         <Border Style="{StaticResource Card}" Padding="20">
                             <StackPanel>
                                 <TextBlock Text="Yerel şifreli yedek" Style="{StaticResource SectionTitle}" />
-                                <TextBlock Style="{StaticResource Muted}" Text="Yedekler AES-256-GCM ile şifrelenir. Bu sürümde yedek, veritabanının tamamını içerir; fotoğraf/ek dosya desteği henüz yoktur. Yedekleme yalnızca Vernuko açıkken çalışır." />
+                                <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Text="Yedekler AES-256-GCM ile şifrelenir ve veritabanının tamamını, müşteri fotoğraf ve belgelerini içerir. Yedekleme yalnızca Vernuko açıkken çalışır." />
                                 <TextBlock Text="YEDEK KLASÖRÜ (harici disk / USB önerilir)" Style="{StaticResource FieldLabel}" />
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right" Content="Klasörü aç" Command="{Binding OpenBackupFolderCommand}" Margin="8,0,0,0" />
@@ -150,6 +150,33 @@
                                     <Run Text="Anahtar kimliği: " /><Run Text="{Binding BackupStatus.KeyId, Mode=OneWay}" />
                                     <Run Text="   ·   Son başarılı yedek: " /><Run Text="{Binding BackupStatus.LastSuccessUtc, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" />
                                 </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Cloud copy (Phase 4) -->
+                        <Border Style="{StaticResource Card}" Padding="20" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Bulut kopyası (isteğe bağlı)" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap"
+                                           Text="Bilgisayar bozulur veya çalınırsa yerel yedekler de gidebilir. Açarsanız her yedeğin şifreli bir kopyası bu bilgisayardaki OneDrive, Google Drive veya Dropbox klasörüne konur; yüklemeyi bulut uygulamanız kendi hesabınıza yapar. Vernuko'nun bulutunuza erişimi yoktur." />
+                                <TextBlock Text="{Binding CloudStatusText}" TextWrapping="Wrap" Margin="0,10,0,0" FontWeight="SemiBold" />
+                                <StackPanel Visibility="{Binding CloudEnabled, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
+                                    <TextBlock Text="BULUT KLASÖRÜ" Style="{StaticResource FieldLabel}" />
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Content="Başka klasör…" Command="{Binding BrowseCloudFolderCommand}" Margin="8,0,0,0" />
+                                        <Button DockPanel.Dock="Right" Content="Yeniden ara" Command="{Binding DetectCloudFoldersCommand}" Margin="8,0,0,0" />
+                                        <ComboBox ItemsSource="{Binding CloudCandidates}" SelectedItem="{Binding SelectedCloud}" DisplayMemberPath="Label" AutomationProperties.Name="Bulut klasörü" />
+                                    </DockPanel>
+                                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding HasNoCloudCandidates, Converter={StaticResource VisibleWhen}}"
+                                               Text="Bu bilgisayarda OneDrive, Google Drive veya Dropbox klasörü bulunamadı. Bulut uygulamasını kurup oturum açtıktan sonra 'Yeniden ara'ya basın ya da klasörü elle seçin." />
+                                    <CheckBox IsChecked="{Binding CloudConsent}" Margin="0,12,0,0">
+                                        <TextBlock Text="{Binding CloudConsentText}" TextWrapping="Wrap" />
+                                    </CheckBox>
+                                    <Button Style="{StaticResource PrimaryButton}" Content="Bulut kopyasını aç" Command="{Binding EnableCloudCommand}" HorizontalAlignment="Left" Margin="0,12,0,0"
+                                            Visibility="{Binding CanManageBackups, Converter={StaticResource VisibleWhen}}" />
+                                </StackPanel>
+                                <Button Content="Bulut kopyasını kapat" Command="{Binding DisableCloudCommand}" HorizontalAlignment="Left" Margin="0,12,0,0"
+                                        Visibility="{Binding CloudEnabled, Converter={StaticResource VisibleWhen}}" />
                             </StackPanel>
                         </Border>
 

@@ -108,7 +108,7 @@
                     <Path Data="{StaticResource IconSend}" Style="{StaticResource Icon}" Width="15" Height="15" />
                     <TextBlock Text="SMS: Kapalı" Margin="6,0,18,0" Foreground="{StaticResource TextSecondaryBrush}" />
                     <Path Data="{StaticResource IconCloud}" Style="{StaticResource Icon}" Width="15" Height="15" />
-                    <TextBlock Text="Bulut yedekleme: Kapalı" Margin="6,0,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock Text="{Binding CloudBackupText}" Margin="6,0,0,0" Foreground="{StaticResource TextSecondaryBrush}" />
                     <TextBlock Text="{Binding VersionText}" Margin="18,0,0,0" Foreground="{StaticResource TextMutedBrush}" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">

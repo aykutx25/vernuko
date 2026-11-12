@@ -38,4 +38,9 @@ public static class SettingKeys
     public const string BackupLastFile = "backup.last_file";
     public const string BackupLastError = "backup.last_error";
     public const string BackupRecoveryKeyConfirmed = "backup.recovery_key_confirmed";
+    public const string BackupCloudFolder = "backup.cloud.folder";
+    public const string BackupCloudProvider = "backup.cloud.provider";
+    public const string BackupCloudConsentUtc = "backup.cloud.consent_utc";
+    public const string BackupCloudLastSuccessUtc = "backup.cloud.last_success_utc";
+    public const string BackupCloudLastError = "backup.cloud.last_error";
 }

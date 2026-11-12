@@ -23,6 +23,7 @@ public sealed partial class SettingsViewModel(
     IDeviceIdentity device,
     IDialogService dialogs,
     IPlatformServices platform,
+    CloudFolderLocator cloudLocator,
     CommissionRulesViewModel commissionRules,
     ConsentTemplatesViewModel consentTemplates,
     UpdatesViewModel updates) : PageViewModel, IShellAware
@@ -99,6 +100,16 @@ public sealed partial class SettingsViewModel(
     [ObservableProperty]
     private string? _shownRecoveryKey;
 
+    // Cloud copy
+    [ObservableProperty]
+    private CloudFolderCandidate? _selectedCloud;
+
+    [ObservableProperty]
+    private bool _cloudConsent;
+
+    [ObservableProperty]
+    private string _cloudStatusText = string.Empty;
+
     // License
     [ObservableProperty]
     private string _licenseText = string.Empty;
@@ -123,6 +134,16 @@ public sealed partial class SettingsViewModel(
 
     public ObservableCollection<BackupListItem> Backups { get; } = [];
 
+    public ObservableCollection<CloudFolderCandidate> CloudCandidates { get; } = [];
+
+    public bool CloudEnabled => BackupStatus?.CloudEnabled == true;
+
+    public bool HasNoCloudCandidates => CloudCandidates.Count == 0;
+
+    public string CloudConsentText =>
+        "Okudum, anlıyorum: yedek dosyası (şifreli) seçtiğim bulut hizmetinin sunucularına, yurt dışında olabilecek bir yere gönderilecek. " +
+        "Bulut sağlayıcısı dosyanın içeriğini okuyamaz, ancak KVKK açısından bu bir yurt dışı aktarım sayılabilir; işletmem bu konuda kendi hukuki değerlendirmesini yapmalıdır.";
+
     public ObservableCollection<AuditEntryDto> AuditEntries { get; } = [];
 
     public IReadOnlyList<Option<SystemRole>> Roles { get; } = Enum.GetValues<SystemRole>().Where(r => r != SystemRole.Custom).Select(r => new Option<SystemRole>(RoleDefaults.DisplayName(r), r)).ToList();
@@ -133,13 +154,14 @@ public sealed partial class SettingsViewModel(
     ];
 
     /// <summary>Cost transparency: every paid integration is off by default and nothing is charged without opt-in.</summary>
-    public IReadOnlyList<IntegrationRow> Integrations { get; } =
+    public IReadOnlyList<IntegrationRow> Integrations =>
     [
-        new("Yerel şifreli yedek (bilgisayar / USB)", "Aktif", "Ücretsiz", "Yedekler sizin diskinizde, AES-256 ile şifreli.", true),
+        new("Yerel şifreli yedek (bilgisayar / USB)", BackupStatus?.KeyConfigured == true ? "Aktif" : "Kapalı", "Ücretsiz", "Yedekler sizin diskinizde, AES-256 ile şifreli.", BackupStatus?.KeyConfigured == true),
         new("WhatsApp — manuel gönderim", "Aktif", "Ücretsiz", "Mesaj WhatsApp'ta açılır, siz kontrol edip gönderirsiniz.", true),
         new("WhatsApp Business Cloud API", "Kapalı", "0 ₺ — aylık limit 0 ₺", "Faz 5: kendi Meta hesabınızla, onaylı şablonlarla. Henüz mevcut değil.", false),
         new("SMS (Netgsm / İleti Merkezi / Verimor)", "Kapalı", "0 ₺ — aylık limit 0 ₺", "Faz 5: kendi sağlayıcı hesabınızla. Henüz mevcut değil.", false),
-        new("Google Drive / OneDrive / Dropbox yedek", "Kapalı", "Kendi bulut kotanız", "Faz 4: kendi hesabınızda, buluta gitmeden önce şifreli. Henüz mevcut değil.", false),
+        new("Bulut kopyası (OneDrive / Google Drive / Dropbox klasörü)", CloudEnabled ? "Aktif" : "Kapalı", "Kendi bulut kotanız",
+            "Şifreli yedek, bilgisayarınızdaki bulut klasörüne kopyalanır; yüklemeyi bulut uygulamanız yapar. Ayarlar › Yedekleme'den açılır.", CloudEnabled),
         new("E-posta (SMTP)", "Kapalı", "—", "Planlanıyor.", false),
     ];
 
@@ -366,12 +388,65 @@ public sealed partial class SettingsViewModel(
         var r = await backups.CreateBackupAsync(BackupTrigger.Manual);
         if (Check(r))
         {
-            InfoMessage = $"Şifreli yedek oluşturuldu: {r.Value.FileName} ({r.Value.SizeBytes / 1024:N0} KB, {r.Value.Duration.TotalSeconds:0.0} sn).";
+            InfoMessage = $"Şifreli yedek oluşturuldu: {r.Value.FileName} ({r.Value.SizeBytes / 1024:N0} KB, {r.Value.Duration.TotalSeconds:0.0} sn){(r.Value.CloudNote is { } note ? "; " + note : string.Empty)}.";
             await LoadBackupAsync();
             if (Shell is not null)
             {
                 await Shell.RefreshStatusAsync();
             }
+        }
+    });
+
+    [RelayCommand]
+    private void DetectCloudFolders()
+    {
+        CloudCandidates.Clear();
+        foreach (var c in cloudLocator.Detect())
+        {
+            CloudCandidates.Add(c);
+        }
+
+        SelectedCloud ??= CloudCandidates.FirstOrDefault();
+        OnPropertyChanged(nameof(HasNoCloudCandidates));
+    }
+
+    [RelayCommand]
+    private async Task BrowseCloudFolderAsync()
+    {
+        var folder = await dialogs.PickFolderAsync("Bulut eşitleme klasörünü seçin", SelectedCloud?.Path);
+        if (folder is not null)
+        {
+            var custom = new CloudFolderCandidate(CloudProvider.Other, folder);
+            CloudCandidates.Add(custom);
+            SelectedCloud = custom;
+            OnPropertyChanged(nameof(HasNoCloudCandidates));
+        }
+    }
+
+    [RelayCommand]
+    private Task EnableCloudAsync() => RunAsync(async () =>
+    {
+        if (SelectedCloud is null)
+        {
+            ErrorMessage = "Önce bir bulut klasörü seçin.";
+            return;
+        }
+
+        if (Check(await backups.EnableCloudCopyAsync(SelectedCloud.Path, SelectedCloud.Provider, CloudConsent)))
+        {
+            CloudConsent = false;
+            await LoadBackupAsync();
+            InfoMessage = $"Bulut kopyası açıldı. Bundan sonraki her yedek {SelectedCloud.ProviderName} klasörüne de kopyalanacak. Şimdi bir yedek alarak deneyebilirsiniz.";
+        }
+    });
+
+    [RelayCommand]
+    private Task DisableCloudAsync() => RunAsync(async () =>
+    {
+        if (Check(await backups.DisableCloudCopyAsync()))
+        {
+            await LoadBackupAsync();
+            InfoMessage = "Bulut kopyası kapatıldı. Buluttaki eski kopyalar silinmedi.";
         }
     });
 
@@ -544,6 +619,20 @@ public sealed partial class SettingsViewModel(
         {
             Backups.Add(b);
         }
+
+        var s = BackupStatus;
+        CloudStatusText = s.CloudFolder is null
+            ? "Kapalı. Açarsanız her yedeğin şifreli bir kopyası bilgisayarınızdaki bulut klasörüne de konur."
+            : $"Açık: {CloudFolderLocator.ProviderName(s.CloudProvider ?? CloudProvider.Other)} — {Path.Combine(s.CloudFolder, BackupService.CloudSubFolder)}"
+              + (s.CloudLastSuccessUtc is { } ok ? $" · son kopya {Formatting.ShortDate(ok.ToLocalTime())} {Formatting.Time(ok.ToLocalTime())}" : " · henüz kopya yok")
+              + (string.IsNullOrEmpty(s.CloudLastError) ? string.Empty : $" · SON DENEME BAŞARISIZ: {s.CloudLastError}");
+        if (CloudCandidates.Count == 0)
+        {
+            DetectCloudFolders();
+        }
+
+        OnPropertyChanged(nameof(CloudEnabled));
+        OnPropertyChanged(nameof(Integrations));
     }
 
     private async Task LoadAuditAsync()

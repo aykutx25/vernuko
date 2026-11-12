@@ -30,11 +30,22 @@ public sealed record BackupStatus(
     RetentionPolicy Retention,
     DateTime? LastSuccessUtc,
     string? LastFile,
-    string? LastError);
+    string? LastError,
+    string? CloudFolder = null,
+    CloudProvider? CloudProvider = null,
+    DateTime? CloudLastSuccessUtc = null,
+    string? CloudLastError = null)
+{
+    public bool CloudEnabled => CloudFolder is not null;
+
+    public string CloudText => CloudFolder is null
+        ? "Kapalı"
+        : $"{CloudFolderLocator.ProviderName(CloudProvider ?? Services.CloudProvider.Other)}{(string.IsNullOrEmpty(CloudLastError) ? string.Empty : " (son kopya başarısız)")}";
+}
 
 public sealed record BackupListItem(string FileName, DateTime? CreatedAtUtc, BackupTrigger? Trigger, long SizeBytes, string? AppVersion, string? SchemaVersion, bool KeyMatches, string? Problem);
 
-public sealed record BackupRunResult(string FileName, long SizeBytes, TimeSpan Duration, int DeletedOldBackups);
+public sealed record BackupRunResult(string FileName, long SizeBytes, TimeSpan Duration, int DeletedOldBackups, string? CloudNote = null);
 
 public sealed record BackupVerifyResult(Guid BackupId, DateTime CreatedAtUtc, string AppVersion, string SchemaVersion, long DatabaseBytes, bool AttachmentsIncluded);
 
@@ -74,7 +85,163 @@ public sealed class BackupService(
             retention is null ? RetentionPolicy.Default : JsonSerializer.Deserialize<RetentionPolicy>(retention) ?? RetentionPolicy.Default,
             await SettingsStore.GetUtcAsync(db, SettingKeys.BackupLastSuccessUtc, ct),
             await SettingsStore.GetAsync(db, SettingKeys.BackupLastFile, ct),
-            await SettingsStore.GetAsync(db, SettingKeys.BackupLastError, ct));
+            await SettingsStore.GetAsync(db, SettingKeys.BackupLastError, ct),
+            NullIfEmpty(await SettingsStore.GetAsync(db, SettingKeys.BackupCloudFolder, ct)),
+            Enum.TryParse<CloudProvider>(await SettingsStore.GetAsync(db, SettingKeys.BackupCloudProvider, ct), out var cp) ? cp : null,
+            await SettingsStore.GetUtcAsync(db, SettingKeys.BackupCloudLastSuccessUtc, ct),
+            NullIfEmpty(await SettingsStore.GetAsync(db, SettingKeys.BackupCloudLastError, ct)));
+    }
+
+    /// <summary>Name of the sub-folder Vernuko creates inside the user's cloud sync folder.</summary>
+    public const string CloudSubFolder = "Vernuko Yedekler";
+
+    /// <summary>
+    /// Turns on the cloud copy: every regular backup (manual, scheduled, on exit, before update) is also copied —
+    /// already encrypted — into "&lt;sync folder&gt;\Vernuko Yedekler". The provider's own client uploads it to the
+    /// customer's account. Requires explicit acknowledgement because the file leaves the computer (KVKK: the
+    /// provider's servers may be abroad).
+    /// </summary>
+    public async Task<Result<bool>> EnableCloudCopyAsync(string syncFolder, CloudProvider provider, bool consentGiven, CancellationToken ct = default)
+    {
+        if (!session.Has(Permission.BackupsManage))
+        {
+            return Error.Forbidden;
+        }
+
+        if (!consentGiven)
+        {
+            return Error.Validation("backup.cloud_consent", "Bulut kopyasını açmak için bilgilendirmeyi okuyup onaylamanız gerekir.");
+        }
+
+        if (string.IsNullOrWhiteSpace(syncFolder) || !Directory.Exists(syncFolder))
+        {
+            return Error.Validation("backup.cloud_folder", "Bulut eşitleme klasörü bulunamadı. Bulut uygulamasının (OneDrive, Google Drive, Dropbox) bu bilgisayarda kurulu ve oturumunun açık olduğundan emin olun.");
+        }
+
+        var root = Path.GetFullPath(syncFolder.Trim());
+        var target = Path.Combine(root, CloudSubFolder);
+        try
+        {
+            Directory.CreateDirectory(target);
+            var probe = Path.Combine(target, ".vernuko-yazma-denemesi-" + Guid.NewGuid().ToString("N"));
+            await File.WriteAllBytesAsync(probe, [1], ct);
+            File.Delete(probe);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return Error.Validation("backup.cloud_write", "Bulut klasörüne yazılamadı. Klasör izinlerini ve bulut uygulamasının çalıştığını kontrol edin.");
+        }
+
+        var localFolder = Path.GetFullPath((await GetStatusAsync(ct)).Folder);
+        if (string.Equals(localFolder.TrimEnd(Path.DirectorySeparatorChar), target.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
+        {
+            return Error.Validation("backup.cloud_same", "Bulut kopyası, yerel yedek klasörüyle aynı olamaz.");
+        }
+
+        var now = time.GetUtcNow().UtcDateTime;
+        await using var db = await factory.CreateDbContextAsync(ct);
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+        await SettingsStore.SetAsync(db, SettingKeys.BackupCloudFolder, root, now, ct);
+        await SettingsStore.SetAsync(db, SettingKeys.BackupCloudProvider, provider.ToString(), now, ct);
+        await SettingsStore.SetUtcAsync(db, SettingKeys.BackupCloudConsentUtc, now, now, ct);
+        await SettingsStore.SetAsync(db, SettingKeys.BackupCloudLastError, string.Empty, now, ct);
+        await audit.AppendAsync(db, "backup.cloud_enabled", "Backup", null, $"Bulut kopyası açıldı ({CloudFolderLocator.ProviderName(provider)}); yurt dışı aktarım bilgilendirmesi onaylandı", ct);
+        await db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+        return true;
+    }
+
+    /// <summary>Stops copying to the cloud. Copies already in the cloud folder are left untouched.</summary>
+    public async Task<Result<bool>> DisableCloudCopyAsync(CancellationToken ct = default)
+    {
+        if (!session.Has(Permission.BackupsManage))
+        {
+            return Error.Forbidden;
+        }
+
+        var now = time.GetUtcNow().UtcDateTime;
+        await using var db = await factory.CreateDbContextAsync(ct);
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+        await SettingsStore.SetAsync(db, SettingKeys.BackupCloudFolder, string.Empty, now, ct);
+        await SettingsStore.SetAsync(db, SettingKeys.BackupCloudLastError, string.Empty, now, ct);
+        await audit.AppendAsync(db, "backup.cloud_disabled", "Backup", null, "Bulut kopyası kapatıldı", ct);
+        await db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+        return true;
+    }
+
+    private static string? NullIfEmpty(string? value) => string.IsNullOrEmpty(value) ? null : value;
+
+    /// <summary>
+    /// Copies the encrypted backup into the cloud sync folder and applies the same retention there. A cloud problem
+    /// never fails the backup itself: the local copy is already safe; the error is recorded and shown.
+    /// </summary>
+    private async Task<string?> CopyToCloudAsync(string encryptedFile, string fileName, BackupTrigger trigger, RetentionPolicy retention, TimeZoneInfo zone, CancellationToken ct)
+    {
+        string? cloudRoot;
+        await using (var db = await factory.CreateDbContextAsync(ct))
+        {
+            cloudRoot = NullIfEmpty(await SettingsStore.GetAsync(db, SettingKeys.BackupCloudFolder, ct));
+        }
+
+        if (cloudRoot is null || trigger is BackupTrigger.PreRestore or BackupTrigger.PreMigration)
+        {
+            return null;
+        }
+
+        string? error = null;
+        try
+        {
+            if (!Directory.Exists(cloudRoot))
+            {
+                throw new DirectoryNotFoundException("cloud folder missing");
+            }
+
+            var cloud = new LocalFolderBackupTarget(Path.Combine(cloudRoot, CloudSubFolder));
+            cloud.CleanupPartialFiles();
+            await cloud.UploadAsync(encryptedFile, fileName, null, ct);
+            var copied = new FileInfo(Path.Combine(cloud.Folder, fileName));
+            if (!copied.Exists || copied.Length != new FileInfo(encryptedFile).Length)
+            {
+                throw new IOException("cloud copy size mismatch");
+            }
+
+            if (trigger is BackupTrigger.Manual or BackupTrigger.Scheduled or BackupTrigger.OnExit)
+            {
+                var records = (await cloud.ListAsync(ct))
+                    .Select(f => (f.Name, Created: BackupNaming.TryParseCreatedAt(f.Name), Trigger: BackupNaming.TryParseTrigger(f.Name)))
+                    .Where(x => x.Created is not null && x.Trigger is not null)
+                    .Select(x => new BackupRecord(x.Name, x.Created!.Value, x.Trigger!.Value))
+                    .ToList();
+                foreach (var old in BackupRetention.SelectForDeletion(records, retention, zone))
+                {
+                    await cloud.DeleteAsync(old.Name, ct);
+                }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            logger.LogWarning(ex, "Cloud copy failed");
+            error = ex is UnauthorizedAccessException ? "bulut klasörüne yazma izni yok" : "bulut klasörüne erişilemiyor (bulut uygulaması kapalı veya klasör taşınmış olabilir)";
+        }
+
+        var now = time.GetUtcNow().UtcDateTime;
+        await using (var db = await factory.CreateDbContextAsync(ct))
+        {
+            if (error is null)
+            {
+                await SettingsStore.SetUtcAsync(db, SettingKeys.BackupCloudLastSuccessUtc, now, now, ct);
+                await SettingsStore.SetAsync(db, SettingKeys.BackupCloudLastError, string.Empty, now, ct);
+            }
+            else
+            {
+                await SettingsStore.SetAsync(db, SettingKeys.BackupCloudLastError, error, now, ct);
+            }
+
+            await db.SaveChangesAsync(ct);
+        }
+
+        return error is null ? "bulut klasörüne de kopyalandı" : $"bulut kopyası yapılamadı: {error}";
     }
 
     public async Task<Result<bool>> ConfigureAsync(string folder, BackupSchedule schedule, bool onExit, RetentionPolicy retention, CancellationToken ct = default)
@@ -466,6 +633,12 @@ public sealed class BackupService(
             var size = new FileInfo(encrypted).Length;
 
             var deleted = 0;
+            TimeZoneInfo zone;
+            await using (var zdb = await factory.CreateDbContextAsync(ct))
+            {
+                zone = (await zdb.BusinessSettings.AnyAsync(ct)) ? (await BusinessContext.LoadAsync(zdb, ct)).Zone : TimeZoneInfo.Utc;
+            }
+
             if (trigger is BackupTrigger.Manual or BackupTrigger.Scheduled or BackupTrigger.OnExit)
             {
                 var records = (await target.ListAsync(ct))
@@ -473,14 +646,14 @@ public sealed class BackupService(
                     .Where(x => x.Created is not null && x.Trigger is not null)
                     .Select(x => new BackupRecord(x.Name, x.Created!.Value, x.Trigger!.Value))
                     .ToList();
-                await using var zdb = await factory.CreateDbContextAsync(ct);
-                var zone = (await zdb.BusinessSettings.AnyAsync(ct)) ? (await BusinessContext.LoadAsync(zdb, ct)).Zone : TimeZoneInfo.Utc;
                 foreach (var old in BackupRetention.SelectForDeletion(records, retention, zone))
                 {
                     await target.DeleteAsync(old.Name, ct);
                     deleted++;
                 }
             }
+
+            var cloudNote = await CopyToCloudAsync(encrypted, fileName, trigger, retention, zone, ct);
 
             await using (var db = await factory.CreateDbContextAsync(ct))
             {
@@ -493,7 +666,7 @@ public sealed class BackupService(
                 await tx.CommitAsync(ct);
             }
 
-            return new BackupRunResult(fileName, size, sw.Elapsed, deleted);
+            return new BackupRunResult(fileName, size, sw.Elapsed, deleted, cloudNote);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or CryptographicException or Microsoft.Data.Sqlite.SqliteException)
         {

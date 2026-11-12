@@ -2,6 +2,15 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.4.0] — 2026-11-12 — Faz 4: bulut kopyası
+
+### Eklendi
+- **Bulut kopyası (OneDrive / Google Drive / Dropbox):** her düzenli yedeğin şifreli kopyası bilgisayardaki bulut eşitleme klasörüne (`Vernuko Yedekler`) konur; yüklemeyi bulut uygulaması müşterinin kendi hesabına yapar. Klasörler otomatik bulunur (Türkçe Windows'taki "Drive'ım" dahil) ya da elle seçilir. Varsayılan kapalı; açmak için KVKK yurt dışı aktarım bilgilendirmesinin onaylanması gerekir. Bulut klasörüne ulaşılamazsa yerel yedek yine alınır, sorun ekranda gösterilir. Aynı saklama politikası bulutta da uygulanır. Durum çubuğu ve "Entegrasyonlar ve Maliyetler" gerçek durumu gösterir.
+- GitHub Actions yeniden her değişiklikte çalışıyor (depo açık): Windows'ta derleme, testler, tüm ekranlar, başarı senaryosu ve kurulum paketi otomatik denetleniyor.
+
+### Düzeltildi
+- Ayarlar › Yedekleme'deki "fotoğraf/ek dosya desteği henüz yoktur" yazısı güncel değildi (fotoğraflar Faz 2'den beri yedekte).
+
 ## [0.3.0] — 2026-11-12 — Açık kaynak (AGPL-3.0)
 
 ### Değişti

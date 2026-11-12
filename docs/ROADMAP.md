@@ -10,7 +10,7 @@
 | 1 | Windows çekirdeği: kurulum, SQLite, kullanıcılar, müşteri, personel, hizmet, randevu motoru, testler | ✅ çekirdek · 🟡 arayüz |
 | 2 | Güzellik & Lazer: paket/seans, bölge, oda/cihaz, ödeme, iptal/iade, prim, stok, onam/fotoğraf, tekrarlayan randevu, bekleme listesi | ✅ iş kuralları ve view model'ler (testli) · 🟡 ekranlar Windows'ta doğrulanacak |
 | 3 | Diğer meslekler (önce kuaför, SPA, danışmanlık) | ⬜ (profil kataloğu hazır) |
-| 4 | Yedekleme: yerel ✅ · Drive/OneDrive/Dropbox ⬜ | Kısmen |
+| 4 | Yedekleme: yerel ✅ · OneDrive/Google Drive/Dropbox eşitleme klasörüne şifreli kopya ✅ · API (OAuth) bağlantısı ⬜ (sahip uygulama kaydı açmalı) | ✅ temel |
 | 5 | İletişim: SMS, WhatsApp API, e-posta, hatırlatma planlama | ⬜ (manuel WhatsApp ✅) |
 | 6 | Lisans sunucusu ve satış (Paddle/iyzico) | ⬜ (istemci doğrulama ✅) |
 | 7 | Çoklu bilgisayar: yerel API, PostgreSQL, eşzamanlılık, veri taşıma | ⬜ |
@@ -47,7 +47,7 @@
 | P1-5 | Onam formları ve müşteri fotoğrafları (şifreli dosya deposu, ayrı yetki) | P0-8, hukuki görüş | Yetkisiz kullanıcı göremez; yedekte yer alır | ✅ (test) · 🟡 ekran · ⚖️ metinler |
 | P1-6 | SMS (Netgsm, İleti Merkezi, Verimor) + outbox + bütçe + segment sayacı | Faz 5 tasarımı | Sağlayıcı kapalı/yanıtsız → kuyrukta bekler; mükerrer yok | ⬜ |
 | P1-7 | WhatsApp Cloud API (işletmenin hesabı, utility şablonları) | P1-6 altyapısı | Hata kodları eşlenir; limit aşımı durdurur | ⬜ |
-| P1-8 | Google Drive / OneDrive / Dropbox yedek hedefleri | P0-9, KVKK görüşü | Kesinti sonrası devam; kota uyarısı | ⬜ |
+| P1-8 | Google Drive / OneDrive / Dropbox yedek hedefleri | P0-9, KVKK görüşü | Kesinti sonrası devam; kota uyarısı | ✅ eşitleme klasörü yöntemi (test) · ⬜ OAuth API yöntemi |
 | P1-9 | Excel/PDF rapor dışa aktarımı, ICS | P0-5 | Türkçe karakterler doğru | ⬜ |
 | P1-10 | Kaynak sütunlu zaman ızgarası + sürükle-bırak | P0-12 | 1366×768'de okunur | ⬜ |
 | P1-11 | SQLite FTS5 arama (100 bin+ müşteri) | P0-5 | 100 bin kayıtta < 200 ms | ⬜ |

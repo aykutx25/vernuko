@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddSingleton<SettingsService>();
         services.AddSingleton<MessagingService>();
         services.AddSingleton<BackupService>();
+        services.AddSingleton<CloudFolderLocator>();
         services.AddSingleton<DemoDataSeeder>();
         services.AddSingleton<CommissionService>();
         services.AddSingleton<InventoryService>();

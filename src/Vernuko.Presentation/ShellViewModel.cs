@@ -71,6 +71,9 @@ public sealed partial class ShellViewModel : ViewModelBase
     private bool _backupNeedsAttention;
 
     [ObservableProperty]
+    private string _cloudBackupText = "Bulut yedekleme: Kapalı";
+
+    [ObservableProperty]
     private bool _isDemo;
 
     [ObservableProperty]
@@ -122,6 +125,7 @@ public sealed partial class ShellViewModel : ViewModelBase
         LicenseReadOnly = license.Mode == AccessMode.ReadOnly;
 
         var backup = await _backups.GetStatusAsync();
+        CloudBackupText = "Bulut yedekleme: " + backup.CloudText;
         var now = _time.GetUtcNow().UtcDateTime;
         if (!backup.KeyConfigured)
         {

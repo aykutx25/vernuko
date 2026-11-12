@@ -42,7 +42,7 @@
 | İşlem geçmişi | Hash zincirli denetim kaydı | ✅ |
 | Aydınlatma ve onay kayıtları | Pazarlama izni tarih + kaynakla; sürümlü onam/bilgilendirme formları, müşteri bazlı onay kaydı (yöntem, tarih, kaydeden; geri alma gerekçeli ve silinmez). Metinleri Vernuko sağlamaz ⚖️ | ✅ |
 | Özel nitelikli veri (sağlık, fotoğraf, terapi notu) | Sağlık profillerinde mesajda hizmet adı gizli; fotoğraflar şifreli ve ayrı yetkili (sekreter varsayılan olarak göremez); anonimleştirmede tüm dosyalar silinir; gizli uzman notları P1 | ✅ / P1 |
-| Yurt dışı aktarım | ⚖️ Google Drive/OneDrive/Dropbox'a yedek KVKK rehberinde yurt dışı aktarım sayılabilir; düzenli yedek "arızi" değildir; standart sözleşme + 5 iş günü içinde Kurul'a bildirim gerekebilir. Tüketici hesaplarıyla sözleşmenin mümkün olup olmadığı doğrulanamadı. | Faz 4'te varsayılan kapalı, açık uyarı, avukat görüşü şart |
+| Yurt dışı aktarım | ⚖️ Google Drive/OneDrive/Dropbox'a yedek KVKK rehberinde yurt dışı aktarım sayılabilir; düzenli yedek "arızi" değildir; standart sözleşme + 5 iş günü içinde Kurul'a bildirim gerekebilir. Tüketici hesaplarıyla sözleşmenin mümkün olup olmadığı doğrulanamadı. | Bulut kopyası uygulandı: **varsayılan kapalı**, açmak için yurt dışı aktarım bilgilendirmesinin onaylanması zorunlu (zaman + denetim kaydı), yalnızca şifreli dosya gider. Avukat görüşü hâlâ şart |
 | Pazarlama ile hizmet iletişimi ayrımı | Müşteri kartında ayrı izin; ticari ileti İYS kontrolüyle (Faz 5) | ✅ / Faz 5 |
 | VERBİS | İşletmenin yükümlülüğü (sağlıkta yeni eşik: <10 çalışan ve <10 M₺ bilanço muafiyeti) | Bilgilendirme |
 | Vernuko'nun rolü | Veriye erişmediği sürece (telemetri/uzaktan destek yok) veri işleyen olmaması hedeflenir ⚖️ | Faz 1'de telemetri yok |
