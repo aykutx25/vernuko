@@ -14,7 +14,45 @@ namespace Vernuko.Application.Services;
 /// device id and the activation id are sent — never business or customer data. Network problems never lock the
 /// app: the signed document keeps working for its offline grace period.
 /// </summary>
-public sealed class LicenseOnlineService(LicenseService license, LicensingOptions options, IDeviceIdentity device, UserSession session, TimeProvider time) : IDisposable
+/// <summary>Online licensing as the screens see it (on a connected computer: "managed on the main computer").</summary>
+public interface ILicenseOnlineService
+{
+    string? UnavailableReason { get; }
+
+    bool IsAvailable { get; }
+
+    Task<Result<LicenseStatus>> ActivateAsync(string licenseKey, CancellationToken ct = default);
+
+    Task<Result<LicenseStatus>> RefreshAsync(CancellationToken ct = default);
+
+    Task AutoRefreshAsync(CancellationToken ct = default);
+
+    Task<Result<LicenseStatus>> DeactivateAsync(CancellationToken ct = default);
+
+    Task<Result<LicenseStatus>> SyncTrialAsync(CancellationToken ct = default);
+}
+
+/// <summary>On a connected computer the license belongs to the main computer.</summary>
+public sealed class HostManagedLicenseOnline : ILicenseOnlineService
+{
+    private static readonly Error OnHost = new("license.on_host", "Lisans ana bilgisayarda yönetilir.");
+
+    public string? UnavailableReason => "Bu bilgisayar ana bilgisayara bağlı; lisans ana bilgisayarda etkinleştirilir ve yönetilir.";
+
+    public bool IsAvailable => false;
+
+    public Task<Result<LicenseStatus>> ActivateAsync(string licenseKey, CancellationToken ct = default) => Task.FromResult<Result<LicenseStatus>>(OnHost);
+
+    public Task<Result<LicenseStatus>> RefreshAsync(CancellationToken ct = default) => Task.FromResult<Result<LicenseStatus>>(OnHost);
+
+    public Task AutoRefreshAsync(CancellationToken ct = default) => Task.CompletedTask;
+
+    public Task<Result<LicenseStatus>> DeactivateAsync(CancellationToken ct = default) => Task.FromResult<Result<LicenseStatus>>(OnHost);
+
+    public Task<Result<LicenseStatus>> SyncTrialAsync(CancellationToken ct = default) => Task.FromResult<Result<LicenseStatus>>(OnHost);
+}
+
+public sealed class LicenseOnlineService(LicenseService license, LicensingOptions options, IDeviceIdentity device, UserSession session, TimeProvider time) : ILicenseOnlineService, IDisposable
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private readonly Lazy<HttpClient> _http = new(() => new HttpClient

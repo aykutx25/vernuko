@@ -28,8 +28,17 @@ public sealed partial class LoginViewModel(IAuthService auth, ISettingsService s
 
     public async Task LoadAsync()
     {
-        var info = await settings.GetBusinessInfoAsync();
-        BusinessName = info?.BusinessName ?? "Vernuko";
+        try
+        {
+            var info = await settings.GetBusinessInfoAsync();
+            BusinessName = info?.BusinessName ?? "Vernuko";
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // A connected computer whose main computer is off or no longer knows it: the login form must still
+            // appear (signing in then explains what is wrong).
+            BusinessName = "Vernuko";
+        }
     }
 
     [RelayCommand]

@@ -32,6 +32,9 @@ public interface IPlatformServices
     Task<byte[]> ReadFileBytesAsync(string path);
 
     Task WriteFileBytesAsync(string path, byte[] content);
+
+    /// <summary>Closes Vernuko and starts it again (after changing the computer's role).</summary>
+    void RestartApplication();
 }
 
 public sealed record UpdateCheck(bool Available, string? NewVersion, string Message);

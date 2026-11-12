@@ -138,8 +138,10 @@ internal sealed class LicensedDownloader(ILicenseService license, IDeviceIdentit
         var all = headers is null ? new Dictionary<string, string>() : new Dictionary<string, string>(headers);
         if (await license.GetDocumentAsync() is { } doc)
         {
+            // The activation of the computer that holds the license (on a connected computer: the main computer's).
             all["X-Vernuko-Activation"] = doc.ActivationId;
-            all["X-Vernuko-Device"] = device.DeviceHash;
+            all["X-Vernuko-Device"] = doc.DeviceHash;
+            _ = device;
         }
 
         return all;

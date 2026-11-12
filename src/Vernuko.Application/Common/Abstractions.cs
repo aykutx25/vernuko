@@ -1,3 +1,4 @@
+using Vernuko.Core;
 using Vernuko.Security;
 
 namespace Vernuko.Application.Common;
@@ -127,4 +128,83 @@ public sealed class UserSession
         IsLocked = false;
         Changed?.Invoke(this, EventArgs.Empty);
     }
+}
+
+public enum ComputerRole
+{
+    /// <summary>One computer, local database (the default).</summary>
+    Standalone,
+
+    /// <summary>Local database and serving connected computers on the local network.</summary>
+    Host,
+
+    /// <summary>No local data: every call goes to the main computer.</summary>
+    Client,
+}
+
+public sealed record PairedComputer(string Id, string Name, DateTime PairedAtUtc, DateTime? LastSeenUtc);
+
+public sealed record ConnectionCode(string Code, DateTime ExpiresAtUtc);
+
+/// <summary>Multi-computer mode (Faz 7): main computer + connected computers on the local network.</summary>
+public interface IMultiComputer
+{
+    ComputerRole Role { get; }
+
+    /// <summary>Main computer: the addresses connected computers can use; connected computer: the main computer.</summary>
+    IReadOnlyList<string> Addresses { get; }
+
+    /// <summary>Connected computer: the main computer ended this session (restart, timeout, removed).</summary>
+    event EventHandler? SessionEnded;
+
+    Task<Result> EnableHostAsync(CancellationToken ct = default);
+
+    Task<Result> DisableHostAsync(CancellationToken ct = default);
+
+    /// <summary>Starts the main-computer server at launch when it was enabled before.</summary>
+    Task StartIfEnabledAsync(CancellationToken ct = default);
+
+    Result<ConnectionCode> NewConnectionCode();
+
+    Task<IReadOnlyList<PairedComputer>> ListComputersAsync(CancellationToken ct = default);
+
+    Task<Result> RemoveComputerAsync(string id, CancellationToken ct = default);
+
+    /// <summary>Pairs this computer with a main computer; takes effect after restarting Vernuko.</summary>
+    Task<Result> PairWithHostAsync(string address, string code, string computerName, CancellationToken ct = default);
+
+    /// <summary>Stops using the main computer; takes effect after restarting Vernuko.</summary>
+    Task<Result> ForgetHostAsync(CancellationToken ct = default);
+}
+
+/// <summary>Used when the multi-computer module is not part of the build (tests, tools).</summary>
+public sealed class StandaloneComputer : IMultiComputer
+{
+    private static readonly Error NotAvailable = new("remote.not_available", "Çoklu bilgisayar bu sürümde kullanılamıyor.");
+
+    public ComputerRole Role => ComputerRole.Standalone;
+
+    public IReadOnlyList<string> Addresses => [];
+
+    public event EventHandler? SessionEnded
+    {
+        add { }
+        remove { }
+    }
+
+    public Task<Result> EnableHostAsync(CancellationToken ct = default) => Task.FromResult<Result>(NotAvailable);
+
+    public Task<Result> DisableHostAsync(CancellationToken ct = default) => Task.FromResult(Result.Success());
+
+    public Task StartIfEnabledAsync(CancellationToken ct = default) => Task.CompletedTask;
+
+    public Result<ConnectionCode> NewConnectionCode() => NotAvailable;
+
+    public Task<IReadOnlyList<PairedComputer>> ListComputersAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<PairedComputer>>([]);
+
+    public Task<Result> RemoveComputerAsync(string id, CancellationToken ct = default) => Task.FromResult<Result>(NotAvailable);
+
+    public Task<Result> PairWithHostAsync(string address, string code, string computerName, CancellationToken ct = default) => Task.FromResult<Result>(NotAvailable);
+
+    public Task<Result> ForgetHostAsync(CancellationToken ct = default) => Task.FromResult(Result.Success());
 }

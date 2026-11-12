@@ -57,7 +57,7 @@
 | P1-14 | Arayüz yerelleştirme altyapısı (resx) | P0-12 | İngilizce dil paketi derlenir | ⬜ |
 
 ## P2 — Gelecek
-Çoklu bilgisayar (yerel API + PostgreSQL, Faz 7) · çok şube ve merkezi yönetim · online randevu portalı · Google/Microsoft takvim senkronu · e-Arşiv/e-Fatura entegratörü · grup dersleri/kontenjan · evcil hayvan, araç, veli modülleri · hediye kartı/üyelik · koyu tema · mobil yardımcı uygulama.
+~~Çoklu bilgisayar (Faz 7)~~ → ✅ 0.9.0: ana bilgisayar + bağlanan bilgisayarlar (SQLite ana bilgisayarda, yerel ağda şifreli bağlantı; `docs/MULTI_PC.md`; iki gerçek bilgisayarda henüz denenmedi) · çok şube ve merkezi yönetim · online randevu portalı · Google/Microsoft takvim senkronu · e-Arşiv/e-Fatura entegratörü · grup dersleri/kontenjan · evcil hayvan, araç, veli modülleri · hediye kartı/üyelik · koyu tema · mobil yardımcı uygulama.
 
 ## Bilinen riskler
 | Risk | Etki | Azaltma |

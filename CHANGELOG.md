@@ -2,6 +2,19 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.9.0] — 2026-11-12 — Faz 7: çoklu bilgisayar
+
+### Eklendi
+- **Ana bilgisayar + bağlanan bilgisayarlar** (ayrıntı `docs/MULTI_PC.md`): işletmedeki bir bilgisayar Ayarlar › Çoklu bilgisayar'dan "ana bilgisayar" yapılır. Diğer bilgisayarlar kurulum sihirbazında "Ana bilgisayara bağlan" ile, ana bilgisayarın ekranındaki adres ve tek kullanımlık bağlantı koduyla eşleşir. Aynı müşteriler, randevular, paketler ve kullanıcılar her bilgisayarda görünür. Veritabanı, yedekleme, otomatik mesajlar ve lisans yalnızca ana bilgisayardadır. Müşteriye ek program kurulmaz.
+- Aynı saate iki bilgisayardan randevu verilmek istenirse yalnızca biri kaydedilir (çakışma kuralı ana bilgisayarda).
+- Her kişinin yetkisi ana bilgisayarda kendi oturumuyla denetlenir. Bilgisayarı kilitlemek yalnızca o oturumu kilitler.
+- Güvenlik: bağlantı şifreli. Ana bilgisayarın sertifikası eşleştirmede sabitlenir; araya giren bir cihaz fark edilir. Her bilgisayarın kendi anahtarı var ve ana bilgisayardaki listeden tek tıkla kaldırılabilir; kaldırılınca açık oturumu hemen kapanır. Kaç bilgisayar bağlanabileceği lisansa göre belirlenir (deneme sürümünde 2).
+- İç yapı: ekranlar artık servis arayüzlerine bağlı (`ServiceContracts.cs`, derlenmiş servislerden üretilir).
+
+### Bilinen sınırlar
+- İki gerçek bilgisayarda yerel ağda **henüz denenmedi**; testler aynı makinede gerçek TLS bağlantısıyla yapıldı.
+- Ana bilgisayar kapalıyken bağlı bilgisayarlar çalışmaz. Başka bilgisayardaki değişiklik, sayfa yenilenince görünür.
+
 ## [0.8.0] — 2026-11-12 — Faz 3: firma müşterisi
 
 ### Eklendi

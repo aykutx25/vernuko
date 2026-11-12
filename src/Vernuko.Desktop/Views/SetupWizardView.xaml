@@ -67,6 +67,16 @@
                                 </StackPanel>
                             </DockPanel>
                         </Border>
+                        <Border Style="{StaticResource Card}" Padding="22" Margin="0,14,0,0">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="Ana bilgisayara bağlan…" Command="{Binding ConnectToHostCommand}" VerticalAlignment="Center" Margin="16,0,0,0" />
+                                <StackPanel>
+                                    <TextBlock Text="İşletmenizde Vernuko başka bir bilgisayarda zaten kurulu mu?" FontWeight="SemiBold" />
+                                    <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"
+                                               Text="Bu bilgisayarı o bilgisayara (ana bilgisayar) bağlayın: aynı müşteriler, randevular ve kullanıcılar burada da görünür. Önce ana bilgisayarda Ayarlar › Çoklu bilgisayar › &quot;Bu bilgisayar ana bilgisayar olsun&quot; seçeneğini açın." />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
                         <TextBlock Margin="0,16,0,0" Style="{StaticResource Muted}" Text="Sadece denemek mi istiyorsunuz? Vernuko'yu '--demo' parametresiyle başlatarak gerçek verilerinizden tamamen ayrı bir demo veritabanını kullanabilirsiniz." />
                     </StackPanel>
 

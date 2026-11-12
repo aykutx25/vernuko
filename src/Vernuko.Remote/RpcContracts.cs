@@ -28,6 +28,12 @@ public static class RpcContracts
         "IAutoMessagingService/PlanRemindersAsync", "IAutoMessagingService/DispatchDueAsync",
     };
 
+    /// <summary>Allowed for a paired computer before anyone signs in (the login screen shows the business name).</summary>
+    public static readonly IReadOnlySet<string> BeforeLogin = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "ISettingsService/GetBusinessInfoAsync",
+    };
+
     public static readonly Error HostOnlyError = new("remote.host_only", "Bu işlem yalnızca ana bilgisayarda yapılabilir.");
 
     public static string Key(Type contract, MethodInfo method) => contract.Name + "/" + method.Name;

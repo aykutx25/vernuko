@@ -97,6 +97,7 @@ public sealed partial class EditableResource : ObservableObject
 public sealed partial class SetupWizardViewModel : ViewModelBase
 {
     private readonly SetupService _setup;
+    private readonly IMultiComputer _computer;
     private readonly IAuthService _auth;
     private readonly IDialogService _dialogs;
     private readonly IPlatformServices _platform;
@@ -161,8 +162,9 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isCompleted;
 
-    public SetupWizardViewModel(SetupService setup, IAuthService auth, IDialogService dialogs, IPlatformServices platform, IAppEnvironment env, IBackupService backups)
+    public SetupWizardViewModel(SetupService setup, IAuthService auth, IDialogService dialogs, IPlatformServices platform, IAppEnvironment env, IBackupService backups, IMultiComputer computer)
     {
+        _computer = computer;
         _backups = backups;
         _setup = setup;
         _auth = auth;
@@ -370,6 +372,35 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
         {
             RecoveryKeyWrittenDown = true;
         }
+    });
+
+    /// <summary>
+    /// Second (third…) computer of the business: pair with the main computer instead of setting up a new
+    /// business. Vernuko restarts as a connected computer; nothing is stored locally.
+    /// </summary>
+    [RelayCommand]
+    private Task ConnectToHostAsync() => RunAsync(async () =>
+    {
+        var address = await _dialogs.PromptAsync("Ana bilgisayara bağlan",
+            "Ana bilgisayarda Ayarlar › Çoklu bilgisayar ekranında yazan adresi girin (ör. 192.168.1.20 veya RESEPSIYON-PC).");
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            return;
+        }
+
+        var code = await _dialogs.PromptAsync("Bağlantı kodu", "Ana bilgisayarda \"Bağlantı kodu göster\" ile çıkan 12 karakterlik kodu girin.");
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return;
+        }
+
+        if (!Check(await _computer.PairWithHostAsync(address, code, Environment.MachineName)))
+        {
+            return;
+        }
+
+        await _dialogs.ShowMessageAsync("Bağlandı", "Bu bilgisayar ana bilgisayarla eşleşti. Vernuko şimdi yeniden başlayacak; ana bilgisayardaki kullanıcı adınız ve parolanızla giriş yapın.");
+        _platform.RestartApplication();
     });
 
     /// <summary>

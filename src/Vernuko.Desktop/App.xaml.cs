@@ -9,6 +9,8 @@ using Vernuko.Infrastructure;
 using Vernuko.Persistence;
 using Vernuko.Presentation;
 using Vernuko.Presentation.Common;
+using Vernuko.Remote;
+using Vernuko.Application.Common;
 
 namespace Vernuko.Desktop;
 
@@ -56,7 +58,25 @@ public partial class App : System.Windows.Application
 
         // Smoke/demo runs never contact the license server.
         services.AddSingleton(smoke || demo ? new LicensingOptions { PublicKeys = BuildSettings.LicenseKeys() } : BuildSettings.Licensing());
-        services.AddVernuko(env);
+
+        // Faz 7: paired with a main computer → no local data, every call goes to the main computer.
+        var endpoint = smoke || demo ? null : RemoteClientStore.Load(env, SecretProtectors.ForCurrentUser(env));
+        var isClient = endpoint is not null;
+        if (endpoint is not null)
+        {
+            var connection = new RemoteConnection(endpoint);
+            services.AddVernukoPlatform(env);
+            services.AddVernukoRemoteClient(connection);
+            services.AddSingleton<IMultiComputer>(sp => new MultiComputerService(sp, connection, sp.GetRequiredService<ILogger<MultiComputerService>>()));
+            services.AddSingleton<ILicenseOnlineService, HostManagedLicenseOnline>();
+            services.AddSingleton<CloudFolderLocator>();
+        }
+        else
+        {
+            services.AddSingleton<IMultiComputer>(sp => new MultiComputerService(sp, sp.GetRequiredService<ILogger<MultiComputerService>>()));
+            services.AddVernuko(env);
+        }
+
         services.AddVernukoPresentation();
         services.AddSingleton<IPlatformServices, WpfPlatformServices>();
         services.AddSingleton<IUpdateService, VelopackUpdateService>();
@@ -78,16 +98,19 @@ public partial class App : System.Windows.Application
             args.Handled = true;
         };
 
-        try
+        if (!isClient)
         {
-            await _services.GetRequiredService<DatabaseInitializer>().InitializeAsync(env.DatabasePath, env.SafetyDirectory, CancellationToken.None);
-        }
-        catch (Exception ex) when (ex is DatabaseTooNewException or DatabaseMigrationFailedException)
-        {
-            logger.LogError(ex, "Database initialisation failed");
-            MessageBox.Show(ex.Message, "Vernuko", MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown(1);
-            return;
+            try
+            {
+                await _services.GetRequiredService<DatabaseInitializer>().InitializeAsync(env.DatabasePath, env.SafetyDirectory, CancellationToken.None);
+            }
+            catch (Exception ex) when (ex is DatabaseTooNewException or DatabaseMigrationFailedException)
+            {
+                logger.LogError(ex, "Database initialisation failed");
+                MessageBox.Show(ex.Message, "Vernuko", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(1);
+                return;
+            }
         }
 
         if (demo || smoke)
@@ -102,6 +125,10 @@ public partial class App : System.Windows.Application
         }
 
         await _services.GetRequiredService<ILicenseService>().RefreshAsync();
+        if (!isClient && !smoke && !demo)
+        {
+            await _services.GetRequiredService<IMultiComputer>().StartIfEnabledAsync();
+        }
 
         if (smoke)
         {

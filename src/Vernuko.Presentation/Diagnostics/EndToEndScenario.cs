@@ -20,12 +20,13 @@ public static class EndToEndScenario
 {
     public const string ServiceName = "Lazer Epilasyon";
 
-    public static async Task<IReadOnlyList<ScenarioStep>> RunAsync(ShellViewModel shell, IServiceProvider services, string backupFolder, Func<string, Task> snapshot)
+    /// <param name="includeBackup">False on a connected computer: backups and restore belong to the main computer.</param>
+    public static async Task<IReadOnlyList<ScenarioStep>> RunAsync(ShellViewModel shell, IServiceProvider services, string backupFolder, Func<string, Task> snapshot, bool includeBackup = true)
     {
         var steps = new List<ScenarioStep>();
         try
         {
-            await RunCoreAsync(shell, services, backupFolder, snapshot, steps);
+            await RunCoreAsync(shell, services, backupFolder, snapshot, steps, includeBackup);
         }
         catch (Exception ex)
         {
@@ -35,7 +36,7 @@ public static class EndToEndScenario
         return steps;
     }
 
-    private static async Task RunCoreAsync(ShellViewModel shell, IServiceProvider services, string backupFolder, Func<string, Task> snapshot, List<ScenarioStep> steps)
+    private static async Task RunCoreAsync(ShellViewModel shell, IServiceProvider services, string backupFolder, Func<string, Task> snapshot, List<ScenarioStep> steps, bool includeBackup)
     {
         var customersService = services.GetRequiredService<ICustomerService>();
         var packages = services.GetRequiredService<IPackageService>();
@@ -188,6 +189,11 @@ public static class EndToEndScenario
         Ok("seans düştü", "8 → 7");
         await shell.NavigateAsync("customers", new OpenCustomer(customerId));
         await snapshot("05-musteri-karti");
+
+        if (!includeBackup)
+        {
+            return;
+        }
 
         // 6) Encrypted backup
         var status = await backups.GetStatusAsync();

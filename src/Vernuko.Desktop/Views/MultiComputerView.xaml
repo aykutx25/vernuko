@@ -1,0 +1,73 @@
+<UserControl x:Class="Vernuko.Desktop.Views.MultiComputerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="820" HorizontalAlignment="Left">
+            <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
+            <Border Style="{StaticResource InfoBanner}" Visibility="{Binding InfoMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding InfoMessage}" TextWrapping="Wrap" /></Border>
+
+            <Border Style="{StaticResource Card}" Padding="20" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="Çoklu bilgisayar" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" FontSize="15" />
+                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Text="Ana bilgisayar verileri tutar, yedekler ve otomatik mesajları gönderir. Diğer bilgisayarlar aynı yerel ağdan ona bağlanır; bağlantı şifrelidir. Ana bilgisayar kapalıyken bağlı bilgisayarlar çalışamaz. Veritabanı dosyası ağ klasöründen paylaşılmaz." />
+
+                    <!-- Stand-alone → host -->
+                    <Button Style="{StaticResource PrimaryButton}" Content="Bu bilgisayar ana bilgisayar olsun" Command="{Binding EnableHostCommand}" HorizontalAlignment="Left" Margin="0,14,0,0"
+                            Visibility="{Binding IsStandalone, Converter={StaticResource VisibleWhen}}" IsEnabled="{Binding CanManage}" />
+
+                    <!-- Host -->
+                    <StackPanel Visibility="{Binding IsHost, Converter={StaticResource VisibleWhen}}" Margin="0,14,0,0">
+                        <TextBlock Text="BAĞLANMAK İÇİN ADRES" Style="{StaticResource FieldLabel}" />
+                        <ItemsControl ItemsSource="{Binding Addresses}" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate><TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="15" Margin="0,2" /></DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <WrapPanel Margin="0,12,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" Content="Bağlantı kodu göster" Command="{Binding ShowCodeCommand}" Margin="0,0,8,6" IsEnabled="{Binding CanManage}" />
+                            <Button Content="Ana bilgisayar modunu kapat" Command="{Binding DisableHostCommand}" Margin="0,0,8,6" IsEnabled="{Binding CanManage}" />
+                        </WrapPanel>
+                        <Border Style="{StaticResource InfoBanner}" Visibility="{Binding Code, Converter={StaticResource VisibleWhen}}" Margin="0,6,0,0">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Code}" FontFamily="Consolas" FontSize="26" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding CodeExpires}" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="BAĞLI BİLGİSAYARLAR" Style="{StaticResource FieldLabel}" Margin="0,16,0,0" />
+                        <ItemsControl ItemsSource="{Binding Computers}" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0,4">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Kaldır"
+                                                Command="{Binding DataContext.RemoveComputerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                            <TextBlock Style="{StaticResource Muted}">
+                                                <Run Text="Eşleşme: " /><Run Text="{Binding PairedAtUtc, Mode=OneWay, StringFormat='dd.MM.yyyy'}" />
+                                                <Run Text=" · Son görülme: " /><Run Text="{Binding LastSeenUtc, Mode=OneWay, StringFormat='dd.MM.yyyy HH:mm', TargetNullValue='—'}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Connected computer -->
+                    <StackPanel Visibility="{Binding IsClient, Converter={StaticResource VisibleWhen}}" Margin="0,14,0,0">
+                        <TextBlock Text="ANA BİLGİSAYAR" Style="{StaticResource FieldLabel}" />
+                        <ItemsControl ItemsSource="{Binding Addresses}" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate><TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="15" /></DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Content="Ana bilgisayar bağlantısını kaldır…" Command="{Binding ForgetHostCommand}" HorizontalAlignment="Left" Margin="0,12,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

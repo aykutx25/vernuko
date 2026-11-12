@@ -19,7 +19,7 @@ public sealed partial class SettingsViewModel(
     IAuthService auth,
     IBackupService backups,
     ILicenseService license,
-    LicenseOnlineService licenseOnline,
+    ILicenseOnlineService licenseOnline,
     IAuditService audit,
     IDeviceIdentity device,
     IDialogService dialogs,
@@ -28,7 +28,9 @@ public sealed partial class SettingsViewModel(
     CommissionRulesViewModel commissionRules,
     ConsentTemplatesViewModel consentTemplates,
     UpdatesViewModel updates,
-    MessagingSettingsViewModel messaging) : PageViewModel, IShellAware
+    MessagingSettingsViewModel messaging,
+    MultiComputerViewModel multiComputer,
+    IMultiComputer computer) : PageViewModel, IShellAware
 {
     // Business
     [ObservableProperty]
@@ -212,6 +214,17 @@ public sealed partial class SettingsViewModel(
 
     public MessagingSettingsViewModel Messaging { get; } = messaging;
 
+    public MultiComputerViewModel MultiComputer { get; } = multiComputer;
+
+    /// <summary>Connected computer: backups, license and automatic messages are managed on the main computer.</summary>
+    public bool IsClient => computer.Role == ComputerRole.Client;
+
+    public bool IsNotClient => !IsClient;
+
+    public bool ShowMessagingTab => CanManageSettings && !IsClient;
+
+    public bool ShowMultiComputerTab => CanManageSettings || IsClient;
+
     /// <summary>Commission rules and consent forms are useful for every profile (KVKK açık rıza applies everywhere).</summary>
     public bool ShowCommissionRules => CanManageSettings;
 
@@ -241,11 +254,12 @@ public sealed partial class SettingsViewModel(
         }
 
         Updates.Load();
-        if (CanManageSettings)
+        if (CanManageSettings && !IsClient)
         {
             await Messaging.LoadAsync();
         }
 
+        await MultiComputer.LoadAsync();
         OnPropertyChanged(string.Empty);
     });
 

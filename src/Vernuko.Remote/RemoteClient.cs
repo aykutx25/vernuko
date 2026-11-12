@@ -155,8 +155,13 @@ public sealed class RemoteConnection : IRpcChannel, IDisposable
             var error = Parse(bytes) ?? new Error("remote.error", $"Ana bilgisayar isteği reddetti (HTTP {(int)response.StatusCode}).");
             if (response.StatusCode == HttpStatusCode.Unauthorized && error.Code is "remote.session" or "remote.device")
             {
+                // Only a session that existed can end (calls before signing in just fail, no login loop).
+                var hadSession = _token is not null;
                 _token = null;
-                SessionEnded?.Invoke(this, EventArgs.Empty);
+                if (hadSession)
+                {
+                    SessionEnded?.Invoke(this, EventArgs.Empty);
+                }
             }
 
             return (null, error);

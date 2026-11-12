@@ -38,5 +38,16 @@ Bağlanan PC (istemci)                              Ana bilgisayar
 5. Masaüstü: ana bilgisayar modu (gömülü Kestrel), istemci modu (başlangıç, kurulum sihirbazı seçeneği), istemciye özel ekran kısıtları, yenileme.
 6. Uçtan uca: başarı senaryosunun istemciden ana bilgisayara karşı çalıştırılması; belgeler.
 
-## Durum
-Bkz. CHANGELOG ve ROADMAP. Bu belge uygulama ilerledikçe güncellenir.
+## Durum (0.9.0)
+| Adım | Durum |
+|---|---|
+| 1. Servis arayüzleri | ✅ `ServiceContracts.cs` derlenmiş servislerden üretilir (`tools/ServiceContractGenerator`); `ServiceContractTests` eksik metodu yakalar |
+| 2. Çağrı biçimi | ✅ `Vernuko.Remote`: JSON (Result/Error, IReadOnlySet dönüştürücüleri), beyaz listeli dağıtıcı, DispatchProxy vekil |
+| 3. Uzak oturumlar | ✅ oturum başına ayrı servis kabı; giriş, kilit, çıkış, 12 saat boşta kalınca sona erme; girişten önce yalnızca işletme adı okunabilir |
+| 4. TLS + eşleştirme | ✅ kendinden imzalı sertifika (DPAPI ile saklı), parmak izi sabitleme, tek kullanımlık kod + karşılıklı HMAC, cihaz anahtarı (yalnızca özeti saklanır), lisansa göre cihaz sınırı, istek sınırları |
+| 5. Masaüstü | ✅ Ayarlar › Çoklu bilgisayar; kurulum sihirbazında "Ana bilgisayara bağlan"; istemci modunda yerel veritabanı yok; yedekleme/mesaj/lisans ekranları ana bilgisayara yönlendirir |
+| 6. Uçtan uca | ✅ test: ana bilgisayar modu açılır → sihirbazdan eşleşme → yeniden başlama → giriş → tüm ekranlar → başarı senaryosu bağlı bilgisayarda → cihaz kaldırılınca giriş ekranı |
+
+**Henüz denenmedi:** iki gerçek Windows bilgisayarda yerel ağ üzerinden (Güvenlik Duvarı izni, bilgisayar adıyla bağlanma, Wi-Fi kopmaları). İlk gerçek kurulumda `kontrol.cmd` sonrası elle denenmeli.
+
+**Bilinen sınırlar:** ana bilgisayar kapalıyken bağlı bilgisayarlar çalışmaz (bilinçli); takvim diğer bilgisayardaki değişikliği sayfa yenilenince/gezinince gösterir (anlık bildirim yok); bağlı bilgisayarda müşteri fotoğrafı/ek dosya 32 MB ile sınırlı.

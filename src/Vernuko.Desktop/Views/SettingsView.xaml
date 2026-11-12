@@ -102,110 +102,115 @@
 
             <!-- Backup -->
             <TabItem Header="Yedekleme">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel MaxWidth="980" HorizontalAlignment="Left">
-                        <Border Style="{StaticResource WarnBanner}" Margin="0,0,0,12" Visibility="{Binding BackupStatus.KeyConfigured, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="Yedeklemeyi etkinleştir" Command="{Binding EnableBackupCommand}" Visibility="{Binding CanManageBackups, Converter={StaticResource VisibleWhen}}" />
-                                <TextBlock Text="Şifreli yedekleme henüz etkin değil. Etkinleştirdiğinizde size bir kurtarma anahtarı verilir." TextWrapping="Wrap" VerticalAlignment="Center" />
-                            </DockPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource Card}" Margin="0,0,0,12" Visibility="{Binding ShownRecoveryKey, Converter={StaticResource VisibleWhen}}">
-                            <StackPanel>
-                                <TextBlock Text="Yeni kurtarma anahtarınız" Style="{StaticResource SectionTitle}" />
-                                <TextBox Text="{Binding ShownRecoveryKey, Mode=OneWay}" Style="{StaticResource MonoTextBox}" Height="50" HorizontalContentAlignment="Center" />
-                                <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" Text="Bu anahtarı kâğıda yazıp bilgisayardan ayrı saklayın. Bu ekrandan çıktıktan sonra tekrar gösterilmez." />
-                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                    <Button Content="Kopyala" Command="{Binding CopyRecoveryKeyCommand}" Margin="0,0,8,0" />
-                                    <Button Style="{StaticResource PrimaryButton}" Content="Yazdım, doğrula" Command="{Binding ConfirmRecoveryKeyCommand}" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource Card}" Padding="20">
-                            <StackPanel>
-                                <TextBlock Text="Yerel şifreli yedek" Style="{StaticResource SectionTitle}" />
-                                <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Text="Yedekler AES-256-GCM ile şifrelenir ve veritabanının tamamını, müşteri fotoğraf ve belgelerini içerir. Yedekleme yalnızca Vernuko açıkken çalışır." />
-                                <TextBlock Text="YEDEK KLASÖRÜ (harici disk / USB önerilir)" Style="{StaticResource FieldLabel}" />
+                <Grid>
+                    <Border Style="{StaticResource Card}" Padding="20" HorizontalAlignment="Left" VerticalAlignment="Top" MaxWidth="720" Visibility="{Binding IsClient, Converter={StaticResource VisibleWhen}}">
+                        <TextBlock TextWrapping="Wrap" Text="Bu bilgisayar ana bilgisayara bağlı. Veriler ana bilgisayarda durur; yedekleme, geri yükleme ve bulut kopyası ana bilgisayarın Ayarlar › Yedekleme ekranından yönetilir." />
+                    </Border>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding IsNotClient, Converter={StaticResource VisibleWhen}}">
+                        <StackPanel MaxWidth="980" HorizontalAlignment="Left">
+                            <Border Style="{StaticResource WarnBanner}" Margin="0,0,0,12" Visibility="{Binding BackupStatus.KeyConfigured, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
                                 <DockPanel>
-                                    <Button DockPanel.Dock="Right" Content="Klasörü aç" Command="{Binding OpenBackupFolderCommand}" Margin="8,0,0,0" />
-                                    <Button DockPanel.Dock="Right" Content="Gözat…" Command="{Binding BrowseBackupFolderCommand}" Margin="8,0,0,0" />
-                                    <TextBox Text="{Binding BackupFolder, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="Yedeklemeyi etkinleştir" Command="{Binding EnableBackupCommand}" Visibility="{Binding CanManageBackups, Converter={StaticResource VisibleWhen}}" />
+                                    <TextBlock Text="Şifreli yedekleme henüz etkin değil. Etkinleştirdiğinizde size bir kurtarma anahtarı verilir." TextWrapping="Wrap" VerticalAlignment="Center" />
                                 </DockPanel>
-                                <WrapPanel Margin="0,4,0,0">
-                                    <StackPanel Margin="0,0,12,0"><TextBlock Text="SIKLIK" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Schedules}" SelectedItem="{Binding Schedule}" DisplayMemberPath="Label" Width="150" /></StackPanel>
-                                    <StackPanel Margin="0,0,12,0"><TextBlock Text="GÜNLÜK SAKLA" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding RetainDaily, UpdateSourceTrigger=PropertyChanged}" Width="90" /></StackPanel>
-                                    <StackPanel Margin="0,0,12,0"><TextBlock Text="HAFTALIK SAKLA" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding RetainWeekly, UpdateSourceTrigger=PropertyChanged}" Width="90" /></StackPanel>
-                                    <StackPanel><TextBlock Text="AYLIK SAKLA" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding RetainMonthly, UpdateSourceTrigger=PropertyChanged}" Width="90" /></StackPanel>
-                                </WrapPanel>
-                                <CheckBox Content="Uygulama kapanırken yedek al" IsChecked="{Binding BackupOnExit}" Margin="0,10,0,0" />
-                                <WrapPanel Margin="0,14,0,0">
-                                    <Button Content="Ayarları kaydet" Command="{Binding SaveBackupSettingsCommand}" Margin="0,0,8,8" Visibility="{Binding CanManageBackups, Converter={StaticResource VisibleWhen}}" />
-                                    <Button Style="{StaticResource PrimaryButton}" Content="Şimdi yedekle" Command="{Binding BackupNowCommand}" Margin="0,0,8,8" />
-                                    <Button Content="Kurtarma anahtarını doğrula" Command="{Binding ConfirmRecoveryKeyCommand}" Margin="0,0,8,8" />
-                                    <Button Style="{StaticResource GhostButton}" Content="Yeni kurtarma anahtarı oluştur" Command="{Binding EnableBackupCommand}" Margin="0,0,8,8" Visibility="{Binding CanManageBackups, Converter={StaticResource VisibleWhen}}" />
-                                </WrapPanel>
-                                <TextBlock Style="{StaticResource Muted}">
-                                    <Run Text="Anahtar kimliği: " /><Run Text="{Binding BackupStatus.KeyId, Mode=OneWay}" />
-                                    <Run Text="   ·   Son başarılı yedek: " /><Run Text="{Binding BackupStatus.LastSuccessUtc, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" />
-                                </TextBlock>
-                            </StackPanel>
-                        </Border>
+                            </Border>
 
-                        <!-- Cloud copy (Phase 4) -->
-                        <Border Style="{StaticResource Card}" Padding="20" Margin="0,12,0,0">
-                            <StackPanel>
-                                <TextBlock Text="Bulut kopyası (isteğe bağlı)" Style="{StaticResource SectionTitle}" />
-                                <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap"
-                                           Text="Bilgisayar bozulur veya çalınırsa yerel yedekler de gidebilir. Açarsanız her yedeğin şifreli bir kopyası bu bilgisayardaki OneDrive, Google Drive veya Dropbox klasörüne konur; yüklemeyi bulut uygulamanız kendi hesabınıza yapar. Vernuko'nun bulutunuza erişimi yoktur." />
-                                <TextBlock Text="{Binding CloudStatusText}" TextWrapping="Wrap" Margin="0,10,0,0" FontWeight="SemiBold" />
-                                <StackPanel Visibility="{Binding CloudEnabled, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
-                                    <TextBlock Text="BULUT KLASÖRÜ" Style="{StaticResource FieldLabel}" />
-                                    <DockPanel>
-                                        <Button DockPanel.Dock="Right" Content="Başka klasör…" Command="{Binding BrowseCloudFolderCommand}" Margin="8,0,0,0" />
-                                        <Button DockPanel.Dock="Right" Content="Yeniden ara" Command="{Binding DetectCloudFoldersCommand}" Margin="8,0,0,0" />
-                                        <ComboBox ItemsSource="{Binding CloudCandidates}" SelectedItem="{Binding SelectedCloud}" DisplayMemberPath="Label" AutomationProperties.Name="Bulut klasörü" />
-                                    </DockPanel>
-                                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding HasNoCloudCandidates, Converter={StaticResource VisibleWhen}}"
-                                               Text="Bu bilgisayarda OneDrive, Google Drive veya Dropbox klasörü bulunamadı. Bulut uygulamasını kurup oturum açtıktan sonra 'Yeniden ara'ya basın ya da klasörü elle seçin." />
-                                    <CheckBox IsChecked="{Binding CloudConsent}" Margin="0,12,0,0">
-                                        <TextBlock Text="{Binding CloudConsentText}" TextWrapping="Wrap" />
-                                    </CheckBox>
-                                    <Button Style="{StaticResource PrimaryButton}" Content="Bulut kopyasını aç" Command="{Binding EnableCloudCommand}" HorizontalAlignment="Left" Margin="0,12,0,0"
-                                            Visibility="{Binding CanManageBackups, Converter={StaticResource VisibleWhen}}" />
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,12" Visibility="{Binding ShownRecoveryKey, Converter={StaticResource VisibleWhen}}">
+                                <StackPanel>
+                                    <TextBlock Text="Yeni kurtarma anahtarınız" Style="{StaticResource SectionTitle}" />
+                                    <TextBox Text="{Binding ShownRecoveryKey, Mode=OneWay}" Style="{StaticResource MonoTextBox}" Height="50" HorizontalContentAlignment="Center" />
+                                    <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" Text="Bu anahtarı kâğıda yazıp bilgisayardan ayrı saklayın. Bu ekrandan çıktıktan sonra tekrar gösterilmez." />
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <Button Content="Kopyala" Command="{Binding CopyRecoveryKeyCommand}" Margin="0,0,8,0" />
+                                        <Button Style="{StaticResource PrimaryButton}" Content="Yazdım, doğrula" Command="{Binding ConfirmRecoveryKeyCommand}" />
+                                    </StackPanel>
                                 </StackPanel>
-                                <Button Content="Bulut kopyasını kapat" Command="{Binding DisableCloudCommand}" HorizontalAlignment="Left" Margin="0,12,0,0"
-                                        Visibility="{Binding CloudEnabled, Converter={StaticResource VisibleWhen}}" />
-                            </StackPanel>
-                        </Border>
+                            </Border>
 
-                        <Border Style="{StaticResource Card}" Padding="0" Margin="0,12,0,0">
-                            <DockPanel>
-                                <Border DockPanel.Dock="Top" Padding="16,12" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                            <Border Style="{StaticResource Card}" Padding="20">
+                                <StackPanel>
+                                    <TextBlock Text="Yerel şifreli yedek" Style="{StaticResource SectionTitle}" />
+                                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Text="Yedekler AES-256-GCM ile şifrelenir ve veritabanının tamamını, müşteri fotoğraf ve belgelerini içerir. Yedekleme yalnızca Vernuko açıkken çalışır." />
+                                    <TextBlock Text="YEDEK KLASÖRÜ (harici disk / USB önerilir)" Style="{StaticResource FieldLabel}" />
                                     <DockPanel>
-                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                            <Button Content="Seçili yedeği doğrula" Command="{Binding VerifyBackupCommand}" Margin="0,0,8,0" />
-                                            <Button Style="{StaticResource DangerButton}" Content="Seçili yedekten geri yükle" Command="{Binding RestoreSelectedCommand}" Margin="0,0,8,0" Visibility="{Binding CanRestore, Converter={StaticResource VisibleWhen}}" />
-                                            <Button Content="Dosyadan geri yükle…" Command="{Binding RestoreFromFileCommand}" Visibility="{Binding CanRestore, Converter={StaticResource VisibleWhen}}" />
-                                        </StackPanel>
-                                        <TextBlock Text="Yedekler" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center" />
+                                        <Button DockPanel.Dock="Right" Content="Klasörü aç" Command="{Binding OpenBackupFolderCommand}" Margin="8,0,0,0" />
+                                        <Button DockPanel.Dock="Right" Content="Gözat…" Command="{Binding BrowseBackupFolderCommand}" Margin="8,0,0,0" />
+                                        <TextBox Text="{Binding BackupFolder, UpdateSourceTrigger=PropertyChanged}" />
                                     </DockPanel>
-                                </Border>
-                                <DataGrid ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}" MaxHeight="360">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Tarih" Binding="{Binding CreatedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="150" />
-                                        <DataGridTextColumn Header="Tür" Binding="{Binding Trigger}" Width="120" />
-                                        <DataGridTextColumn Header="Boyut (bayt)" Binding="{Binding SizeBytes, StringFormat={}{0:N0}}" Width="130" />
-                                        <DataGridCheckBoxColumn Header="Bu anahtarla" Binding="{Binding KeyMatches, Mode=OneWay}" Width="110" />
-                                        <DataGridTextColumn Header="Dosya" Binding="{Binding FileName}" Width="*" />
-                                        <DataGridTextColumn Header="Sorun" Binding="{Binding Problem}" Width="160" />
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </DockPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                                    <WrapPanel Margin="0,4,0,0">
+                                        <StackPanel Margin="0,0,12,0"><TextBlock Text="SIKLIK" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Schedules}" SelectedItem="{Binding Schedule}" DisplayMemberPath="Label" Width="150" /></StackPanel>
+                                        <StackPanel Margin="0,0,12,0"><TextBlock Text="GÜNLÜK SAKLA" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding RetainDaily, UpdateSourceTrigger=PropertyChanged}" Width="90" /></StackPanel>
+                                        <StackPanel Margin="0,0,12,0"><TextBlock Text="HAFTALIK SAKLA" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding RetainWeekly, UpdateSourceTrigger=PropertyChanged}" Width="90" /></StackPanel>
+                                        <StackPanel><TextBlock Text="AYLIK SAKLA" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding RetainMonthly, UpdateSourceTrigger=PropertyChanged}" Width="90" /></StackPanel>
+                                    </WrapPanel>
+                                    <CheckBox Content="Uygulama kapanırken yedek al" IsChecked="{Binding BackupOnExit}" Margin="0,10,0,0" />
+                                    <WrapPanel Margin="0,14,0,0">
+                                        <Button Content="Ayarları kaydet" Command="{Binding SaveBackupSettingsCommand}" Margin="0,0,8,8" Visibility="{Binding CanManageBackups, Converter={StaticResource VisibleWhen}}" />
+                                        <Button Style="{StaticResource PrimaryButton}" Content="Şimdi yedekle" Command="{Binding BackupNowCommand}" Margin="0,0,8,8" />
+                                        <Button Content="Kurtarma anahtarını doğrula" Command="{Binding ConfirmRecoveryKeyCommand}" Margin="0,0,8,8" />
+                                        <Button Style="{StaticResource GhostButton}" Content="Yeni kurtarma anahtarı oluştur" Command="{Binding EnableBackupCommand}" Margin="0,0,8,8" Visibility="{Binding CanManageBackups, Converter={StaticResource VisibleWhen}}" />
+                                    </WrapPanel>
+                                    <TextBlock Style="{StaticResource Muted}">
+                                        <Run Text="Anahtar kimliği: " /><Run Text="{Binding BackupStatus.KeyId, Mode=OneWay}" />
+                                        <Run Text="   ·   Son başarılı yedek: " /><Run Text="{Binding BackupStatus.LastSuccessUtc, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" />
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Cloud copy (Phase 4) -->
+                            <Border Style="{StaticResource Card}" Padding="20" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Bulut kopyası (isteğe bağlı)" Style="{StaticResource SectionTitle}" />
+                                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap"
+                                               Text="Bilgisayar bozulur veya çalınırsa yerel yedekler de gidebilir. Açarsanız her yedeğin şifreli bir kopyası bu bilgisayardaki OneDrive, Google Drive veya Dropbox klasörüne konur; yüklemeyi bulut uygulamanız kendi hesabınıza yapar. Vernuko'nun bulutunuza erişimi yoktur." />
+                                    <TextBlock Text="{Binding CloudStatusText}" TextWrapping="Wrap" Margin="0,10,0,0" FontWeight="SemiBold" />
+                                    <StackPanel Visibility="{Binding CloudEnabled, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
+                                        <TextBlock Text="BULUT KLASÖRÜ" Style="{StaticResource FieldLabel}" />
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Right" Content="Başka klasör…" Command="{Binding BrowseCloudFolderCommand}" Margin="8,0,0,0" />
+                                            <Button DockPanel.Dock="Right" Content="Yeniden ara" Command="{Binding DetectCloudFoldersCommand}" Margin="8,0,0,0" />
+                                            <ComboBox ItemsSource="{Binding CloudCandidates}" SelectedItem="{Binding SelectedCloud}" DisplayMemberPath="Label" AutomationProperties.Name="Bulut klasörü" />
+                                        </DockPanel>
+                                        <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding HasNoCloudCandidates, Converter={StaticResource VisibleWhen}}"
+                                                   Text="Bu bilgisayarda OneDrive, Google Drive veya Dropbox klasörü bulunamadı. Bulut uygulamasını kurup oturum açtıktan sonra 'Yeniden ara'ya basın ya da klasörü elle seçin." />
+                                        <CheckBox IsChecked="{Binding CloudConsent}" Margin="0,12,0,0">
+                                            <TextBlock Text="{Binding CloudConsentText}" TextWrapping="Wrap" />
+                                        </CheckBox>
+                                        <Button Style="{StaticResource PrimaryButton}" Content="Bulut kopyasını aç" Command="{Binding EnableCloudCommand}" HorizontalAlignment="Left" Margin="0,12,0,0"
+                                                Visibility="{Binding CanManageBackups, Converter={StaticResource VisibleWhen}}" />
+                                    </StackPanel>
+                                    <Button Content="Bulut kopyasını kapat" Command="{Binding DisableCloudCommand}" HorizontalAlignment="Left" Margin="0,12,0,0"
+                                            Visibility="{Binding CloudEnabled, Converter={StaticResource VisibleWhen}}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Padding="0" Margin="0,12,0,0">
+                                <DockPanel>
+                                    <Border DockPanel.Dock="Top" Padding="16,12" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                <Button Content="Seçili yedeği doğrula" Command="{Binding VerifyBackupCommand}" Margin="0,0,8,0" />
+                                                <Button Style="{StaticResource DangerButton}" Content="Seçili yedekten geri yükle" Command="{Binding RestoreSelectedCommand}" Margin="0,0,8,0" Visibility="{Binding CanRestore, Converter={StaticResource VisibleWhen}}" />
+                                                <Button Content="Dosyadan geri yükle…" Command="{Binding RestoreFromFileCommand}" Visibility="{Binding CanRestore, Converter={StaticResource VisibleWhen}}" />
+                                            </StackPanel>
+                                            <TextBlock Text="Yedekler" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center" />
+                                        </DockPanel>
+                                    </Border>
+                                    <DataGrid ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}" MaxHeight="360">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Tarih" Binding="{Binding CreatedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="150" />
+                                            <DataGridTextColumn Header="Tür" Binding="{Binding Trigger}" Width="120" />
+                                            <DataGridTextColumn Header="Boyut (bayt)" Binding="{Binding SizeBytes, StringFormat={}{0:N0}}" Width="130" />
+                                            <DataGridCheckBoxColumn Header="Bu anahtarla" Binding="{Binding KeyMatches, Mode=OneWay}" Width="110" />
+                                            <DataGridTextColumn Header="Dosya" Binding="{Binding FileName}" Width="*" />
+                                            <DataGridTextColumn Header="Sorun" Binding="{Binding Problem}" Width="160" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
             </TabItem>
 
             <!-- Integrations & costs -->
@@ -299,8 +304,13 @@
             </TabItem>
 
             <!-- Messaging -->
-            <TabItem Header="Mesajlaşma" Visibility="{Binding CanManageSettings, Converter={StaticResource VisibleWhen}}">
+            <TabItem Header="Mesajlaşma" Visibility="{Binding ShowMessagingTab, Converter={StaticResource VisibleWhen}}">
                 <ContentControl Content="{Binding Messaging}" Focusable="False" />
+            </TabItem>
+
+            <!-- Multi-computer (Faz 7) -->
+            <TabItem Header="Çoklu bilgisayar" Visibility="{Binding ShowMultiComputerTab, Converter={StaticResource VisibleWhen}}">
+                <ContentControl Content="{Binding MultiComputer}" Focusable="False" />
             </TabItem>
 
             <!-- Updates -->

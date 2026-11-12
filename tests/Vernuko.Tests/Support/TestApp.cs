@@ -248,6 +248,10 @@ public sealed class FakeDialogs : Vernuko.Presentation.Common.IDialogService
 
 public sealed class FakePlatform : Vernuko.Presentation.Common.IPlatformServices
 {
+    public int Restarts { get; private set; }
+
+    public void RestartApplication() => Restarts++;
+
     public List<Uri> Opened { get; } = [];
 
     public string? Clipboard { get; private set; }

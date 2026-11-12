@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Vernuko.Presentation\Vernuko.Presentation.csproj" />
     <ProjectReference Include="..\Vernuko.Infrastructure\Vernuko.Infrastructure.csproj" />
+    <ProjectReference Include="..\Vernuko.Remote\Vernuko.Remote.csproj" />
   </ItemGroup>
   <!-- Update feed (HTTPS) is set by the release pipeline: dotnet publish -p:VernukoUpdateUrl=https://… -->
   <ItemGroup Condition="'$(VernukoUpdateUrl)' != ''">

@@ -57,7 +57,7 @@ Bu liste `dotnet list src/Vernuko.Desktop package --include-transitive` çıktı
 
 ## Ayrıca dağıtılanlar
 
-- **.NET çalışma zamanı ve WPF** (kendi içinde yayımlanan kurulumlarda programla birlikte gelir): MIT lisansı, © .NET Foundation and Contributors / Microsoft Corporation. Çalışma zamanının içerdiği üçüncü taraf bileşenlerin bildirimleri: https://github.com/dotnet/runtime/blob/main/THIRD-PARTY-NOTICES.TXT ve https://github.com/dotnet/wpf/blob/main/THIRD-PARTY-NOTICES.TXT
+- **.NET çalışma zamanı, WPF ve ASP.NET Core (Kestrel; çoklu bilgisayar için)** (kendi içinde yayımlanan kurulumlarda programla birlikte gelir): MIT lisansı, © .NET Foundation and Contributors / Microsoft Corporation. Çalışma zamanının içerdiği üçüncü taraf bileşenlerin bildirimleri: https://github.com/dotnet/runtime/blob/main/THIRD-PARTY-NOTICES.TXT ve https://github.com/dotnet/wpf/blob/main/THIRD-PARTY-NOTICES.TXT ve https://github.com/dotnet/aspnetcore/blob/main/THIRD-PARTY-NOTICES.txt
 - **SQLite** (`e_sqlite3`, SQLitePCLRaw ile gelir): kamu malı (public domain), https://www.sqlite.org/copyright.html
 - **Velopack güncelleyicisi** (`Update.exe`, Velopack paketiyle gelir): MIT, © Velopack Ltd., https://github.com/velopack/velopack
 

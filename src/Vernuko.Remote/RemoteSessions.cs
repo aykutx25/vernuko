@@ -45,6 +45,10 @@ public sealed class RemoteSessionHost(Func<ServiceProvider> createServices, Time
     public static readonly TimeSpan IdleTimeout = TimeSpan.FromHours(12);
 
     private readonly ConcurrentDictionary<string, Session> _sessions = new(StringComparer.Ordinal);
+    private readonly Lazy<ServiceProvider> _signedOut = new(createServices);
+
+    /// <summary>Services with nobody signed in, for the few calls allowed before login (permission checks still apply).</summary>
+    public IServiceProvider SignedOut => _signedOut.Value;
 
     public int Count => _sessions.Count;
 
@@ -117,6 +121,11 @@ public sealed class RemoteSessionHost(Func<ServiceProvider> createServices, Time
         foreach (var token in _sessions.Keys)
         {
             End(token);
+        }
+
+        if (_signedOut.IsValueCreated)
+        {
+            _signedOut.Value.Dispose();
         }
     }
 

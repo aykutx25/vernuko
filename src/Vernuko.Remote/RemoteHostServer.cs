@@ -181,7 +181,9 @@ public sealed class RemoteHostServer : IAsyncDisposable
                 return Fail(401, "remote.device", "Bu bilgisayar ana bilgisayarla eşleşmemiş veya eşleşmesi kaldırılmış.");
             }
 
-            if (sessions.Find(Token(http), device) is not { } services)
+            var services = sessions.Find(Token(http), device)
+                ?? (Token(http) is null && RpcContracts.BeforeLogin.Contains(contract + "/" + method) ? sessions.SignedOut : null);
+            if (services is null)
             {
                 return Fail(401, "remote.session", "Oturumunuz sona erdi. Lütfen yeniden giriş yapın.");
             }

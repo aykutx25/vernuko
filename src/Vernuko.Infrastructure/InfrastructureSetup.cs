@@ -14,6 +14,14 @@ public static class InfrastructureSetup
     /// </summary>
     public static IServiceCollection AddVernuko(this IServiceCollection services, AppEnvironment env)
     {
+        services.AddVernukoPlatform(env);
+        services.AddVernukoApplication(env.DatabasePath);
+        return services;
+    }
+
+    /// <summary>Paths, device id, secret protection and logging — also for a connected computer (no local database).</summary>
+    public static IServiceCollection AddVernukoPlatform(this IServiceCollection services, AppEnvironment env)
+    {
         services.AddSingleton(env);
         services.AddSingleton<IAppEnvironment>(env);
         services.AddSingleton<IDeviceIdentity, DeviceIdentity>();
@@ -32,7 +40,14 @@ public static class InfrastructureSetup
             .WriteTo.File(Path.Combine(env.LogDirectory, "vernuko-.log"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14, fileSizeLimitBytes: 10 * 1024 * 1024)
             .CreateLogger();
         services.AddLogging(b => b.ClearProviders().AddSerilog(logger, dispose: true));
-        services.AddVernukoApplication(env.DatabasePath);
         return services;
     }
+}
+
+public static class SecretProtectors
+{
+    /// <summary>The protector for this platform (DPAPI on Windows), usable before the service container exists.</summary>
+    public static ISecretProtector ForCurrentUser(AppEnvironment env) => OperatingSystem.IsWindows()
+        ? new DpapiSecretProtector()
+        : new DevelopmentSecretProtector(Path.Combine(env.DataDirectory, "dev-secret.key"));
 }

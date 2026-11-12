@@ -74,7 +74,7 @@ Projeler ayrı servis değildir; tek süreçte çalışır. Sınırlar derleyici
 | Model | Durum | Mimari |
 |---|---|---|
 | A — Tek bilgisayar | Faz 1 ✅ | WPF + yerel SQLite, internet gerekmez |
-| B — Yerel ağ | Faz 7 | Bir bilgisayarda Vernuko servisi (ASP.NET Core, yerel API) + PostgreSQL; istemciler API üzerinden. SQLite dosyası paylaşılmaz. Çakışma garantisi PostgreSQL exclusion constraint + işlem. |
+| B — Yerel ağ | Faz 7 ✅ | **Karar (2026-11-12): PostgreSQL yok.** Ana bilgisayardaki Vernuko gömülü Kestrel ile servis arayüzlerini yerel ağda sunar; veritabanı ana bilgisayardaki SQLite. İstemciler arayüzleri ağ vekiliyle kullanır. SQLite dosyası paylaşılmaz. Çakışma garantisi aynı (IMMEDIATE işlem + veritabanı tetikleyicileri). Ayrıntı: `MULTI_PC.md`. |
 | C — Bulut / çok şube | P2 | Kiracı başına veri izolasyonu, şube bazlı yetki/rapor, merkezi kullanıcı yönetimi. GUID v7 ve `BranchId` sayesinde yeniden anahtarlama gerekmez. |
 
 **Bulut yedekleme ≠ canlı senkronizasyon.** Yedekleme (Faz 4) şifreli dosya kopyalar; çok cihazlı canlı çalışma (Faz 7) merkezi veritabanı gerektirir. İkisi aynı mekanizma olarak tasarlanmamıştır.

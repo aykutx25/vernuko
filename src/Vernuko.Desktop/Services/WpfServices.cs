@@ -55,6 +55,20 @@ public sealed class WpfDialogService : IDialogService
 
 public sealed class WpfPlatformServices : IPlatformServices
 {
+    public void RestartApplication()
+    {
+        if (Environment.ProcessPath is { } exe)
+        {
+            // Started via "dotnet Vernuko.dll" (Smart App Control workaround): restart the same way.
+            var args = Path.GetFileNameWithoutExtension(exe).Equals("dotnet", StringComparison.OrdinalIgnoreCase)
+                ? $"\"{typeof(WpfPlatformServices).Assembly.Location}\""
+                : string.Empty;
+            System.Windows.Application.Current.Exit += (_, _) => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe, args) { UseShellExecute = false });
+        }
+
+        System.Windows.Application.Current.Shutdown(0);
+    }
+
     public void OpenUri(Uri uri)
     {
         if (uri.Scheme is not ("https" or "http"))

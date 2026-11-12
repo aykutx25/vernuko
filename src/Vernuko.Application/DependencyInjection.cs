@@ -26,6 +26,8 @@ public static class DependencyInjection
         services.TryAddSingleton<LicenseService>();
         services.TryAddSingleton<ILicenseGate>(sp => sp.GetRequiredService<LicenseService>());
         services.AddSingleton<LicenseOnlineService>();
+        services.TryAddSingleton<ILicenseOnlineService>(sp => sp.GetRequiredService<LicenseOnlineService>());
+        services.TryAddSingleton<IMultiComputer, StandaloneComputer>();
         services.AddSingleton<AppServiceDeps>();
         services.AddSingleton<DatabaseInitializer>();
         services.AddSingleton<BackupKeyStore>();

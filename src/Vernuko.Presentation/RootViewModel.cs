@@ -12,7 +12,7 @@ namespace Vernuko.Presentation;
 public sealed partial class RootViewModel : ViewModelBase
 {
     private readonly IServiceProvider _services;
-    private readonly SetupService _setup;
+    private readonly IMultiComputer _computer;
     private readonly UserSession _session;
     private readonly IBackupService _backups;
 
@@ -22,10 +22,11 @@ public sealed partial class RootViewModel : ViewModelBase
     [ObservableProperty]
     private LockViewModel? _lockScreen;
 
-    public RootViewModel(IServiceProvider services, SetupService setup, UserSession session, IBackupService backups)
+    public RootViewModel(IServiceProvider services, IMultiComputer computer, UserSession session, IBackupService backups)
     {
         _services = services;
-        _setup = setup;
+        _computer = computer;
+        _computer.SessionEnded += (_, _) => RunSafely(() => ShowLoginAsync("Ana bilgisayardaki oturumunuz sona erdi. Lütfen yeniden giriş yapın."));
         _session = session;
         _backups = backups;
         _session.Changed += (_, _) => LockScreen = _session.IsAuthenticated && _session.IsLocked ? CreateLock() : null;
@@ -38,7 +39,8 @@ public sealed partial class RootViewModel : ViewModelBase
 
     public async Task StartAsync()
     {
-        if (!await _setup.IsCompletedAsync())
+        // A connected computer has no local data: straight to the main computer's login.
+        if (_computer.Role != ComputerRole.Client && !await _services.GetRequiredService<SetupService>().IsCompletedAsync())
         {
             var wizard = _services.GetRequiredService<SetupWizardViewModel>();
             wizard.Completed += (_, _) => RunSafely(ShowShellAsync);
@@ -73,6 +75,11 @@ public sealed partial class RootViewModel : ViewModelBase
     /// <summary>Automatic reminders (Phase 5): plan and send due messages. Never throws.</summary>
     public async Task RunMessagingAsync()
     {
+        if (_computer.Role == ComputerRole.Client)
+        {
+            return; // the main computer sends reminders
+        }
+
         try
         {
             var messaging = _services.GetRequiredService<IAutoMessagingService>();
@@ -93,7 +100,7 @@ public sealed partial class RootViewModel : ViewModelBase
     {
         try
         {
-            await _services.GetRequiredService<LicenseOnlineService>().AutoRefreshAsync();
+            await _services.GetRequiredService<ILicenseOnlineService>().AutoRefreshAsync();
         }
         catch (ObjectDisposedException)
         {
@@ -107,6 +114,11 @@ public sealed partial class RootViewModel : ViewModelBase
     /// <summary>Scheduled backups run only while the app is open — Vernuko never pretends to back up a switched-off PC.</summary>
     public async Task RunScheduledBackupIfDueAsync()
     {
+        if (_computer.Role == ComputerRole.Client)
+        {
+            return; // backups run on the main computer
+        }
+
         try
         {
             if (await _backups.IsScheduledBackupDueAsync())
