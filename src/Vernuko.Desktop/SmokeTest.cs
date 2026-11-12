@@ -209,7 +209,8 @@ internal static class SmokeTest
             report.AppendLine("  " + e);
         }
 
-        File.WriteAllText(Path.Combine(dir, "smoke-report.txt"), report.ToString());
+        // UTF-8 *with* BOM: Windows PowerShell 5.1 (Get-Content) otherwise reads it as ANSI and garbles Turkish letters.
+        File.WriteAllText(Path.Combine(dir, "smoke-report.txt"), report.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
         return code != 0 ? code : listener.Errors.Count > 0 ? 2 : 0;
     }
 

@@ -32,7 +32,7 @@ rem Microsoft imzali "dotnet" uzerinden: imzasiz Vernuko.exe, Windows 11 Akilli 
 dotnet "src\Vernuko.Desktop\bin\Release\net10.0-windows\Vernuko.dll" --smoke-test "%OUT%"
 set SMOKE=%errorlevel%
 echo.
-if exist "%OUT%\smoke-report.txt" type "%OUT%\smoke-report.txt"
+if exist "%OUT%\smoke-report.txt" powershell -NoProfile -Command "[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-Content -Encoding UTF8 '%OUT%\smoke-report.txt'"
 if not "%SMOKE%"=="0" goto fail
 
 echo.

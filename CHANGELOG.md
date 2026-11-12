@@ -2,6 +2,15 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.2.9] — 2026-11-12
+
+### Doğrulandı
+- Temiz bir Windows 11 bilgisayarda: 143/143 test ve **başarı senaryosu gerçek ekranlarda baştan sona** (paket 8 → 7, şifreli yedek, geri yükleme) geçti.
+
+### Düzeltildi
+- Kontrol raporu Windows PowerShell'de Türkçe harfleri bozuk gösteriyordu ("MÃ¼ÅŸteri"); rapor UTF-8 BOM ile yazılıyor ve `kontrol.cmd` doğru kodlamayla gösteriyor.
+- Yeni Windows 11 bilgisayarda imzasız `Vernuko.exe` Akıllı Uygulama Denetimi tarafından engellendi; `kontrol.cmd`, `baslat.cmd`, `demo.cmd` programı Microsoft imzalı `dotnet` üzerinden başlatıyor. Kod imzalama satış için engelleyici iş olarak işaretlendi.
+
 ## [0.2.8] — 2026-11-12
 
 ### Eklendi
