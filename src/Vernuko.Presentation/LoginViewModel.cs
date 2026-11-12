@@ -19,6 +19,9 @@ public sealed partial class LoginViewModel(AuthService auth, SettingsService set
 
     public bool IsDemo => env.IsDemo;
 
+    /// <summary>Shown under the login form so the user can see which version is running after an update.</summary>
+    public string VersionText => $"Sürüm {env.AppVersion}";
+
     public string? DemoHint => env.IsDemo ? $"Demo modu — kullanıcı adı: {DemoDataSeeder.DemoUsername}, parola: {DemoDataSeeder.DemoPassword}" : null;
 
     public event EventHandler? LoggedIn;

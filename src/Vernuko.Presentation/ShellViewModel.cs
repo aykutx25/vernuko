@@ -40,6 +40,7 @@ public sealed partial class ShellViewModel : ViewModelBase
     private readonly BackupService _backups;
     private readonly AuthService _auth;
     private readonly TimeProvider _time;
+    private readonly IAppEnvironment _env;
     private readonly Dictionary<Type, PageViewModel> _pages = [];
 
     [ObservableProperty]
@@ -75,8 +76,9 @@ public sealed partial class ShellViewModel : ViewModelBase
     [ObservableProperty]
     private BusinessInfo? _business;
 
-    public ShellViewModel(IServiceProvider services, UserSession session, SettingsService settings, LicenseService license, BackupService backups, AuthService auth, TimeProvider time)
+    public ShellViewModel(IServiceProvider services, UserSession session, SettingsService settings, LicenseService license, BackupService backups, AuthService auth, TimeProvider time, IAppEnvironment env)
     {
+        _env = env;
         _services = services;
         _session = session;
         _settings = settings;
@@ -93,6 +95,8 @@ public sealed partial class ShellViewModel : ViewModelBase
     public string UserRoleName => _session.Role is { } r ? RoleDefaults.DisplayName(r) : string.Empty;
 
     public string UserInitials => Formatting.Initials(_session.DisplayName);
+
+    public string VersionText => $"Sürüm {_env.AppVersion}";
 
     public event EventHandler? LoggedOut;
 

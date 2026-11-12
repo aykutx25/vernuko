@@ -25,6 +25,7 @@
                     <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
                 </Border>
                 <Button Style="{StaticResource PrimaryButton}" Content="Giriş yap" Height="44" Margin="0,18,0,0" Command="{Binding LoginCommand}" IsDefault="True" />
+                <TextBlock Text="{Binding VersionText}" HorizontalAlignment="Center" Margin="0,14,0,0" FontSize="12.5" Foreground="{StaticResource TextMutedBrush}" />
             </StackPanel>
         </Border>
     </Grid>

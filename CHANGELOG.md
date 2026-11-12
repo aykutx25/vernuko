@@ -2,6 +2,11 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.2.4] — 2026-11-12
+
+### Eklendi
+- Çalışan sürüm numarası giriş ekranında ve alt durum çubuğunda görünür (güncellemenin gelip gelmediği anlaşılsın diye).
+
 ## [0.2.3] — 2026-11-12 — Görünüm düzeltmeleri (Windows geri bildirimi)
 
 ### Düzeltildi
