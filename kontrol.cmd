@@ -28,7 +28,8 @@ if errorlevel 1 goto fail
 echo.
 echo [4/4] Ekranlar ve kullanim senaryosu kontrol ediliyor (pencere acilmaz, 2-3 dakika)...
 if exist "%OUT%" rmdir /s /q "%OUT%"
-start "" /wait "src\Vernuko.Desktop\bin\Release\net10.0-windows\Vernuko.exe" --smoke-test "%OUT%"
+rem Microsoft imzali "dotnet" uzerinden: imzasiz Vernuko.exe, Windows 11 Akilli Uygulama Denetimi tarafindan engellenir.
+dotnet "src\Vernuko.Desktop\bin\Release\net10.0-windows\Vernuko.dll" --smoke-test "%OUT%"
 set SMOKE=%errorlevel%
 echo.
 if exist "%OUT%\smoke-report.txt" type "%OUT%\smoke-report.txt"

@@ -54,6 +54,10 @@ dotnet run --project src/Vernuko.Desktop -- --smoke-test smoke-output
 ```
 Veriler: `%LOCALAPPDATA%\Vernuko\Data` (demo: `%LOCALAPPDATA%\Vernuko\Demo`); müşteri dosyaları aynı klasörde `attachments\` altında şifreli. Kurulan program `%LOCALAPPDATA%\VernukoApp` altındadır; kaldırmak verileri silmez. Varsayılan yedek klasörü: `Belgeler\Vernuko Yedekler` — harici disk önerilir.
 
+## Windows'ta çalıştırma (kaynak koddan)
+- **`baslat.cmd`**: derler ve Vernuko'yu açar. **`demo.cmd`**: örnek verilerle (ayrı demo veritabanı) açar.
+- Program Microsoft imzalı `dotnet` üzerinden başlatılır. İmzasız `Vernuko.exe` yeni Windows 11 bilgisayarlarda **Akıllı Uygulama Denetimi** (Smart App Control) tarafından "Device Guard policy" mesajıyla engellenir. Kod imzalama sertifikası alınana kadar kurulum paketi de bu bilgisayarlarda açılmaz (bkz. [docs/RELEASE.md](docs/RELEASE.md)).
+
 ## Yerel kontrol (Windows)
 Depo kökündeki **`kontrol.cmd`** dosyasına çift tıklayın: güncel kodu indirir, derler, tüm testleri çalıştırır ve tüm ekranları açıp kontrol eder (smoke test). Sonunda "TÜM KONTROLLER BAŞARILI" ya da hata satırlarını gösterir; ekran görüntüleri `%USERPROFILE%\vernuko-kontrol` klasörüne kaydedilir. GitHub Actions şu an yalnızca elle başlatılır.
 
