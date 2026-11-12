@@ -53,7 +53,9 @@ Faz 2 ek testleri: en özel prim kuralı ve geri almada ters prim, satan ≠ uyg
 Ek testler: denetim zinciri kurcalama, iyimser eşzamanlılık, hesap kilidi + oturum kilidi, iptali geri almada çakışma, yeniden planlamada kendi slotu, seans etiketi ("3. Seans"), kurtarma anahtarı doğrulama ve zamanlama, aynı saniyede yedek adı çakışması (bulunup düzeltilen gerçek hata), DB seviyesinde append-only.
 
 ## Sonuçlar (bu sürüm)
-v0.2.2 — Linux (.NET 10.0.15, Release, 0 uyarı): **140 test — 139 geçti, 1 atlandı (yalnızca Windows), 0 başarısız**.
+v0.2.6 — **Windows (kullanıcının bilgisayarı, `kontrol.cmd`, 2026-11-12): 141 test — 141 geçti, 0 atlandı, 0 başarısız** (Windows'a özgü DPAPI testi dahil); smoke test 11 sayfa + 20 sekme, ana pencere aç-kapat, **0 bağlama hatası, 0 beklenmeyen hata**. Linux: 141 test — 140 geçti, 1 atlandı (DPAPI).
+
+v0.2.2 — Linux (.NET 10.0.15, Release, 0 uyarı): 140 test — 139 geçti, 1 atlandı (yalnızca Windows), 0 başarısız.
 
 **İlk gerçek Windows çalıştırması (2026-11-12, kullanıcının bilgisayarı, `dotnet run`):** demo girişi, yeni randevu paneli ve açılır kutular elle denendi; `--smoke-test` 11 sayfa ve 20 sekmeyi çizdi, **0 bağlama hatası**, parola kutusu kontrolü başarılı. Windows'ta elle denemeyle bulunan ve düzeltilen hatalar (hepsi kullanıcı tarafından Windows'ta yeniden denenip doğrulandı, v0.2.5):
 

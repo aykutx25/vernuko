@@ -33,7 +33,7 @@
 | P0-10 | Lisans istemcisi: imzalı belge, çevrimdışı tolerans, salt-okunur mod, saat geri alma | P0-2 | Süre bitince yazma engellenir, okuma/yedek/dışa aktarma çalışır (test) | ✅ |
 | P0-11 | Kurulum sihirbazı (10 adım, atlanabilir adımlar), demo modu ayrı veritabanında | P0-3..9 | Sihirbaz VM testi; demo DB gerçek DB'den ayrı | ✅ VM · 🟡 ekran |
 | P0-12 | WPF arayüz: kabuk, randevu gün/hafta/ay, yan panelde hızlı randevu, müşteri, hizmet, personel, paket, ödeme, rapor, ayarlar | P0-3..11 | Smoke test (Windows) 0 bağlama hatası; başarı kriterleri elle uçtan uca | ✅ smoke test Windows'ta 0 hata (2026-11-12) · 🟡 başarı akışı elle |
-| P0-13 | Windows CI: derleme + test + smoke test + ekran görüntüsü artefaktı | P0-12 | Workflow yeşil | 🟡 workflow hazır; GitHub işleri başlamadan duruyor (hesap/faturalandırma kontrol edilmeli) |
+| P0-13 | Windows CI: derleme + test + smoke test + ekran görüntüsü artefaktı | P0-12 | Workflow yeşil | ✅ yerelde `kontrol.cmd` ile (Windows'ta 141/141 + smoke test temiz, 2026-11-12) · GitHub Actions yalnızca elle |
 | P0-14 | Kurulum paketi (Velopack), güncelleme öncesi yedek, imzalı yükleyici (OV + bulut HSM) | P0-12 | Temiz Windows 10/11'de kur-kaldır-güncelle | 🟡 paket + CI + taslak sürüm iş akışı + güncelleme öncesi yedek (test) · ⬜ imza · ⬜ Windows'ta kur/kaldır/güncelle denemesi |
 | P0-15 | Lisans sunucusu + ödeme (Paddle/iyzico) + aktivasyon | P0-10 | Webhook idempotent; ödeme olmadan lisans yok | ⬜ Faz 6 |
 
