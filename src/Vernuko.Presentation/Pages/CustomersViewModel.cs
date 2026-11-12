@@ -79,8 +79,9 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
     [ObservableProperty]
     private string _balanceText = string.Empty;
 
-    public CustomersViewModel(CustomerService customers, PackageService packages, PaymentService payments, IServiceProvider services, IDialogService dialogs, IPlatformServices platform)
+    public CustomersViewModel(CustomerService customers, PackageService packages, PaymentService payments, IServiceProvider services, IDialogService dialogs, IPlatformServices platform, CustomerRecordsViewModel records)
     {
+        Records = records;
         _customers = customers;
         _packages = packages;
         _payments = payments;
@@ -100,6 +101,9 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
     public ObservableCollection<AppointmentListItem> History { get; } = [];
 
     public ObservableCollection<TransactionDto> Transactions { get; } = [];
+
+    /// <summary>Consents and encrypted files of the selected customer.</summary>
+    public CustomerRecordsViewModel Records { get; }
 
     public bool HasSelection => Details is not null;
 
@@ -420,5 +424,7 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
                 Transactions.Add(t);
             }
         }
+
+        await Records.LoadAsync(id);
     }
 }

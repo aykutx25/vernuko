@@ -57,9 +57,9 @@ internal static class SmokeTest
             foreach (var item in shell.NavItems.ToList())
             {
                 await shell.NavigateAsync(item, null);
-                await RenderAsync(root, 1366, 768, Path.Combine(outputDirectory, $"page-{item.Key}-1366.png"));
+                var tabs = await RenderAsync(root, 1366, 768, Path.Combine(outputDirectory, $"page-{item.Key}-1366.png"), renderAllTabs: true);
                 await RenderAsync(root, 1920, 1080, Path.Combine(outputDirectory, $"page-{item.Key}-1920.png"));
-                report.AppendLine($"page {item.Key}: ok");
+                report.AppendLine($"page {item.Key}: ok ({tabs} tabs rendered)");
             }
 
             await shell.NavigateAsync("appointments", new OpenNewAppointment(null));
@@ -106,7 +106,9 @@ internal static class SmokeTest
         return code != 0 ? code : listener.Errors.Count > 0 ? 2 : 0;
     }
 
-    private static async Task RenderAsync(object dataContext, int width, int height, string file)
+    /// <summary>Renders the content to a PNG. With <paramref name="renderAllTabs"/> every visible tab of the page's first
+    /// TabControl is selected and rendered too, so bindings inside non-default tabs are exercised as well.</summary>
+    private static async Task<int> RenderAsync(object dataContext, int width, int height, string file, bool renderAllTabs = false)
     {
         var window = new Window
         {
@@ -128,6 +130,28 @@ internal static class SmokeTest
         }
 
         window.Show();
+        await SnapshotAsync(window, width, height, file);
+        var rendered = 0;
+        if (renderAllTabs && FindTabControls(window).FirstOrDefault() is { } tabControl)
+        {
+            for (var i = 0; i < tabControl.Items.Count; i++)
+            {
+                if (tabControl.Items[i] is System.Windows.Controls.TabItem { Visibility: Visibility.Visible })
+                {
+                    tabControl.SelectedIndex = i;
+                    await SnapshotAsync(window, width, height, Path.ChangeExtension(file, null) + $"-tab{i + 1:00}.png");
+                    rendered++;
+                }
+            }
+        }
+
+        window.Content = null;
+        window.Close();
+        return rendered;
+    }
+
+    private static async Task SnapshotAsync(Window window, int width, int height, string file)
+    {
         await Task.Delay(400);
         await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
         window.UpdateLayout();
@@ -136,13 +160,25 @@ internal static class SmokeTest
         bitmap.Render((Visual)window.Content);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
-        await using (var fs = File.Create(file))
-        {
-            encoder.Save(fs);
-        }
+        await using var fs = File.Create(file);
+        encoder.Save(fs);
+    }
 
-        window.Content = null;
-        window.Close();
+    private static IEnumerable<System.Windows.Controls.TabControl> FindTabControls(DependencyObject parent)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is System.Windows.Controls.TabControl tc)
+            {
+                yield return tc;
+            }
+
+            foreach (var nested in FindTabControls(child))
+            {
+                yield return nested;
+            }
+        }
     }
 
     private sealed class BindingErrorListener : TraceListener

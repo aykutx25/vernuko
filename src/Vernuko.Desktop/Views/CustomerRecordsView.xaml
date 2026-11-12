@@ -1,0 +1,81 @@
+<UserControl x:Class="Vernuko.Desktop.Views.CustomerRecordsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Margin="0,4,0,0">
+        <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
+        <Border Style="{StaticResource InfoBanner}" Visibility="{Binding InfoMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding InfoMessage}" TextWrapping="Wrap" /></Border>
+
+        <!-- Consents -->
+        <TextBlock Text="Onaylar" Style="{StaticResource SectionTitle}" Margin="0,8,0,6" />
+        <DataGrid ItemsSource="{Binding Consents}" MaxHeight="220">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Form" Binding="{Binding Title}" Width="*" />
+                <DataGridTextColumn Header="Sürüm" Binding="{Binding TemplateVersion}" Width="60" />
+                <DataGridTextColumn Header="Yöntem" Binding="{Binding MethodName}" Width="140" />
+                <DataGridTextColumn Header="Tarih" Binding="{Binding AcceptedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                <DataGridTextColumn Header="Kaydeden" Binding="{Binding RecordedBy}" Width="110" />
+                <DataGridTextColumn Header="Durum" Binding="{Binding StatusText}" Width="90" />
+                <DataGridTemplateColumn Width="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource LinkButton}" Content="Geri al" Visibility="{Binding IsActive, Converter={StaticResource VisibleWhen}}"
+                                    Command="{Binding DataContext.RevokeConsentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel Visibility="{Binding CanRecordConsent, Converter={StaticResource VisibleWhen}}" Margin="0,8,0,0">
+            <TextBlock Style="{StaticResource Muted}" Visibility="{Binding HasNoTemplates, Converter={StaticResource VisibleWhen}}" TextWrapping="Wrap"
+                       Text="Henüz onam formu tanımlanmamış. Yönetici Ayarlar › Onam formları bölümünden form ekleyebilir." />
+            <WrapPanel>
+                <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}" DisplayMemberPath="Title" Width="240" Margin="0,0,8,6" AutomationProperties.Name="Onam formu" />
+                <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" DisplayMemberPath="Label" Width="180" Margin="0,0,8,6" AutomationProperties.Name="Onay yöntemi" />
+                <TextBox Text="{Binding ConsentNote, UpdateSourceTrigger=PropertyChanged}" Tag="Not (isteğe bağlı)" Width="200" Margin="0,0,8,6" />
+                <Button Style="{StaticResource PrimaryButton}" Content="Onayı kaydet" Command="{Binding RecordConsentCommand}" Margin="0,0,0,6" />
+            </WrapPanel>
+        </StackPanel>
+
+        <!-- Files -->
+        <StackPanel Visibility="{Binding CanViewFiles, Converter={StaticResource VisibleWhen}}" Margin="0,14,0,0">
+            <DockPanel Margin="0,0,0,6">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Visibility="{Binding CanManageFiles, Converter={StaticResource VisibleWhen}}">
+                    <ComboBox ItemsSource="{Binding FileKinds}" SelectedItem="{Binding NewFileKind}" DisplayMemberPath="Label" Width="150" Margin="0,0,8,0" AutomationProperties.Name="Dosya türü" />
+                    <Button Content="+ Dosya ekle…" Command="{Binding AddFileCommand}" />
+                </StackPanel>
+                <TextBlock Text="Fotoğraflar ve belgeler (şifreli)" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
+            </DockPanel>
+            <DataGrid ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" MaxHeight="220">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Tür" Binding="{Binding KindName}" Width="110" />
+                    <DataGridTextColumn Header="Dosya" Binding="{Binding OriginalName}" Width="*" />
+                    <DataGridTextColumn Header="Boyut" Binding="{Binding SizeText}" Width="80" />
+                    <DataGridTextColumn Header="Tarih" Binding="{Binding CreatedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                    <DataGridTextColumn Header="Not" Binding="{Binding Note}" Width="*" />
+                    <DataGridTemplateColumn Width="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Style="{StaticResource LinkButton}" Content="Görüntüle" Margin="0,0,10,0" Command="{Binding DataContext.PreviewCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                    <Button Style="{StaticResource LinkButton}" Content="Dışa aktar" Margin="0,0,10,0" Command="{Binding DataContext.ExportFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                    <Button Style="{StaticResource LinkButton}" Content="Sil" Command="{Binding DataContext.DeleteFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Border Visibility="{Binding HasPreview, Converter={StaticResource VisibleWhen}}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,10,0,0" Padding="8">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Kapat" Command="{Binding ClosePreviewCommand}" />
+                        <TextBlock Text="{Binding SelectedFile.OriginalName}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <Image Source="{Binding PreviewImage, Converter={StaticResource BytesToImage}}" MaxHeight="420" Stretch="Uniform" HorizontalAlignment="Left" />
+                </DockPanel>
+            </Border>
+            <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" TextWrapping="Wrap"
+                       Text="Dosyalar bu bilgisayarda AES-256 ile şifreli saklanır ve yedeğe dahildir. Her görüntüleme denetim kaydına yazılır." />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

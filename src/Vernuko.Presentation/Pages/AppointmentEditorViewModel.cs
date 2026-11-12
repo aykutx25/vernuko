@@ -94,6 +94,28 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
     [ObservableProperty]
     private bool _noSlots;
 
+    // Recurrence (create only) / apply-to-following (reschedule of a series member)
+    [ObservableProperty]
+    private bool _isRecurring;
+
+    [ObservableProperty]
+    private Option<RecurrenceFrequency>? _frequency;
+
+    [ObservableProperty]
+    private string _recurrenceInterval = "1";
+
+    [ObservableProperty]
+    private string _recurrenceCount = "8";
+
+    [ObservableProperty]
+    private bool _applyToFollowing;
+
+    [ObservableProperty]
+    private bool _isSeriesMember;
+
+    [ObservableProperty]
+    private bool _showRecurrence;
+
     public AppointmentEditorViewModel(AppointmentService appointments, CustomerService customers, CatalogService catalog, PackageService packages, SettingsService settings, IDialogService dialogs)
     {
         _appointments = appointments;
@@ -123,10 +145,33 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
 
     public bool HasPackages => Packages.Count > 0;
 
+    public IReadOnlyList<Option<RecurrenceFrequency>> FrequencyOptions { get; } =
+    [
+        new("Gün", RecurrenceFrequency.Daily), new("Hafta", RecurrenceFrequency.Weekly), new("Ay", RecurrenceFrequency.Monthly),
+    ];
+
+    public string RecurrenceSummary => TryPattern() is { } p ? p.Describe() : "Aralık ve tekrar sayısını kontrol edin.";
+
+    partial void OnIsRecurringChanged(bool value) => OnPropertyChanged(nameof(RecurrenceSummary));
+
+    partial void OnFrequencyChanged(Option<RecurrenceFrequency>? value) => OnPropertyChanged(nameof(RecurrenceSummary));
+
+    partial void OnRecurrenceIntervalChanged(string value) => OnPropertyChanged(nameof(RecurrenceSummary));
+
+    partial void OnRecurrenceCountChanged(string value) => OnPropertyChanged(nameof(RecurrenceSummary));
+
+    private RecurrencePattern? TryPattern() =>
+        int.TryParse(RecurrenceInterval, out var interval) && int.TryParse(RecurrenceCount, out var count) &&
+        new RecurrencePattern(Frequency?.Value ?? RecurrenceFrequency.Weekly, interval, count) is var p && p.Validate().IsSuccess
+            ? p
+            : null;
+
     public async Task InitializeForCreateAsync(DateOnly date, Guid? customerId)
     {
         _initializing = true;
         await LoadCatalogAsync();
+        Frequency = FrequencyOptions[1];
+        ShowRecurrence = true; // generic engine feature, offered in every profile (e.g. laser every 6 weeks)
         Date = date.ToDateTime(TimeOnly.MinValue);
         if (customerId is { } id && (await _customers.GetAsync(id)) is { IsSuccess: true } c)
         {
@@ -144,6 +189,8 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
         _initializing = true;
         _rescheduleId = item.Id;
         Title = "Randevuyu Taşı";
+        IsSeriesMember = item.IsInSeries;
+        ShowRecurrence = false;
         OnPropertyChanged(nameof(IsReschedule));
         await LoadCatalogAsync();
         SelectedCustomer = new CustomerListItem(item.CustomerId, 0, item.CustomerName, item.CustomerPhone, null, nameof(CustomerState.Active), null);
@@ -312,6 +359,12 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
         var start = DateOnly.FromDateTime(Date).ToDateTime(time);
         var resources = Resources.Where(r => r.IsSelected).Select(r => r.Resource.Id).ToList();
 
+        if (!IsReschedule && IsRecurring)
+        {
+            await SaveSeriesAsync(start, duration, resources);
+            return;
+        }
+
         var outcome = await SubmitAsync(start, duration, resources, confirm: false);
         if (outcome is null)
         {
@@ -342,10 +395,58 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
         ErrorMessage = string.Join("\n", outcome.Issues.Select(i => i.Message));
     });
 
+    /// <summary>
+    /// Creates a recurring series. Dates with a hard conflict are listed and can be skipped explicitly; warnings
+    /// (e.g. outside working hours, package overbooked) need confirmation. Nothing is saved silently.
+    /// </summary>
+    private async Task SaveSeriesAsync(DateTime start, int? duration, List<Guid> resources)
+    {
+        if (TryPattern() is not { } pattern)
+        {
+            ErrorMessage = $"Tekrar aralığı 1–12, tekrar sayısı 2–{RecurrencePattern.MaxCount} olmalıdır.";
+            return;
+        }
+
+        var request = new CreateAppointmentRequest(SelectedCustomer!.Id, SelectedService!.Id, SelectedStaff!.Id, resources, start, duration, Notes, BodyArea, SelectedPackage?.Id);
+        var first = await _appointments.CreateSeriesAsync(request, pattern, confirmWarnings: false, skipBlocked: false);
+        if (!Check(first))
+        {
+            return;
+        }
+
+        var outcome = first.Value;
+        if (!outcome.Saved)
+        {
+            var lines = outcome.Problems.Select(p => $"• {Formatting.ShortDate(p.StartLocal)} {Formatting.Time(p.StartLocal)}: {string.Join("; ", p.Issues.Select(i => i.Message))}");
+            var blocking = outcome.Problems.Count(p => p.Issues.Any(i => i.Severity == IssueSeverity.Blocking));
+            var question = blocking > 0
+                ? $"\n\n{blocking} tarihte randevu verilemiyor; bu tarihler ATLANACAK. Diğer tarihler kaydedilsin mi?"
+                : "\n\nSeri yine de kaydedilsin mi?";
+            if (!await _dialogs.ConfirmAsync("Tekrarlayan randevu", string.Join("\n", lines) + question, "Kaydet"))
+            {
+                return;
+            }
+
+            var second = await _appointments.CreateSeriesAsync(request, pattern, confirmWarnings: true, skipBlocked: true);
+            if (!Check(second))
+            {
+                return;
+            }
+
+            outcome = second.Value;
+        }
+
+        if (outcome.Saved)
+        {
+            await _dialogs.ShowMessageAsync("Tekrarlayan randevu", $"{outcome.CreatedLocal.Count} randevu oluşturuldu ({pattern.Describe()}).");
+            Closed?.Invoke(this, true);
+        }
+    }
+
     private async Task<BookingOutcome?> SubmitAsync(DateTime start, int? duration, List<Guid> resources, bool confirm)
     {
         var result = _rescheduleId is { } id
-            ? await _appointments.RescheduleAsync(new RescheduleRequest(id, start, SelectedStaff!.Id, resources, duration), confirm)
+            ? await _appointments.RescheduleAsync(new RescheduleRequest(id, start, SelectedStaff!.Id, resources, duration, IsSeriesMember && ApplyToFollowing), confirm)
             : await _appointments.CreateAsync(new CreateAppointmentRequest(SelectedCustomer!.Id, SelectedService!.Id, SelectedStaff!.Id, resources, start, duration, Notes, BodyArea, SelectedPackage?.Id), confirm);
         return Check(result) ? result.Value : null;
     }

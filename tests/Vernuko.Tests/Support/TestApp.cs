@@ -216,6 +216,10 @@ public sealed class FakeDialogs : Vernuko.Presentation.Common.IDialogService
 
     public List<string> Shown { get; } = [];
 
+    public Queue<string?> OpenFileAnswers { get; } = new();
+
+    public Queue<string?> SaveFileAnswers { get; } = new();
+
     public Task<bool> ConfirmAsync(string title, string message, string confirmText = "Evet", string cancelText = "Vazgeç", bool destructive = false)
     {
         Shown.Add(title + ": " + message);
@@ -233,9 +237,9 @@ public sealed class FakeDialogs : Vernuko.Presentation.Common.IDialogService
 
     public Task<string?> PickFolderAsync(string title, string? initialFolder) => Task.FromResult(initialFolder);
 
-    public Task<string?> PickOpenFileAsync(string title, string filter) => Task.FromResult<string?>(null);
+    public Task<string?> PickOpenFileAsync(string title, string filter) => Task.FromResult(OpenFileAnswers.Count > 0 ? OpenFileAnswers.Dequeue() : null);
 
-    public Task<string?> PickSaveFileAsync(string title, string defaultFileName, string filter) => Task.FromResult<string?>(null);
+    public Task<string?> PickSaveFileAsync(string title, string defaultFileName, string filter) => Task.FromResult(SaveFileAnswers.Count > 0 ? SaveFileAnswers.Dequeue() : null);
 }
 
 public sealed class FakePlatform : Vernuko.Presentation.Common.IPlatformServices

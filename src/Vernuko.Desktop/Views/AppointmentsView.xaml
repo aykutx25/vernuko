@@ -41,6 +41,7 @@
                         <StackPanel Margin="10,0,0,0">
                             <TextBlock Text="{Binding ServiceLine}" TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="{Binding BodyArea}" FontSize="12.5" Foreground="{StaticResource TextMutedBrush}" Visibility="{Binding BodyArea, Converter={StaticResource VisibleWhen}}" />
+                            <TextBlock Text="↻ Tekrarlayan seri" FontSize="12" Foreground="{StaticResource TextMutedBrush}" Visibility="{Binding IsInSeries, Converter={StaticResource VisibleWhen}}" />
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Grid.Column="4" VerticalAlignment="Center">

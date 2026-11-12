@@ -153,6 +153,37 @@
 
                     <TextBlock Text="NOT" Style="{StaticResource FieldLabel}" />
                     <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MultilineTextBox}" Tag="Randevu notu (isteğe bağlı)" />
+
+                    <!-- Recurrence (new appointments) -->
+                    <StackPanel Visibility="{Binding ShowRecurrence, Converter={StaticResource VisibleWhen}}" Margin="0,12,0,0">
+                        <CheckBox Content="Tekrarlayan randevu" IsChecked="{Binding IsRecurring}" />
+                        <StackPanel Visibility="{Binding IsRecurring, Converter={StaticResource VisibleWhen}}" Margin="0,6,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="56" />
+                                    <ColumnDefinition Width="100" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="56" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Her" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBox Grid.Column="1" Text="{Binding RecurrenceInterval, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Tekrar aralığı" />
+                                <ComboBox Grid.Column="2" ItemsSource="{Binding FrequencyOptions}" SelectedItem="{Binding Frequency}" DisplayMemberPath="Label" Margin="6,0" AutomationProperties.Name="Tekrar birimi" />
+                                <TextBlock Grid.Column="3" Text="toplam" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBox Grid.Column="4" Text="{Binding RecurrenceCount, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Tekrar sayısı" />
+                                <TextBlock Grid.Column="5" Text="kez" VerticalAlignment="Center" Margin="6,0,0,0" />
+                            </Grid>
+                            <TextBlock Text="{Binding RecurrenceSummary}" Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                            <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Text="Saat yaz/kış saati değişse de aynı kalır. Çakışan tarihler kaydetmeden önce listelenir." />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Series member being moved -->
+                    <StackPanel Visibility="{Binding IsSeriesMember, Converter={StaticResource VisibleWhen}}" Margin="0,12,0,0">
+                        <CheckBox Content="Serideki sonraki randevulara da uygula" IsChecked="{Binding ApplyToFollowing}" />
+                        <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Text="Sonraki randevular aynı gün farkı ve saat kadar kaydırılır; tamamlanmış randevular değişmez." />
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </DockPanel>

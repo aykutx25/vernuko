@@ -78,6 +78,11 @@ public sealed partial class AppointmentRow(AppointmentListItem item, bool isCurr
         .ToList();
 
     public bool CanReschedule => Item.CanReschedule;
+
+    public bool IsInSeries => Item.IsInSeries;
+
+    /// <summary>Only open members of a series can be cancelled "from this one onwards".</summary>
+    public bool CanCancelSeries => Item.IsInSeries && AppointmentStatusRules.IsOpen(Item.Status);
 }
 
 public sealed class WeekDayColumn(DateOnly date, bool isToday, IReadOnlyList<AppointmentListItem> items)
@@ -112,6 +117,7 @@ public sealed class MonthCell(DateOnly date, bool inMonth, bool isToday, int cou
 public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
 {
     private readonly AppointmentService _appointments;
+    private readonly WaitlistService _waitlist;
     private readonly CatalogService _catalog;
     private readonly MessagingService _messaging;
     private readonly IServiceProvider _services;
@@ -152,9 +158,10 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
     [ObservableProperty]
     private bool _isClosedDay;
 
-    public AppointmentsViewModel(AppointmentService appointments, CatalogService catalog, MessagingService messaging, IServiceProvider services, IDialogService dialogs, IPlatformServices platform, TimeProvider time)
+    public AppointmentsViewModel(AppointmentService appointments, WaitlistService waitlist, CatalogService catalog, MessagingService messaging, IServiceProvider services, IDialogService dialogs, IPlatformServices platform, TimeProvider time)
     {
         _appointments = appointments;
+        _waitlist = waitlist;
         _catalog = catalog;
         _messaging = messaging;
         _services = services;
@@ -411,8 +418,58 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
         {
             await RefreshAsync();
             InfoMessage = $"{row.Customer}: {AppointmentStatusRules.DisplayName(action.Target)}";
+            if (action.Target is AppointmentStatus.Cancelled or AppointmentStatus.Postponed)
+            {
+                await OfferWaitlistAsync(row);
+            }
         }
     }, clearMessages: true);
+
+    [RelayCommand]
+    private Task CancelSeriesAsync(AppointmentRow row) => RunAsync(async () =>
+    {
+        var reason = await _dialogs.PromptAsync("Seriyi iptal et",
+            $"{row.Customer} — {Formatting.ShortDate(row.Start)} {row.TimeText} ve serideki SONRAKİ tüm açık randevular iptal edilecek. Geçmiş/tamamlanmış randevular değişmez. İptal nedeni:");
+        if (reason is null)
+        {
+            return;
+        }
+
+        var result = await _appointments.CancelSeriesFromAsync(row.Item.Id, reason);
+        if (Check(result))
+        {
+            await RefreshAsync();
+            InfoMessage = $"{row.Customer}: serideki {result.Value} randevu iptal edildi.";
+            await OfferWaitlistAsync(row);
+        }
+    }, clearMessages: true);
+
+    /// <summary>
+    /// After a cancellation, show waiting customers that fit the freed slot. The secretary decides whom to call;
+    /// nothing is sent automatically.
+    /// </summary>
+    private async Task OfferWaitlistAsync(AppointmentRow row)
+    {
+        var matches = await _waitlist.FindMatchesForAsync(row.Item.Id);
+        if (matches.IsFailure || matches.Value.Count == 0)
+        {
+            return;
+        }
+
+        var lines = string.Join("\n", matches.Value.Take(8).Select(m => $"• {m.CustomerName}{(m.CustomerPhone is { } p ? " — " + p : string.Empty)}{(m.PreferredTime is { } t ? " (" + t + ")" : string.Empty)}"));
+        var hasPage = Shell?.NavItems.Any(n => n.Key == "waitlist") == true;
+        if (hasPage)
+        {
+            if (await _dialogs.ConfirmAsync("Boşalan saat için bekleyen müşteriler", $"{Formatting.ShortDate(row.Start)} {row.TimeText} boşaldı. Bekleme listesinde uygun müşteriler:\n\n{lines}", "Bekleme listesini aç"))
+            {
+                await Shell!.NavigateAsync("waitlist");
+            }
+        }
+        else
+        {
+            await _dialogs.ShowMessageAsync("Boşalan saat için bekleyen müşteriler", lines);
+        }
+    }
 
     [RelayCommand]
     private Task SendWhatsAppAsync(AppointmentRow row) => RunAsync(async () =>

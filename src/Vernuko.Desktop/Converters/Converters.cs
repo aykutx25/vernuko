@@ -134,3 +134,41 @@ public sealed class ParametersConverter : IMultiValueConverter
 
     public object[] ConvertBack(object value, Type[] targetTypes, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
+
+/// <summary>
+/// Turns decrypted image bytes into a frozen bitmap held only in memory (no temp file). Decoded at a bounded size
+/// so a large camera photo does not exhaust memory.
+/// </summary>
+public sealed class BytesToImageConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not byte[] { Length: > 0 } bytes)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var stream = new System.IO.MemoryStream(bytes, writable: false);
+            var image = new System.Windows.Media.Imaging.BitmapImage();
+            image.BeginInit();
+            image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            image.DecodePixelWidth = 1200;
+            image.StreamSource = stream;
+            image.EndInit();
+            image.Freeze();
+            return image;
+        }
+        catch (NotSupportedException)
+        {
+            return null;
+        }
+        catch (System.IO.FileFormatException)
+        {
+            return null;
+        }
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}

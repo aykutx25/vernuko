@@ -36,6 +36,11 @@ public partial class AppointmentsView : UserControl
             menu.Items.Add(new MenuItem { Header = "Yeni saate taşı…", Command = vm.RescheduleCommand, CommandParameter = row });
         }
 
+        if (row.CanCancelSeries)
+        {
+            menu.Items.Add(new MenuItem { Header = "Seriyi bu randevudan itibaren iptal et…", Command = vm.CancelSeriesCommand, CommandParameter = row });
+        }
+
         menu.Items.Add(new MenuItem { Header = "WhatsApp ile hatırlat", Command = vm.SendWhatsAppCommand, CommandParameter = row });
         menu.Items.Add(new MenuItem { Header = "Ödeme al", Command = vm.TakePaymentCommand, CommandParameter = row });
         menu.Items.Add(new MenuItem { Header = "Müşteri kartını aç", Command = vm.OpenCustomerCommand, CommandParameter = row });

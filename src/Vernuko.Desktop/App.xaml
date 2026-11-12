@@ -23,6 +23,7 @@
             <c:IconKeyConverter x:Key="IconKey" />
             <c:PercentArcConverter x:Key="PercentArc" />
             <c:ParametersConverter x:Key="Parameters" />
+            <c:BytesToImageConverter x:Key="BytesToImage" />
 
             <!-- View-model → view mapping (MVVM, no code-behind logic). -->
             <DataTemplate DataType="{x:Type vm:SetupWizardViewModel}"><v:SetupWizardView /></DataTemplate>
@@ -43,6 +44,7 @@
             <DataTemplate DataType="{x:Type pages:WaitlistViewModel}"><v:WaitlistView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:CommissionRulesViewModel}"><v:CommissionRulesView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:ConsentTemplatesViewModel}"><v:ConsentTemplatesView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pages:CustomerRecordsViewModel}"><v:CustomerRecordsView /></DataTemplate>
             <DataTemplate DataType="{x:Type dialogs:PaymentDialogViewModel}"><v:PaymentDialogView /></DataTemplate>
             <DataTemplate DataType="{x:Type dialogs:SellPackageDialogViewModel}"><v:SellPackageDialogView /></DataTemplate>
         </ResourceDictionary>
