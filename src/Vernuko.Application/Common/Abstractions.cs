@@ -37,6 +37,9 @@ public interface IDeviceIdentity
     string DeviceHash { get; }
 }
 
+/// <summary>Who is signed in, as sent from the main computer to a connected one.</summary>
+public sealed record RemoteUser(Guid Id, string Username, string DisplayName, SystemRole Role, Guid? StaffMemberId, IReadOnlyList<Permission> Permissions);
+
 /// <summary>The signed-in user of this desktop session.</summary>
 public sealed class UserSession
 {
@@ -71,6 +74,23 @@ public sealed class UserSession
         IsLocked = false;
         Changed?.Invoke(this, EventArgs.Empty);
     }
+
+    /// <summary>The user signed in on the main computer (connected computer): a copy for showing/hiding screens only.</summary>
+    public void SignInRemote(RemoteUser user)
+    {
+        UserId = user.Id;
+        Username = user.Username;
+        DisplayName = user.DisplayName;
+        Role = user.Role;
+        StaffMemberId = user.StaffMemberId;
+        _permissions = user.Permissions.ToHashSet();
+        IsLocked = false;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public RemoteUser? ToRemoteUser() => UserId is { } id && Username is { } name && Role is { } role
+        ? new RemoteUser(id, name, DisplayName ?? name, role, StaffMemberId, _permissions.Order().ToList())
+        : null;
 
     /// <summary>Used by background/system operations (setup wizard, scheduled backup) — never by UI actions.</summary>
     public void SignInSystem(string name, IReadOnlySet<Permission> permissions)

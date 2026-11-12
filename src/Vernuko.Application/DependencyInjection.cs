@@ -22,8 +22,9 @@ public static class DependencyInjection
         services.AddSingleton<UserSession>();
         services.AddSingleton<AuditWriter>();
         services.TryAddSingleton(new PasswordHasher());
-        services.AddSingleton<LicenseService>();
-        services.AddSingleton<ILicenseGate>(sp => sp.GetRequiredService<LicenseService>());
+        // TryAdd: a remote session's container on the main computer shares the main computer's license service.
+        services.TryAddSingleton<LicenseService>();
+        services.TryAddSingleton<ILicenseGate>(sp => sp.GetRequiredService<LicenseService>());
         services.AddSingleton<LicenseOnlineService>();
         services.AddSingleton<AppServiceDeps>();
         services.AddSingleton<DatabaseInitializer>();

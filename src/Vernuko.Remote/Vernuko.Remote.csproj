@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Vernuko.Remote</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The main computer serves connected computers with an embedded Kestrel server. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Vernuko.Application\Vernuko.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Vernuko.Tests" />
+  </ItemGroup>
+</Project>
