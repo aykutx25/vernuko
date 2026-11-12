@@ -109,6 +109,16 @@ docs/                       mimari, kararlar ve araştırma
 | [docs/RELEASE.md](docs/RELEASE.md) | Kurulum paketi, sürüm yayınlama, güncelleme, imzalama |
 | [CHANGELOG.md](CHANGELOG.md) | Sürüm notları |
 
+## Lisans
+Vernuko **özgür yazılımdır**: [GNU Affero Genel Kamu Lisansı sürüm 3](LICENSE) (AGPL-3.0-only) ile dağıtılır.
+Copyright © 2026 Vernuko.
+
+- Kaynak kodunu kullanabilir, inceleyebilir, değiştirebilir ve paylaşabilirsiniz. Değiştirilmiş bir sürümü dağıtırsanız (ya da ağ üzerinden kullanıcılara sunarsanız) onun kaynak kodunu da aynı lisansla açmanız gerekir.
+- Program **hiçbir garanti olmaksızın** sunulur (lisansın 15–16. maddeleri).
+- Kullanılan açık kaynak bileşenler ve lisansları: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Hepsi MIT veya Apache-2.0 lisanslıdır ve AGPL-3.0 ile uyumludur.
+- **"Vernuko" adı ve logosu AGPL kapsamında değildir.** Kodun değiştirilmiş sürümleri bu ad ve logo ile dağıtılamaz; başka bir ad kullanılmalıdır.
+- Hazır kurulum paketi, otomatik güncelleme, kurulum desteği ve sunucu gerektiren hizmetler (ör. bulut yedek, SMS/WhatsApp) ücretli olarak sunulabilir; bu, AGPL ile uyumludur.
+
 ## Bilinen sınırlar
 - **Arayüz Windows'ta smoke test ile doğrulandı** (11 sayfa, 20 sekme, 0 bağlama hatası; ilk çalıştırmada bulunan 3 hata düzeltildi). Başarı akışının elle baştan sona denenmesi ve kurulum paketinin Windows'ta kurulup kaldırılması henüz yapılmadı.
 - Yükleyici imzasız; Windows SmartScreen uyarı verir. Sertifika alınınca imzalanacak (bkz. [docs/RELEASE.md](docs/RELEASE.md)).

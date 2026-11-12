@@ -26,6 +26,11 @@
   <ItemGroup Condition="'$(VernukoUpdateUrl)' != ''">
     <AssemblyMetadata Include="VernukoUpdateUrl" Value="$(VernukoUpdateUrl)" />
   </ItemGroup>
+  <!-- AGPL-3.0: the license and third-party notices ship with every build and installer. -->
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\vernuko.ico" />
     <Resource Include="Assets\vernuko-256.png" />

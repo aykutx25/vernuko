@@ -12,8 +12,8 @@
     <Deterministic>true</Deterministic>
     <Company>Vernuko</Company>
     <Product>Vernuko</Product>
-    <Copyright>© Vernuko</Copyright>
-    <Version>0.2.10</Version>
+    <Copyright>© 2026 Vernuko</Copyright>
+    <Version>0.3.0</Version>
     <NeutralLanguage>tr-TR</NeutralLanguage>
     <!-- WPF projects can be compiled (not run) on Linux/macOS CI with this flag. -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>

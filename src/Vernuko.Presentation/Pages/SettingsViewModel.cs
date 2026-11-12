@@ -157,6 +157,11 @@ public sealed partial class SettingsViewModel(
 
     public string DeviceId => device.DeviceHash;
 
+    /// <summary>AGPL-3.0 §6: users who receive the program must be able to get its source code.</summary>
+    public const string SourceCodeUrl = "https://github.com/aykutx25/vernuko";
+
+    public string SourceCodeText => SourceCodeUrl;
+
     public CommissionRulesViewModel CommissionRules { get; } = commissionRules;
 
     public ConsentTemplatesViewModel ConsentTemplates { get; } = consentTemplates;
@@ -427,6 +432,13 @@ public sealed partial class SettingsViewModel(
             InfoMessage = "Lisans yüklendi.";
         }
     });
+
+    [RelayCommand]
+    private void OpenSourceCode() => platform.OpenUri(new Uri(SourceCodeUrl));
+
+    /// <summary>Opens the program folder, which contains LICENSE.txt (AGPL-3.0) and THIRD-PARTY-NOTICES.md.</summary>
+    [RelayCommand]
+    private void ShowLicenseFiles() => platform.OpenFolder(AppContext.BaseDirectory);
 
     [RelayCommand]
     private Task VerifyAuditAsync() => RunAsync(async () =>

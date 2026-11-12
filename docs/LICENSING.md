@@ -2,6 +2,19 @@
 
 Ayrıntılı ve kaynaklı karşılaştırma: [research/licensing-payments-signing.md](research/licensing-payments-signing.md).
 
+## Kaynak kod lisansı (2026-11-12 kararı)
+Vernuko'nun kaynak kodu **AGPL-3.0-only** ile açılır (`LICENSE`). Sahibin kararı; gerekçe ve sonuçlar:
+
+| Konu | Sonuç |
+|---|---|
+| Satış | Serbest. Satılan şey: hazır ve güncel kurulum paketi, otomatik güncelleme, kurulum/taşıma desteği ve sunucu gerektiren hizmetler (bulut yedek, SMS/WhatsApp, lisans/etkinleştirme). |
+| Rakip ürünler | AGPL gereği, kodu değiştirip dağıtan ya da ağ üzerinden sunan herkes kendi kaynak kodunu da aynı lisansla açmak zorundadır; kapalı rakip ürün çıkaramaz. |
+| Lisans kontrolü | Kodda görünür ve değiştirilebilir. Gerçek koruma sunucu tarafındadır: etkinleştirme, güncelleme izni ve ücretli hizmetler geçerli lisans ister (Faz 4–6). Uygulamadaki imzalı lisans belgesi sahte lisans üretilmesini engellemeye devam eder. |
+| Ad ve logo | "Vernuko" adı/logosu AGPL kapsamında değildir; marka tescili (TÜRKPATENT) önerilir. |
+| Çift lisans | Yapılmıyor (AGPL dışında ticari kod lisansı satılmıyor). Bu, ücretsiz açık kaynak imza programlarının (SignPath Foundation) koşuludur. |
+| Bileşenler | Hepsi MIT/Apache-2.0, AGPL-3.0 ile uyumlu (`THIRD-PARTY-NOTICES.md`). |
+| Hukuki kontrol | ⚖️ Lisans seçimi, marka kullanım politikası ve kullanıcı sözleşmesi bir avukatla gözden geçirilmelidir. |
+
 ## Karar özeti
 | Konu | Karar | Gerekçe |
 |---|---|---|

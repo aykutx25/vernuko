@@ -2,6 +2,13 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.3.0] — 2026-11-12 — Açık kaynak (AGPL-3.0)
+
+### Değişti
+- **Lisans: AGPL-3.0-only** (`LICENSE`). Kaynak kod açık; değiştirip dağıtan kendi kodunu da açmak zorunda. "Vernuko" adı ve logosu lisans kapsamında değil.
+- Program, lisans metnini (`LICENSE.txt`) ve açık kaynak bileşen bildirimlerini (`THIRD-PARTY-NOTICES.md`) birlikte dağıtır; Ayarlar › Lisans'ta açık kaynak bilgisi ve kaynak kod bağlantısı var.
+- Belgeler: lisans kararı ve sonuçları (`docs/LICENSING.md`), açık kaynak imza seçenekleri (`docs/RELEASE.md`).
+
 ## [0.2.10] — 2026-11-12
 
 ### Eklendi

@@ -242,6 +242,14 @@
                         <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0" Text="Lisans süresi dolsa bile verileriniz silinmez veya kilitlenmez; Vernuko salt-okunur moda geçer ve yedek almanıza, dışa aktarmanıza izin verir." />
                         <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0"><Run Text="Cihaz kimliği (gizlilik için özetlenmiş): " /><Run Text="{Binding DeviceId, Mode=OneWay}" FontFamily="Consolas" /></TextBlock>
                         <Button Content="Lisans dosyası yükle…" Command="{Binding ImportLicenseCommand}" HorizontalAlignment="Left" Margin="0,14,0,0" Visibility="{Binding CanManageLicense, Converter={StaticResource VisibleWhen}}" />
+
+                        <TextBlock Text="Açık kaynak" Style="{StaticResource SectionTitle}" Margin="0,24,0,6" />
+                        <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"
+                                   Text="Vernuko özgür yazılımdır: GNU Affero Genel Kamu Lisansı sürüm 3 (AGPL-3.0) koşullarıyla dağıtılır. Kaynak kodunu inceleyebilir, bu lisansın koşullarına uyarak değiştirip paylaşabilirsiniz. Program HİÇBİR GARANTİ olmaksızın sunulur; ayrıntılar lisans metnindedir. Kullanılan açık kaynak bileşenlerin bildirimleri program klasöründeki THIRD-PARTY-NOTICES.md dosyasındadır." />
+                        <WrapPanel Margin="0,10,0,0">
+                            <Button Style="{StaticResource LinkButton}" Content="{Binding SourceCodeText}" Command="{Binding OpenSourceCodeCommand}" Margin="0,0,18,6" ToolTip="Kaynak kodu tarayıcıda aç" />
+                            <Button Style="{StaticResource LinkButton}" Content="Lisans dosyalarını göster" Command="{Binding ShowLicenseFilesCommand}" Margin="0,0,0,6" />
+                        </WrapPanel>
                     </StackPanel>
                 </Border>
             </TabItem>
