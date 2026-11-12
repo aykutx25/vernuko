@@ -39,7 +39,7 @@ public sealed class BreakRow(DateTime start, DateTime end, string title) : Agend
 
 public sealed record StatusAction(string Label, AppointmentStatus Target, bool IsDestructive);
 
-public sealed partial class AppointmentRow(AppointmentListItem item, bool isCurrent) : AgendaRow
+public sealed partial class AppointmentRow(AppointmentListItem item, bool isCurrent, DateTime nowLocal) : AgendaRow
 {
     public AppointmentListItem Item { get; } = item;
 
@@ -73,7 +73,9 @@ public sealed partial class AppointmentRow(AppointmentListItem item, bool isCurr
         _ => "Planned",
     };
 
+    /// <summary>Only actions that can be chosen right now (no "Tamamla" on tomorrow's appointment).</summary>
     public IReadOnlyList<StatusAction> Actions { get; } = item.NextStatuses
+        .Where(s => item.Status == AppointmentStatus.Completed || !AppointmentStatusRules.IsTooEarly(s, item.StartLocal, nowLocal))
         .Select(s => new StatusAction(AppointmentStatusRules.ActionName(item.Status, s), s, s is AppointmentStatus.Cancelled or AppointmentStatus.NoShow))
         .ToList();
 
@@ -283,7 +285,7 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
                 Rows.Clear();
                 var rows = new List<AgendaRow>();
                 var current = agenda.Value.Items.FirstOrDefault(i => i.StartLocal <= nowLocal && nowLocal < i.EndLocal && AppointmentStatusRules.IsOpen(i.Status));
-                rows.AddRange(agenda.Value.Items.Select(i => new AppointmentRow(i, i == current)));
+                rows.AddRange(agenda.Value.Items.Select(i => new AppointmentRow(i, i == current, nowLocal)));
                 rows.AddRange(agenda.Value.Breaks.Select(b => new BreakRow(day.ToDateTime(b.Start), day.ToDateTime(b.End), "Öğle Arası")));
                 foreach (var r in rows.OrderBy(r => r.Start))
                 {

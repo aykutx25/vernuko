@@ -57,7 +57,27 @@ public static class AppointmentStatusRules
     public static bool HoldsResources(AppointmentStatus status) => status is not (AppointmentStatus.Postponed or AppointmentStatus.Cancelled or AppointmentStatus.NoShow);
 
     /// <summary>Statuses that can only be set once the appointment start time has been reached.</summary>
-    public static bool RequiresStarted(AppointmentStatus status) => status is AppointmentStatus.InProgress or AppointmentStatus.Completed or AppointmentStatus.NoShow;
+    /// <summary>
+    /// How early treatment may start or be completed: customers arrive early and a free room can be used, but an
+    /// appointment for later today or tomorrow must not be completed by mistake (it consumes a package session).
+    /// </summary>
+    public static readonly TimeSpan EarlyStartTolerance = TimeSpan.FromMinutes(60);
+
+    /// <summary>
+    /// True when <paramref name="to"/> cannot be chosen yet: "Gelmedi" only after the start time, "İşleme başla" and
+    /// "Tamamla" from <see cref="EarlyStartTolerance"/> before it. Start and now must use the same clock (both UTC or
+    /// both local business time).
+    /// </summary>
+    public static bool IsTooEarly(AppointmentStatus to, DateTime start, DateTime now) => to switch
+    {
+        AppointmentStatus.NoShow => now < start,
+        AppointmentStatus.InProgress or AppointmentStatus.Completed => now < start - EarlyStartTolerance,
+        _ => false,
+    };
+
+    public static string TooEarlyMessage(AppointmentStatus to) => to == AppointmentStatus.NoShow
+        ? "Randevu saati geçmeden \"Gelmedi\" işaretlenemez."
+        : "İşleme başlama ve tamamlama en erken randevu saatinden 1 saat önce yapılabilir.";
 
     public static bool RequiresReason(AppointmentStatus from, AppointmentStatus to) =>
         to is AppointmentStatus.Cancelled || (from == AppointmentStatus.Completed && to == AppointmentStatus.InProgress);

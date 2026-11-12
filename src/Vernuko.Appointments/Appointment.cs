@@ -257,9 +257,9 @@ public sealed class Appointment : Entity
                 $"\"{AppointmentStatusRules.DisplayName(Status)}\" durumundaki randevu \"{AppointmentStatusRules.DisplayName(to)}\" yapılamaz.");
         }
 
-        if (AppointmentStatusRules.RequiresStarted(to) && Status != AppointmentStatus.Completed && nowUtc < StartUtc)
+        if (Status != AppointmentStatus.Completed && AppointmentStatusRules.IsTooEarly(to, StartUtc, nowUtc))
         {
-            return Error.Validation("appointment.not_started", "Randevu saati gelmeden bu durum seçilemez.");
+            return Error.Validation("appointment.not_started", AppointmentStatusRules.TooEarlyMessage(to));
         }
 
         if (AppointmentStatusRules.RequiresReason(Status, to) && string.IsNullOrWhiteSpace(reason))

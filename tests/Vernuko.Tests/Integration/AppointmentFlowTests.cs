@@ -150,6 +150,37 @@ public class AppointmentFlowTests
     }
 
     [Fact]
+    public async Task Treatment_may_start_up_to_an_hour_early_but_no_show_only_after_the_start_time()
+    {
+        // Found on the first Windows run: "Tamamla" was offered for tomorrow's appointment and then refused, and a
+        // customer who came 10 minutes early could not be started at all. Test clock: 12 Nov 10:00 local.
+        await using var app = await TestApp.CreateAsync();
+        await app.SetupBeautyAsync();
+        var c = await app.CatalogAsync();
+        var customer = await app.AddCustomerAsync();
+        var svc = app.Get<AppointmentService>();
+
+        var soon = (await svc.CreateAsync(Request(customer, c.Laser, c.Selin, c.Room1, TestApp.Local(10, 50)), false)).Value.AppointmentId!.Value;
+        var noShowEarly = await svc.ChangeStatusAsync(soon, AppointmentStatus.NoShow, null);
+        Assert.Contains("Gelmedi", noShowEarly.Error.Message);
+        Assert.True((await svc.ChangeStatusAsync(soon, AppointmentStatus.Arrived, null)).IsSuccess);
+        Assert.True((await svc.ChangeStatusAsync(soon, AppointmentStatus.Completed, null)).IsSuccess); // 50 min early
+
+        var later = (await svc.CreateAsync(Request(customer, c.Laser, c.Derya, c.Room2, TestApp.Local(12)), false)).Value.AppointmentId!.Value;
+        var r = await svc.ChangeStatusAsync(later, AppointmentStatus.Completed, null);
+        Assert.Equal("validation.appointment.not_started", r.Error.Code);
+        Assert.Contains("1 saat", r.Error.Message);
+
+        // The day list only offers what can be chosen now.
+        var page = app.Get<Vernuko.Presentation.Pages.AppointmentsViewModel>();
+        page.SelectedDate = new DateTime(2026, 11, 12);
+        await page.OnNavigatedToAsync(null);
+        var row = page.Rows.OfType<Vernuko.Presentation.Pages.AppointmentRow>().Single(x => x.Item.Id == later);
+        Assert.DoesNotContain(row.Actions, a => a.Target is AppointmentStatus.Completed or AppointmentStatus.InProgress or AppointmentStatus.NoShow);
+        Assert.Contains(row.Actions, a => a.Target == AppointmentStatus.Arrived);
+    }
+
+    [Fact]
     public async Task Reschedule_moves_bookings_and_frees_old_slot()
     {
         await using var app = await TestApp.CreateAsync();

@@ -2,6 +2,12 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.2.7] — 2026-11-12
+
+### Değişti
+- **İşleme başlama ve tamamlama en erken randevu saatinden 1 saat önce yapılabilir** (önceden tam saatinde). Erken gelen müşteri boş odada erken alınabilir; yarınki bir randevu yine yanlışlıkla tamamlanamaz (paketten seans düşürür). "Gelmedi" yalnızca randevu saati geçince işaretlenebilir.
+- Randevu satırındaki işlemler menüsü artık o an seçilemeyecek durumları göstermiyor (ör. yarınki randevuda "Tamamla" yok). Windows'taki denemede, menüde görünen "Tamamla" seçilince "Randevu saati gelmeden bu durum seçilemez" uyarısı çıkıyordu.
+
 ## [0.2.6] — 2026-11-12
 
 ### Düzeltildi
