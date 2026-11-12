@@ -223,6 +223,16 @@
                 </ScrollViewer>
             </TabItem>
 
+            <!-- Commission rules -->
+            <TabItem Header="Prim kuralları" Visibility="{Binding ShowCommissionRules, Converter={StaticResource VisibleWhen}}">
+                <ContentControl Content="{Binding CommissionRules}" Focusable="False" />
+            </TabItem>
+
+            <!-- Consent templates -->
+            <TabItem Header="Onam formları" Visibility="{Binding ShowConsentTemplates, Converter={StaticResource VisibleWhen}}">
+                <ContentControl Content="{Binding ConsentTemplates}" Focusable="False" />
+            </TabItem>
+
             <!-- License -->
             <TabItem Header="Lisans">
                 <Border Style="{StaticResource Card}" Padding="20" HorizontalAlignment="Left" VerticalAlignment="Top" MinWidth="620">

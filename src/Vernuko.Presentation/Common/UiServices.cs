@@ -28,4 +28,8 @@ public interface IPlatformServices
     Task WriteTextFileAsync(string path, string content);
 
     Task<string> ReadTextFileAsync(string path);
+
+    Task<byte[]> ReadFileBytesAsync(string path);
+
+    Task WriteFileBytesAsync(string path, byte[] content);
 }

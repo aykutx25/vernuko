@@ -72,4 +72,8 @@ public sealed class WpfPlatformServices : IPlatformServices
     public Task WriteTextFileAsync(string path, string content) => File.WriteAllTextAsync(path, content, new UTF8Encoding(false));
 
     public Task<string> ReadTextFileAsync(string path) => File.ReadAllTextAsync(path);
+
+    public Task<byte[]> ReadFileBytesAsync(string path) => File.ReadAllBytesAsync(path);
+
+    public Task WriteFileBytesAsync(string path, byte[] content) => File.WriteAllBytesAsync(path, content);
 }

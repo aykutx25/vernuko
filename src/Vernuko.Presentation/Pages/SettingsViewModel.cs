@@ -22,7 +22,9 @@ public sealed partial class SettingsViewModel(
     AuditService audit,
     IDeviceIdentity device,
     IDialogService dialogs,
-    IPlatformServices platform) : PageViewModel, IShellAware
+    IPlatformServices platform,
+    CommissionRulesViewModel commissionRules,
+    ConsentTemplatesViewModel consentTemplates) : PageViewModel, IShellAware
 {
     // Business
     [ObservableProperty]
@@ -154,6 +156,15 @@ public sealed partial class SettingsViewModel(
 
     public string DeviceId => device.DeviceHash;
 
+    public CommissionRulesViewModel CommissionRules { get; } = commissionRules;
+
+    public ConsentTemplatesViewModel ConsentTemplates { get; } = consentTemplates;
+
+    /// <summary>Commission rules and consent forms are useful for every profile (KVKK açık rıza applies everywhere).</summary>
+    public bool ShowCommissionRules => CanManageSettings;
+
+    public bool ShowConsentTemplates => CanManageSettings;
+
     public override Task OnNavigatedToAsync(object? parameter) => RunAsync(async () =>
     {
         NewUserRole = Roles.First(r => r.Value == SystemRole.Secretary);
@@ -164,6 +175,16 @@ public sealed partial class SettingsViewModel(
         if (CanViewAudit)
         {
             await LoadAuditAsync();
+        }
+
+        if (ShowCommissionRules)
+        {
+            await CommissionRules.LoadAsync();
+        }
+
+        if (ShowConsentTemplates)
+        {
+            await ConsentTemplates.LoadAsync();
         }
 
         OnPropertyChanged(string.Empty);
@@ -357,7 +378,7 @@ public sealed partial class SettingsViewModel(
         var r = await backups.VerifyAsync(path, key);
         if (Check(r))
         {
-            InfoMessage = $"Yedek sağlam: {Formatting.ShortDate(r.Value.CreatedAtUtc.ToLocalTime())} {Formatting.Time(r.Value.CreatedAtUtc.ToLocalTime())}, veritabanı {r.Value.DatabaseBytes / 1024:N0} KB, bütünlük kontrolü başarılı. Fotoğraf/ek dosya içermez.";
+            InfoMessage = $"Yedek sağlam: {Formatting.ShortDate(r.Value.CreatedAtUtc.ToLocalTime())} {Formatting.Time(r.Value.CreatedAtUtc.ToLocalTime())}, veritabanı {r.Value.DatabaseBytes / 1024:N0} KB, bütünlük kontrolü başarılı.{(r.Value.AttachmentsIncluded ? " Müşteri fotoğrafları/dosyaları dahil." : string.Empty)}";
         }
     });
 

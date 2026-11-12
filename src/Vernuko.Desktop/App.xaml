@@ -39,6 +39,10 @@
             <DataTemplate DataType="{x:Type pages:PaymentsViewModel}"><v:PaymentsView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:ReportsViewModel}"><v:ReportsView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:SettingsViewModel}"><v:SettingsView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pages:InventoryViewModel}"><v:InventoryView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pages:WaitlistViewModel}"><v:WaitlistView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pages:CommissionRulesViewModel}"><v:CommissionRulesView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pages:ConsentTemplatesViewModel}"><v:ConsentTemplatesView /></DataTemplate>
             <DataTemplate DataType="{x:Type dialogs:PaymentDialogViewModel}"><v:PaymentDialogView /></DataTemplate>
             <DataTemplate DataType="{x:Type dialogs:SellPackageDialogViewModel}"><v:SellPackageDialogView /></DataTemplate>
         </ResourceDictionary>

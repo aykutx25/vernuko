@@ -3,13 +3,17 @@ using CommunityToolkit.Mvvm.Input;
 using Vernuko.Application;
 using Vernuko.Application.Services;
 using Vernuko.Presentation.Common;
+using Vernuko.Security;
 
 namespace Vernuko.Presentation.Pages;
 
 public sealed record ReportLine(string Name, int Count);
 
-public sealed partial class ReportsViewModel(ReportService reports, TimeProvider time) : PageViewModel
+public sealed partial class ReportsViewModel(ReportService reports, CommissionService commissions, TimeProvider time) : PageViewModel, IShellAware
 {
+    [ObservableProperty]
+    private CommissionReport? _commission;
+
     [ObservableProperty]
     private DateTime _from = new(time.GetLocalNow().Year, time.GetLocalNow().Month, 1);
 
@@ -20,6 +24,13 @@ public sealed partial class ReportsViewModel(ReportService reports, TimeProvider
     private PeriodReport? _report;
 
     public override string Title => "Raporlar";
+
+    public ShellViewModel? Shell { get; set; }
+
+    /// <summary>Commissions are financial data: only users with the financial report permission see them.</summary>
+    public bool ShowCommission => Shell?.Has(Permission.ReportsFinancial) ?? false;
+
+    public string CommissionTotalText => Commission is null ? "–" : Formatting.Money(Commission.GrandTotalMinor);
 
     public IReadOnlyList<ReportLine> ByStaff => Report?.ByStaff.Select(x => new ReportLine(x.Name, x.Count)).ToList() ?? [];
 
@@ -73,5 +84,14 @@ public sealed partial class ReportsViewModel(ReportService reports, TimeProvider
         {
             Report = r.Value;
         }
+
+        if (ShowCommission)
+        {
+            var c = await commissions.GetReportAsync(DateOnly.FromDateTime(From), DateOnly.FromDateTime(To));
+            Commission = c.IsSuccess ? c.Value : null;
+        }
+
+        OnPropertyChanged(nameof(ShowCommission));
+        OnPropertyChanged(nameof(CommissionTotalText));
     });
 }

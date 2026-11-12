@@ -1,0 +1,151 @@
+<UserControl x:Class="Vernuko.Desktop.Views.InventoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="24,20,24,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border CornerRadius="14" Padding="10,4" Background="{StaticResource WarningSoftBrush}" Margin="0,0,12,0" Visibility="{Binding LowCount, Converter={StaticResource VisibleWhen}}">
+                    <TextBlock Foreground="{StaticResource TextBrush}"><Run Text="{Binding LowCount, Mode=OneWay}" /><Run Text=" ürün kritik seviyede" /></TextBlock>
+                </Border>
+                <CheckBox Content="Yalnızca kritik stok" IsChecked="{Binding LowOnly}" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Text="Stok" Style="{StaticResource PageTitle}" />
+        </DockPanel>
+        <StackPanel Grid.Row="1">
+            <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
+            <Border Style="{StaticResource InfoBanner}" Visibility="{Binding InfoMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding InfoMessage}" TextWrapping="Wrap" /></Border>
+            <Border Style="{StaticResource WarnBanner}" Margin="0,8,0,0" Visibility="{Binding CanManage, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
+                <TextBlock Text="Stok kayıtlarını görüntüleyebilirsiniz; ürün ve stok değişikliği için yetki gerekir." />
+            </Border>
+        </StackPanel>
+        <TabControl Grid.Row="2">
+            <TabItem Header="Ürünler">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="400" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="3*" />
+                        <RowDefinition Height="2*" />
+                    </Grid.RowDefinitions>
+                    <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,14,10">
+                        <DataGrid ItemsSource="{Binding Products}" SelectedItem="{Binding Selected}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Ürün" Binding="{Binding Name}" Width="*" />
+                                <DataGridTextColumn Header="Kod" Binding="{Binding Sku}" Width="90" />
+                                <DataGridTextColumn Header="Stok" Binding="{Binding StockText}" Width="90" />
+                                <DataGridTextColumn Header="Kritik" Binding="{Binding MinimumStock}" Width="60" />
+                                <DataGridTextColumn Header="Satış fiyatı" Binding="{Binding SalePriceMinor, Converter={StaticResource Money}}" Width="100" />
+                                <DataGridCheckBoxColumn Header="Kritik mi" Binding="{Binding IsLow, Mode=OneWay}" Width="70" />
+                                <DataGridCheckBoxColumn Header="Aktif" Binding="{Binding IsActive, Mode=OneWay}" Width="55" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                    <Border Grid.Row="1" Style="{StaticResource Card}" Padding="0" Margin="0,0,14,0">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Stok hareketleri (seçili ürün)" Style="{StaticResource SectionTitle}" Margin="14,12,14,6" />
+                            <DataGrid ItemsSource="{Binding Movements}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Tarih" Binding="{Binding AtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                                    <DataGridTextColumn Header="Hareket" Binding="{Binding KindName}" Width="130" />
+                                    <DataGridTextColumn Header="Miktar" Binding="{Binding QuantityDelta}" Width="70" />
+                                    <DataGridTextColumn Header="Müşteri" Binding="{Binding CustomerName}" Width="130" />
+                                    <DataGridTextColumn Header="Açıklama" Binding="{Binding Note}" Width="*" />
+                                    <DataGridTextColumn Header="Kullanıcı" Binding="{Binding UserName}" Width="100" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+                    <Border Grid.Column="1" Grid.RowSpan="2" Style="{StaticResource Card}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewCommand}" IsEnabled="{Binding CanManage}" />
+                                    <TextBlock Text="Ürün bilgileri" Style="{StaticResource SectionTitle}" />
+                                </DockPanel>
+                                <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                                <UniformGrid Columns="2">
+                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="ÜRÜN KODU" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Sku, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel><TextBlock Text="BİRİM" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Unit, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="SATIŞ FİYATI (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding SalePrice, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel><TextBlock Text="ALIŞ MALİYETİ (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Cost, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="KRİTİK STOK" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding MinimumStock, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                </UniformGrid>
+                                <CheckBox Content="Aktif" IsChecked="{Binding IsActive}" Margin="0,10,0,0" />
+                                <WrapPanel Margin="0,12,0,0">
+                                    <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveCommand}" MinWidth="100" Margin="0,0,8,6" IsEnabled="{Binding CanManage}" />
+                                    <Button Content="Stok girişi…" Command="{Binding ReceiveCommand}" Margin="0,0,8,6" IsEnabled="{Binding CanManage}" />
+                                    <Button Content="Sayım düzeltmesi…" Command="{Binding AdjustCommand}" Margin="0,0,0,6" IsEnabled="{Binding CanManage}" />
+                                </WrapPanel>
+                                <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Text="Stok hareketleri silinemez ve değiştirilemez; düzeltmeler gerekçesiyle yeni hareket olarak kaydedilir." />
+
+                                <Separator Margin="0,16" />
+                                <TextBlock Text="Müşteriye ürün sat" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="MÜŞTERİ" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}" Tag="Ad veya telefon ile ara…" IsEnabled="{Binding CanSell}" AutomationProperties.Name="Müşteri ara" />
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,4,0,0" Padding="4" Visibility="{Binding CustomerResults.Count, Converter={StaticResource VisibleWhen}}">
+                                    <ListBox ItemsSource="{Binding CustomerResults}" SelectedItem="{Binding SaleCustomer}" Style="{StaticResource PlainListBox}" MaxHeight="180">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Phone}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" />
+                                                    <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" />
+                                                </DockPanel>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Border>
+                                <UniformGrid Columns="2">
+                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="MİKTAR" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding SaleQuantity, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel><TextBlock Text="BİRİM FİYAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding SalePriceText, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                </UniformGrid>
+                                <TextBlock Text="SATIŞI YAPAN (PRİM İÇİN)" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding Staff}" SelectedItem="{Binding SaleStaff}" DisplayMemberPath="DisplayName" />
+                                <TextBlock Text="ÖDEME" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding PaymentOptions}" SelectedItem="{Binding SalePayment}" DisplayMemberPath="Label" />
+                                <Button Style="{StaticResource PrimaryButton}" Content="Satışı kaydet" Command="{Binding SellCommand}" HorizontalAlignment="Left" Margin="0,12,0,0" IsEnabled="{Binding CanSell}" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Hizmet malzemeleri">
+                <Border Style="{StaticResource Card}" HorizontalAlignment="Left" VerticalAlignment="Top" MinWidth="620">
+                    <StackPanel MaxWidth="720">
+                        <TextBlock Text="Hizmet tamamlandığında stoktan düşülecek malzemeler" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Text="Örnek: Lazer epilasyon tamamlanınca 1 adet jel ve 1 adet tek kullanımlık örtü otomatik düşülür. Stok yetersizse randevu yine tamamlanır, stok eksiye düşer ve kritik listede görünür." />
+                        <TextBlock Text="HİZMET" Style="{StaticResource FieldLabel}" />
+                        <ComboBox ItemsSource="{Binding Services}" SelectedItem="{Binding MaterialService}" DisplayMemberPath="Name" Width="360" HorizontalAlignment="Left" />
+                        <ItemsControl ItemsSource="{Binding Materials}" Margin="0,10,0,0" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="320" />
+                                            <ColumnDefinition Width="90" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox ItemsSource="{Binding DataContext.Products, RelativeSource={RelativeSource AncestorType=UserControl}}" SelectedItem="{Binding Product}" DisplayMemberPath="Name" Margin="0,0,8,0" />
+                                        <TextBox Grid.Column="1" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" AutomationProperties.Name="Miktar" />
+                                        <Button Grid.Column="2" Style="{StaticResource LinkButton}" Content="Kaldır" Command="{Binding DataContext.RemoveMaterialCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="+ Malzeme ekle" Command="{Binding AddMaterialCommand}" Margin="0,0,8,0" IsEnabled="{Binding CanManage}" />
+                            <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveMaterialsCommand}" IsEnabled="{Binding CanManage}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

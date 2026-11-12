@@ -121,7 +121,13 @@ public sealed partial class SellPackageDialogViewModel(PackageService packages, 
     [ObservableProperty]
     private Option<PaymentMethod> _method = PaymentDialogViewModel.Methods[0];
 
+    [ObservableProperty]
+    private Option<Guid?>? _soldBy;
+
     public System.Collections.ObjectModel.ObservableCollection<PackageTemplateDto> Templates { get; } = [];
+
+    /// <summary>Who made the sale (for package-sale commission). "Belirtilmedi" = no commission.</summary>
+    public System.Collections.ObjectModel.ObservableCollection<Option<Guid?>> SellerOptions { get; } = [];
 
     public System.Collections.ObjectModel.ObservableCollection<ServiceDto> Services { get; } = [];
 
@@ -142,6 +148,14 @@ public sealed partial class SellPackageDialogViewModel(PackageService packages, 
         {
             Services.Add(s);
         }
+
+        SellerOptions.Add(new Option<Guid?>("Belirtilmedi", null));
+        foreach (var s in (await catalog.GetStaffAsync()).OrEmpty())
+        {
+            SellerOptions.Add(new Option<Guid?>(s.DisplayName, s.Id));
+        }
+
+        SoldBy = SellerOptions[0];
 
         if (customerId is { } id && (await customers.GetAsync(id)) is { IsSuccess: true } c)
         {
@@ -213,7 +227,7 @@ public sealed partial class SellPackageDialogViewModel(PackageService packages, 
         }
 
         int? validity = int.TryParse(ValidityDays, out var v) ? v : null;
-        var r = await packages.SellAsync(new SellPackageRequest(Customer.Id, Service.Id, Template?.Id, Name, BodyArea, sessions, price.Value.Minor, validity, paid.Value.Minor, paid.Value.Minor > 0 ? Method.Value : null, _idempotencyKey));
+        var r = await packages.SellAsync(new SellPackageRequest(Customer.Id, Service.Id, Template?.Id, Name, BodyArea, sessions, price.Value.Minor, validity, paid.Value.Minor, paid.Value.Minor > 0 ? Method.Value : null, _idempotencyKey, SoldBy?.Value));
         if (Check(r))
         {
             _saved = true;

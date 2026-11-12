@@ -30,10 +30,7 @@ public sealed record BackupStatus(
     RetentionPolicy Retention,
     DateTime? LastSuccessUtc,
     string? LastFile,
-    string? LastError)
-{
-    public bool AttachmentsIncluded => false;
-}
+    string? LastError);
 
 public sealed record BackupListItem(string FileName, DateTime? CreatedAtUtc, BackupTrigger? Trigger, long SizeBytes, string? AppVersion, string? SchemaVersion, bool KeyMatches, string? Problem);
 

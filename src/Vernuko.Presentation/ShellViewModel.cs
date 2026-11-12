@@ -214,6 +214,16 @@ public sealed partial class ShellViewModel : ViewModelBase
             items.Add(new("packages", "Paket & Seanslar", "IconBox", typeof(PackagesViewModel), Permission.PackagesView));
         }
 
+        if (features.Contains(ProfileFeature.Waitlist))
+        {
+            items.Add(new("waitlist", "Bekleme Listesi", "IconHourglass", typeof(WaitlistViewModel), Permission.AppointmentsView));
+        }
+
+        if (features.Contains(ProfileFeature.ProductStock))
+        {
+            items.Add(new("inventory", "Stok", "IconTag", typeof(InventoryViewModel), Permission.InventoryView));
+        }
+
         items.Add(new("payments", "Ödemeler", "IconCard", typeof(PaymentsViewModel), Permission.PaymentsView));
         items.Add(new("reports", "Raporlar", "IconChart", typeof(ReportsViewModel), Permission.ReportsOperational));
         items.Add(new("settings", "Ayarlar", "IconSettings", typeof(SettingsViewModel), null));

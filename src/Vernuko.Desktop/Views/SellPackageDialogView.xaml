@@ -31,6 +31,7 @@
             <StackPanel><TextBlock Text="GEÇERLİLİK (gün)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ValidityDays, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
             <StackPanel Margin="0,0,8,0"><TextBlock Text="PEŞİNAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding InitialPayment, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
             <StackPanel><TextBlock Text="ÖDEME YÖNTEMİ" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" DisplayMemberPath="Label" /></StackPanel>
+            <StackPanel Margin="0,0,8,0"><TextBlock Text="SATIŞI YAPAN (PRİM İÇİN)" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding SellerOptions}" SelectedItem="{Binding SoldBy}" DisplayMemberPath="Label" /></StackPanel>
         </UniformGrid>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
             <Button Content="Vazgeç" Command="{Binding CancelCommand}" Margin="0,0,8,0" MinWidth="100" />
