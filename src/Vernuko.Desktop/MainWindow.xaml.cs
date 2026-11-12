@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Vernuko.Application.Common;
 using Vernuko.Application.Services;
 using Vernuko.Presentation;
@@ -18,6 +19,7 @@ public partial class MainWindow : Window
     private readonly UserSession _session;
     private int _ticks;
     private bool _closingAllowed;
+    private bool _closingInProgress;
 
     public MainWindow(RootViewModel root)
     {
@@ -98,16 +100,30 @@ public partial class MainWindow : Window
         }
 
         e.Cancel = true;
+        if (_closingInProgress)
+        {
+            return; // second click on X while the exit backup is running
+        }
+
+        _closingInProgress = true;
         ClosingOverlay.Visibility = Visibility.Visible;
+
+        // Leave the Closing event before calling Close() again: WPF throws if Close() is called while the window is
+        // closing. That happened whenever the backup check finished synchronously (backups off, demo mode) — found on
+        // the first Windows run. Yielding also lets the "yedek alınıyor" overlay render.
+        await Dispatcher.Yield(DispatcherPriority.Background);
         try
         {
             await _root.BackupOnExitAsync();
         }
-        finally
+        catch (Exception ex)
         {
-            _closingAllowed = true;
-            _timer.Stop();
-            Close();
+            // Never block closing because of a backup problem; the next start shows the failed attempt in the status bar.
+            App.Services.GetRequiredService<ILogger<MainWindow>>().LogError(ex, "Exit backup failed");
         }
+
+        _closingAllowed = true;
+        _timer.Stop();
+        Close();
     }
 }

@@ -2,6 +2,12 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.2.5] — 2026-11-12
+
+### Düzeltildi
+- **Programı kapatırken hata çıkıyordu.** Yedekleme kapalıyken (ör. demo modu) kapanış kontrolü anında bittiği için pencere, Windows kapanma işlemi sürerken ikinci kez kapatılmaya çalışılıyor ve "Beklenmeyen bir hata oluştu" uyarısı çıkıyordu; "yedek alınıyor" yazısı ekranda kalabiliyordu. Kapanış artık sırayla yapılıyor; kapanırken ikinci kez X'e basılması ve yedekleme hatası kapanmayı engellemiyor.
+- Smoke test ana pencereyi açıp kapatarak bu durumu denetler; kontrol modunda beklenmeyen hatalar uyarı kutusu açmak yerine rapora yazılır.
+
 ## [0.2.4] — 2026-11-12
 
 ### Eklendi

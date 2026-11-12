@@ -20,6 +20,10 @@ namespace Vernuko.Desktop;
 /// </summary>
 internal static class SmokeTest
 {
+    private static readonly List<string> UnhandledErrors = [];
+
+    public static void RecordUnhandled(Exception ex) => UnhandledErrors.Add(ex.GetType().Name + ": " + ex.Message);
+
     public static async Task<int> RunAsync(IServiceProvider services, string outputDirectory)
     {
         Directory.CreateDirectory(outputDirectory);
@@ -107,6 +111,22 @@ internal static class SmokeTest
                 }
             }
 
+            // Regression check from the first Windows run: closing the main window threw when the exit-backup check
+            // finished synchronously (backups off). The demo database has backups off, so this exercises that path.
+            var main = new MainWindow(root) { Left = -20000, Top = -20000, ShowInTaskbar = false, ShowActivated = false };
+            var closed = new TaskCompletionSource();
+            main.Closed += (_, _) => closed.TrySetResult();
+            main.Show();
+            await Task.Delay(300);
+            main.Close();
+            if (await Task.WhenAny(closed.Task, Task.Delay(TimeSpan.FromSeconds(60))) != closed.Task)
+            {
+                report.AppendLine("FAIL: main window did not close");
+                return Finish(outputDirectory, report, listener, 6);
+            }
+
+            report.AppendLine("close main window: ok");
+
             services.GetRequiredService<UserSession>().Lock();
             await RenderAsync(root, 1366, 768, Path.Combine(outputDirectory, "lock.png"));
         }
@@ -121,6 +141,17 @@ internal static class SmokeTest
 
     private static int Finish(string dir, StringBuilder report, BindingErrorListener listener, int code)
     {
+        report.AppendLine($"unhandled errors: {UnhandledErrors.Count}");
+        foreach (var e in UnhandledErrors)
+        {
+            report.AppendLine("  " + e);
+        }
+
+        if (code == 0 && UnhandledErrors.Count > 0)
+        {
+            code = 4;
+        }
+
         report.AppendLine($"binding errors: {listener.Errors.Count}");
         foreach (var e in listener.Errors.Distinct())
         {

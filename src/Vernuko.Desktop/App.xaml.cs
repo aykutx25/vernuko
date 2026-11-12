@@ -54,6 +54,14 @@ public partial class App : System.Windows.Application
         DispatcherUnhandledException += (_, args) =>
         {
             logger.LogError(args.Exception, "Unhandled UI exception");
+            if (smoke)
+            {
+                // The smoke test must report, not block on a dialog nobody can click.
+                SmokeTest.RecordUnhandled(args.Exception);
+                args.Handled = true;
+                return;
+            }
+
             MessageBox.Show("Beklenmeyen bir hata oluştu. Verileriniz kaydedildiği son halde korunuyor; ayrıntılar günlük dosyasına yazıldı.", "Vernuko", MessageBoxButton.OK, MessageBoxImage.Warning);
             args.Handled = true;
         };
@@ -101,8 +109,16 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        _services?.Dispose();
-        SqliteSetup.ReleaseFileHandles();
+        // Shutdown must never end with an error dialog: data is already committed (WAL, synchronous=FULL).
+        try
+        {
+            _services?.Dispose();
+            SqliteSetup.ReleaseFileHandles();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or ObjectDisposedException)
+        {
+        }
+
         _singleInstance?.Dispose();
         base.OnExit(e);
     }
