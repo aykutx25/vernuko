@@ -54,6 +54,11 @@ dotnet run --project src/Vernuko.Desktop -- --smoke-test smoke-output
 ```
 Veriler: `%LOCALAPPDATA%\Vernuko\Data` (demo: `%LOCALAPPDATA%\Vernuko\Demo`); müşteri dosyaları aynı klasörde `attachments\` altında şifreli. Kurulan program `%LOCALAPPDATA%\VernukoApp` altındadır; kaldırmak verileri silmez. Varsayılan yedek klasörü: `Belgeler\Vernuko Yedekler` — harici disk önerilir.
 
+## Yerel kontrol (Windows)
+Depo kökündeki **`kontrol.cmd`** dosyasına çift tıklayın: güncel kodu indirir, derler, tüm testleri çalıştırır ve tüm ekranları açıp kontrol eder (smoke test). Sonunda "TÜM KONTROLLER BAŞARILI" ya da hata satırlarını gösterir; ekran görüntüleri `%USERPROFILE%\vernuko-kontrol` klasörüne kaydedilir. GitHub Actions şu an yalnızca elle başlatılır.
+
+Kurulum dosyası üretmek için: **`kurulum-olustur.cmd`**.
+
 ## Klavye kısayolları
 Ctrl+K arama · Ctrl+N yeni randevu · Ctrl+S kaydet · Ctrl+L kilitle · Esc kapat · F5 yenile · Alt+←/→ gün · Alt+T bugün.
 

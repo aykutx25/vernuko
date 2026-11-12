@@ -66,7 +66,7 @@ v0.2.2 — Linux (.NET 10.0.15, Release, 0 uyarı): **140 test — 139 geçti, 1
 | 5 | Bekleme listesine müşteri eklenemiyordu (ad yazılıp listeden seçilmeyince); "Müşteri" sütunu kayboluyordu | Yazılan adı eşleştirme + açık yönlendirme; `MinColumnWidth`; `Waitlist_accepts_a_typed_name…` |
 | 6 | Programı kapatırken hata çıkıyordu (yedekleme kapalıyken) | Kapanış sıralaması; smoke testte ana pencereyi aç-kapat kontrolü |
 
-Ders: Linux'taki statik kontroller ve view model testleri bu hataların hiçbirini yakalayamadı; hepsi gerçek Windows'ta ilk birkaç dakikada çıktı. Windows CI (smoke test) çalışır hale getirilmeli.
+Ders: Linux'taki statik kontroller ve view model testleri bu hataların hiçbirini yakalayamadı; hepsi gerçek Windows'ta ilk birkaç dakikada çıktı. Bu yüzden Windows kontrolü yerele taşındı: **`kontrol.cmd`** (derleme + tüm testler + smoke test) her değişiklikten sonra Windows bilgisayarda çalıştırılır. GitHub Actions hesap kısıtı nedeniyle yalnızca elle başlatılır.
 
 v0.2.0 — Linux: 136 test — 135 geçti, 1 atlandı; üç ardışık çalıştırmada aynı sonuç. Windows CI işi (`.github/workflows/ci.yml`) aynı testleri Windows'ta çalıştırır, smoke testi koşar ve deneme kurulum paketi üretir; bu oturumdan CI sonuçlarına erişilemediği için sonuç görülmedi.
 

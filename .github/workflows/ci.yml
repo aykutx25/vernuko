@@ -1,9 +1,9 @@
 name: CI
 
+# Manual only: hosted runners are not available on this account right now and every push produced a failed run.
+# The same checks run locally with kontrol.cmd (Windows). Start this from the Actions tab when runners are available.
 on:
-  push:
-    branches: [ "**" ]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
