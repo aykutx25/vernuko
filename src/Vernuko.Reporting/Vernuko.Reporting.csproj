@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Vernuko.Reporting</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Vernuko.Core\Vernuko.Core.csproj" />
+    <ProjectReference Include="..\Vernuko.Appointments\Vernuko.Appointments.csproj" />
+  </ItemGroup>
+</Project>

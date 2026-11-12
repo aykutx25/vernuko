@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Vernuko.Persistence</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Vernuko.Core\Vernuko.Core.csproj" />
+    <ProjectReference Include="..\Vernuko.Security\Vernuko.Security.csproj" />
+    <ProjectReference Include="..\Vernuko.BusinessProfiles\Vernuko.BusinessProfiles.csproj" />
+    <ProjectReference Include="..\Vernuko.Customers\Vernuko.Customers.csproj" />
+    <ProjectReference Include="..\Vernuko.Appointments\Vernuko.Appointments.csproj" />
+    <ProjectReference Include="..\Vernuko.Packages\Vernuko.Packages.csproj" />
+    <ProjectReference Include="..\Vernuko.Payments\Vernuko.Payments.csproj" />
+    <ProjectReference Include="..\Vernuko.Licensing\Vernuko.Licensing.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,19 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+*.swp
+TestResults/
+artifacts/
+publish/
+*.nupkg
+*.snupkg
+*.db
+*.db-shm
+*.db-wal
+*.vbk
+coverage*/

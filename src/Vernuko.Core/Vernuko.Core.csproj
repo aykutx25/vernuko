@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Vernuko.Core</RootNamespace>
+  </PropertyGroup>
+</Project>
