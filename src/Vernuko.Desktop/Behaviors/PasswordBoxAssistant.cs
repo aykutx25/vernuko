@@ -6,17 +6,20 @@ namespace Vernuko.Desktop.Behaviors;
 /// <summary>
 /// Makes PasswordBox.Password bindable. The password lives in the view model only as long as the form is open;
 /// view models clear it right after use.
+/// The default value is null on purpose: the view model starts with "", so the first binding transfer is a real
+/// change (null → "") and hooks PasswordChanged. With an "" default the callback never ran and typed passwords
+/// never reached the view model (found on the first Windows run: every login counted as a wrong password).
 /// </summary>
 public static class PasswordBoxAssistant
 {
     public static readonly DependencyProperty BoundPasswordProperty = DependencyProperty.RegisterAttached(
         "BoundPassword", typeof(string), typeof(PasswordBoxAssistant),
-        new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnBoundPasswordChanged));
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnBoundPasswordChanged));
 
     private static readonly DependencyProperty UpdatingProperty = DependencyProperty.RegisterAttached(
         "Updating", typeof(bool), typeof(PasswordBoxAssistant));
 
-    public static string GetBoundPassword(DependencyObject d) => (string)d.GetValue(BoundPasswordProperty);
+    public static string GetBoundPassword(DependencyObject d) => (string?)d.GetValue(BoundPasswordProperty) ?? string.Empty;
 
     public static void SetBoundPassword(DependencyObject d, string value) => d.SetValue(BoundPasswordProperty, value);
 
@@ -28,9 +31,10 @@ public static class PasswordBoxAssistant
         }
 
         box.PasswordChanged -= OnPasswordChanged;
-        if (!(bool)box.GetValue(UpdatingProperty))
+        var value = e.NewValue as string ?? string.Empty;
+        if (!(bool)box.GetValue(UpdatingProperty) && box.Password != value)
         {
-            box.Password = e.NewValue as string ?? string.Empty;
+            box.Password = value;
         }
 
         box.PasswordChanged += OnPasswordChanged;

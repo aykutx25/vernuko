@@ -10,6 +10,12 @@ public sealed class AuthService(IDbContextFactory<VernukoDbContext> factory, Pas
 {
     public async Task<Result> LoginAsync(string username, string password, CancellationToken ct = default)
     {
+        // An empty field is a form mistake, not a guess: it must not count towards the account lock-out.
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrEmpty(password))
+        {
+            return Error.Validation("auth.empty", "Kullanıcı adı ve parolayı girin.");
+        }
+
         var now = time.GetUtcNow().UtcDateTime;
         var name = (username ?? string.Empty).Trim().ToLowerInvariant();
         await using var db = await factory.CreateDbContextAsync(ct);
@@ -60,6 +66,11 @@ public sealed class AuthService(IDbContextFactory<VernukoDbContext> factory, Pas
         if (session.UserId is not { } id)
         {
             return AppErrors.InvalidCredentials;
+        }
+
+        if (string.IsNullOrEmpty(password))
+        {
+            return Error.Validation("auth.empty", "Parolanızı girin.");
         }
 
         await using var db = await factory.CreateDbContextAsync(ct);

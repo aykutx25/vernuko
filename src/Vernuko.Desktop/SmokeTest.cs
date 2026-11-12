@@ -31,6 +31,31 @@ internal static class SmokeTest
 
         try
         {
+            // Regression check from the first Windows run: a typed password must reach the view model.
+            var probe = services.GetRequiredService<LoginViewModel>();
+            var box = new System.Windows.Controls.PasswordBox();
+            System.Windows.Data.BindingOperations.SetBinding(box, Behaviors.PasswordBoxAssistant.BoundPasswordProperty, new System.Windows.Data.Binding(nameof(LoginViewModel.Password))
+            {
+                Source = probe,
+                Mode = System.Windows.Data.BindingMode.TwoWay,
+                UpdateSourceTrigger = System.Windows.Data.UpdateSourceTrigger.PropertyChanged,
+            });
+            box.Password = "Smoke-Parola-1";
+            if (probe.Password != "Smoke-Parola-1")
+            {
+                report.AppendLine("FAIL: PasswordBox does not update the view model");
+                return Finish(outputDirectory, report, listener, 5);
+            }
+
+            probe.Password = string.Empty;
+            if (box.Password.Length != 0)
+            {
+                report.AppendLine("FAIL: clearing the view model password does not clear the PasswordBox");
+                return Finish(outputDirectory, report, listener, 5);
+            }
+
+            report.AppendLine("password binding: ok");
+
             // Setup wizard: render every step without completing it.
             var wizard = services.GetRequiredService<SetupWizardViewModel>();
             wizard.SelectProfileCommand.Execute(wizard.Profiles[0]);
