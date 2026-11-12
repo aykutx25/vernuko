@@ -13,7 +13,7 @@
     <Company>Vernuko</Company>
     <Product>Vernuko</Product>
     <Copyright>© Vernuko</Copyright>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <NeutralLanguage>tr-TR</NeutralLanguage>
     <!-- WPF projects can be compiled (not run) on Linux/macOS CI with this flag. -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
