@@ -1,0 +1,132 @@
+<UserControl x:Class="Vernuko.Desktop.Views.CatalogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="24,20,24,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="Hizmetler" Style="{StaticResource PageTitle}" />
+        <StackPanel Grid.Row="1">
+            <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
+            <Border Style="{StaticResource InfoBanner}" Visibility="{Binding InfoMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding InfoMessage}" TextWrapping="Wrap" /></Border>
+            <Border Style="{StaticResource WarnBanner}" Margin="0,8,0,0" Visibility="{Binding CanManage, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
+                <TextBlock Text="Bu bölümü görüntüleyebilirsiniz; değişiklik için yönetici yetkisi gerekir." />
+            </Border>
+        </StackPanel>
+        <TabControl Grid.Row="2">
+            <TabItem Header="Hizmetler">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="380" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,14,0">
+                        <DataGrid ItemsSource="{Binding Services}" SelectedItem="{Binding SelectedService}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Hizmet" Binding="{Binding Name}" Width="*" />
+                                <DataGridTextColumn Header="Kategori" Binding="{Binding Category}" Width="120" />
+                                <DataGridTextColumn Header="Süre (dk)" Binding="{Binding DurationMinutes}" Width="90" />
+                                <DataGridTextColumn Header="Fiyat" Binding="{Binding DisplayPrice}" Width="110" />
+                                <DataGridCheckBoxColumn Header="Aktif" Binding="{Binding IsActive, Mode=OneWay}" Width="60" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Card}">
+                        <StackPanel>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewServiceCommand}" />
+                                <TextBlock Text="Hizmet bilgileri" Style="{StaticResource SectionTitle}" />
+                            </DockPanel>
+                            <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding ServiceName, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="KATEGORİ" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding ServiceCategory, UpdateSourceTrigger=PropertyChanged}" />
+                            <UniformGrid Columns="2">
+                                <StackPanel Margin="0,0,6,0"><TextBlock Text="SÜRE (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServiceDuration, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                <StackPanel><TextBlock Text="FİYAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServicePrice, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                <StackPanel Margin="0,0,6,0"><TextBlock Text="HAZIRLIK (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServicePrep, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                <StackPanel><TextBlock Text="TEMİZLİK (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServiceCleanup, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                            </UniformGrid>
+                            <TextBlock Text="GEREKEN KAYNAK" Style="{StaticResource FieldLabel}" />
+                            <ComboBox ItemsSource="{Binding RequirementOptions}" SelectedItem="{Binding ServiceRequires}" DisplayMemberPath="Label" />
+                            <CheckBox Content="Aktif" IsChecked="{Binding ServiceActive}" Margin="0,12,0,0" />
+                            <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveServiceCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" MinWidth="120" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Odalar ve Cihazlar">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="380" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,14,0">
+                        <DataGrid ItemsSource="{Binding Resources}" SelectedItem="{Binding SelectedResource}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Ad" Binding="{Binding Name}" Width="*" />
+                                <DataGridTextColumn Header="Tür" Binding="{Binding KindName}" Width="160" />
+                                <DataGridCheckBoxColumn Header="Aktif" Binding="{Binding IsActive, Mode=OneWay}" Width="60" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Card}">
+                        <StackPanel>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewResourceCommand}" />
+                                <TextBlock Text="Oda / cihaz" Style="{StaticResource SectionTitle}" />
+                            </DockPanel>
+                            <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding ResourceName, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="TÜR" Style="{StaticResource FieldLabel}" />
+                            <ComboBox ItemsSource="{Binding KindOptions}" SelectedItem="{Binding ResourceKind}" DisplayMemberPath="Label" />
+                            <CheckBox Content="Aktif" IsChecked="{Binding ResourceActive}" Margin="0,12,0,0" />
+                            <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" Text="Aynı oda veya cihaz, çakışan saatlerde iki farklı randevuya atanamaz." />
+                            <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveResourceCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" MinWidth="120" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Paket tanımları" Visibility="{Binding ShowPackages, Converter={StaticResource VisibleWhen}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="380" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,14,0">
+                        <DataGrid ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Paket" Binding="{Binding Name}" Width="*" />
+                                <DataGridTextColumn Header="Hizmet" Binding="{Binding ServiceName}" Width="160" />
+                                <DataGridTextColumn Header="Seans" Binding="{Binding SessionCount}" Width="70" />
+                                <DataGridTextColumn Header="Fiyat" Binding="{Binding PriceMinor, Converter={StaticResource Money}}" Width="110" />
+                                <DataGridTextColumn Header="Geçerlilik (gün)" Binding="{Binding ValidityDays}" Width="120" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Card}">
+                        <StackPanel>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewTemplateCommand}" />
+                                <TextBlock Text="Paket tanımı" Style="{StaticResource SectionTitle}" />
+                            </DockPanel>
+                            <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding TemplateName, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="HİZMET" Style="{StaticResource FieldLabel}" />
+                            <ComboBox ItemsSource="{Binding Services}" SelectedItem="{Binding TemplateService}" DisplayMemberPath="Name" />
+                            <UniformGrid Columns="3">
+                                <StackPanel Margin="0,0,6,0"><TextBlock Text="SEANS" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TemplateSessions, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                <StackPanel Margin="0,0,6,0"><TextBlock Text="FİYAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TemplatePrice, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                <StackPanel><TextBlock Text="GÜN" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TemplateValidity, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                            </UniformGrid>
+                            <CheckBox Content="Aktif" IsChecked="{Binding TemplateActive}" Margin="0,12,0,0" />
+                            <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveTemplateCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" MinWidth="120" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

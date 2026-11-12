@@ -1,0 +1,112 @@
+<UserControl x:Class="Vernuko.Desktop.Views.StaffView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="24,20,24,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Command="{Binding NewCommand}" Height="42">
+                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconPlus}" Style="{StaticResource Icon}" /><TextBlock Text="Yeni personel" Margin="8,0,0,0" /></StackPanel>
+            </Button>
+            <TextBlock Text="Personel" Style="{StaticResource PageTitle}" />
+        </DockPanel>
+        <StackPanel Grid.Row="1">
+            <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
+            <Border Style="{StaticResource InfoBanner}" Visibility="{Binding InfoMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding InfoMessage}" TextWrapping="Wrap" /></Border>
+        </StackPanel>
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,14,0">
+                <ListBox ItemsSource="{Binding Staff}" SelectedItem="{Binding Selected}" Style="{StaticResource PlainListBox}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Title}" FontSize="12.5" Foreground="{StaticResource TextSecondaryBrush}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Style="{StaticResource Card}" Padding="20">
+                        <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+                            <TextBlock Text="Personel bilgileri" Style="{StaticResource SectionTitle}" />
+                            <UniformGrid Columns="3">
+                                <StackPanel Margin="0,0,8,0"><TextBlock Text="AD SOYAD" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                <StackPanel Margin="0,0,8,0"><TextBlock Text="UNVAN" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding StaffTitle, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                <StackPanel><TextBlock Text="TELEFON" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                            </UniformGrid>
+                            <CheckBox Content="Aktif (randevu alabilir)" IsChecked="{Binding IsActive}" Margin="0,12,0,0" />
+                            <TextBlock Text="ÇALIŞMA SAATLERİ" Style="{StaticResource FieldLabel}" Margin="0,16,0,4" />
+                            <CheckBox Content="İşletmenin çalışma saatlerini kullan" IsChecked="{Binding UseBusinessHours}" />
+                            <ItemsControl ItemsSource="{Binding Hours}" Focusable="False" Margin="0,6,0,0" Visibility="{Binding UseBusinessHours, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="150" />
+                                                <ColumnDefinition Width="100" />
+                                                <ColumnDefinition Width="100" />
+                                            </Grid.ColumnDefinitions>
+                                            <CheckBox Content="{Binding Name}" IsChecked="{Binding IsWorking}" />
+                                            <TextBox Grid.Column="1" Text="{Binding Start, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,6,0" IsEnabled="{Binding IsWorking}" />
+                                            <TextBox Grid.Column="2" Text="{Binding End, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsWorking}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="VERDİĞİ HİZMETLER (boş bırakılırsa tüm hizmetler)" Style="{StaticResource FieldLabel}" Margin="0,16,0,4" />
+                            <ItemsControl ItemsSource="{Binding ServiceChoices}" Focusable="False">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Content="{Binding Service.Name}" IsChecked="{Binding IsSelected}" Margin="0,2,16,2" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveCommand}" Margin="0,16,0,0" HorizontalAlignment="Left" MinWidth="120" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Padding="20" Margin="0,14,0,0">
+                        <StackPanel>
+                            <TextBlock Text="İzinler ve kapalı günler" Style="{StaticResource SectionTitle}" />
+                            <WrapPanel>
+                                <StackPanel Margin="0,0,8,0"><TextBlock Text="BAŞLANGIÇ" Style="{StaticResource FieldLabel}" /><DatePicker SelectedDate="{Binding LeaveFrom}" Width="150" /></StackPanel>
+                                <StackPanel Margin="0,0,8,0"><TextBlock Text="BİTİŞ" Style="{StaticResource FieldLabel}" /><DatePicker SelectedDate="{Binding LeaveTo}" Width="150" /></StackPanel>
+                                <StackPanel Margin="0,0,8,0"><TextBlock Text="AÇIKLAMA" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding LeaveNote, UpdateSourceTrigger=PropertyChanged}" Width="220" /></StackPanel>
+                            </WrapPanel>
+                            <CheckBox Content="Tüm işletme kapalı (resmî tatil / kapalı gün) — seçili personel yerine" IsChecked="{Binding LeaveIsBusinessClosure}" Margin="0,10,0,0" />
+                            <Button Content="Ekle" Command="{Binding AddLeaveCommand}" HorizontalAlignment="Left" Margin="0,10,0,12" MinWidth="100" />
+                            <DataGrid ItemsSource="{Binding Exceptions}" MaxHeight="260">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Kim" Binding="{Binding TargetName, TargetNullValue='Tüm işletme'}" Width="*" />
+                                    <DataGridTextColumn Header="Başlangıç" Binding="{Binding StartLocal, Converter={StaticResource DateFormat}}" Width="140" />
+                                    <DataGridTextColumn Header="Bitiş" Binding="{Binding EndLocal, Converter={StaticResource DateFormat}}" Width="140" />
+                                    <DataGridTextColumn Header="Not" Binding="{Binding Note}" Width="*" />
+                                    <DataGridTemplateColumn Width="90">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{StaticResource LinkButton}" Content="Kaldır" Command="{Binding DataContext.RemoveExceptionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

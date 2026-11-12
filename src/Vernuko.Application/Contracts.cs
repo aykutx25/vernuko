@@ -174,7 +174,15 @@ public sealed record CustomerPackageDto(
     public string Label => BodyArea is null ? Name : $"{Name} · {BodyArea}";
 }
 
-public sealed record SessionLedgerDto(DateTime AtUtc, SessionEntryKind Kind, int Delta, Guid? AppointmentId, string? Reason, string? UserName);
+public sealed record SessionLedgerDto(DateTime AtUtc, SessionEntryKind Kind, int Delta, Guid? AppointmentId, string? Reason, string? UserName)
+{
+    public string KindName => Kind switch
+    {
+        SessionEntryKind.Consumed => "Seans kullanıldı",
+        SessionEntryKind.Restored => "Seans iade edildi",
+        _ => "Düzeltme",
+    };
+}
 
 // ---------- Payments ----------
 public sealed record RecordTransactionRequest(

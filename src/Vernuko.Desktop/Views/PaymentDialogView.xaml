@@ -1,0 +1,32 @@
+<UserControl x:Class="Vernuko.Desktop.Views.PaymentDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:b="clr-namespace:Vernuko.Desktop.Behaviors">
+    <UserControl.InputBindings>
+        <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+    </UserControl.InputBindings>
+    <StackPanel>
+        <TextBlock Text="Ödeme Al" Style="{StaticResource SectionTitle}" />
+        <TextBlock Text="{Binding CustomerName}" FontSize="16" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding BalanceText}" Style="{StaticResource Muted}" />
+        <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
+        <UniformGrid Columns="2">
+            <StackPanel Margin="0,0,8,0">
+                <TextBlock Text="TUTAR (₺)" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}" b:FocusBehavior.FocusOnLoad="True" FontSize="18" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="YÖNTEM" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" DisplayMemberPath="Label" />
+            </StackPanel>
+        </UniformGrid>
+        <CheckBox Content="Kapora (ön ödeme)" IsChecked="{Binding IsDeposit}" Margin="0,12,0,0" />
+        <TextBlock Text="AÇIKLAMA" Style="{StaticResource FieldLabel}" />
+        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0" Text="Bu bir tahsilat kaydıdır; resmî fatura düzenlemez. Kart tahsilatı POS cihazınızdan ayrıca yapılır." />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+            <Button Content="Vazgeç" Command="{Binding CancelCommand}" Margin="0,0,8,0" MinWidth="100" />
+            <Button Style="{StaticResource PrimaryButton}" Content="Ödemeyi kaydet" Command="{Binding SaveCommand}" IsDefault="True" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

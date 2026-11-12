@@ -1,0 +1,40 @@
+<UserControl x:Class="Vernuko.Desktop.Views.SellPackageDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.InputBindings>
+        <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+    </UserControl.InputBindings>
+    <StackPanel>
+        <TextBlock Text="Paket Satışı" Style="{StaticResource SectionTitle}" />
+        <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
+        <TextBlock Text="MÜŞTERİ" Style="{StaticResource FieldLabel}" />
+        <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}" Tag="Ad veya telefon" />
+        <ListBox ItemsSource="{Binding CustomerResults}" SelectedItem="{Binding Customer}" Style="{StaticResource PlainListBox}" MaxHeight="160"
+                 Visibility="{Binding CustomerResults.Count, Converter={StaticResource VisibleWhen}}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding Phone}" Style="{StaticResource Muted}" />
+                        <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" />
+                    </DockPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Text="PAKET TANIMI" Style="{StaticResource FieldLabel}" />
+        <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding Template}" DisplayMemberPath="Name" />
+        <UniformGrid Columns="2">
+            <StackPanel Margin="0,0,8,0"><TextBlock Text="HİZMET" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Services}" SelectedItem="{Binding Service}" DisplayMemberPath="Name" /></StackPanel>
+            <StackPanel><TextBlock Text="PAKET ADI" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+            <StackPanel Margin="0,0,8,0"><TextBlock Text="BÖLGE" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding BodyArea, UpdateSourceTrigger=PropertyChanged}" Tag="Ör. Bacak" /></StackPanel>
+            <StackPanel><TextBlock Text="SEANS SAYISI" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Sessions, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+            <StackPanel Margin="0,0,8,0"><TextBlock Text="FİYAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Price, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+            <StackPanel><TextBlock Text="GEÇERLİLİK (gün)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ValidityDays, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+            <StackPanel Margin="0,0,8,0"><TextBlock Text="PEŞİNAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding InitialPayment, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+            <StackPanel><TextBlock Text="ÖDEME YÖNTEMİ" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" DisplayMemberPath="Label" /></StackPanel>
+        </UniformGrid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+            <Button Content="Vazgeç" Command="{Binding CancelCommand}" Margin="0,0,8,0" MinWidth="100" />
+            <Button Style="{StaticResource PrimaryButton}" Content="Satışı kaydet" Command="{Binding SaveCommand}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

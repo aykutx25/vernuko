@@ -8,6 +8,7 @@ using Vernuko.Application.Services;
 using Vernuko.BusinessProfiles;
 using Vernuko.Core;
 using Vernuko.Persistence;
+using Vernuko.Presentation;
 using Vernuko.Security;
 
 namespace Vernuko.Tests.Support;
@@ -98,6 +99,11 @@ public sealed class TestApp : IAsyncDisposable
         }
 
         services.AddVernukoApplication(Env.DatabasePath);
+        services.AddVernukoPresentation();
+        services.AddSingleton<FakeDialogs>();
+        services.AddSingleton<Vernuko.Presentation.Common.IDialogService>(sp => sp.GetRequiredService<FakeDialogs>());
+        services.AddSingleton<FakePlatform>();
+        services.AddSingleton<Vernuko.Presentation.Common.IPlatformServices>(sp => sp.GetRequiredService<FakePlatform>());
         Services = services.BuildServiceProvider();
     }
 
@@ -199,3 +205,52 @@ public sealed class TestApp : IAsyncDisposable
 }
 
 public sealed record Catalog(ServiceDto Laser, ServiceDto SkinCare, StaffDto Selin, StaffDto Derya, ResourceDto Room1, ResourceDto Room2, ResourceDto LaserDevice);
+
+public sealed class FakeDialogs : Vernuko.Presentation.Common.IDialogService
+{
+    public bool ConfirmAnswer { get; set; } = true;
+
+    public Queue<string?> PromptAnswers { get; } = new();
+
+    public List<string> Shown { get; } = [];
+
+    public Task<bool> ConfirmAsync(string title, string message, string confirmText = "Evet", string cancelText = "Vazgeç", bool destructive = false)
+    {
+        Shown.Add(title + ": " + message);
+        return Task.FromResult(ConfirmAnswer);
+    }
+
+    public Task ShowMessageAsync(string title, string message)
+    {
+        Shown.Add(title + ": " + message);
+        return Task.CompletedTask;
+    }
+
+    public Task<string?> PromptAsync(string title, string message, string? initialValue = null, bool required = true) =>
+        Task.FromResult(PromptAnswers.Count > 0 ? PromptAnswers.Dequeue() : initialValue);
+
+    public Task<string?> PickFolderAsync(string title, string? initialFolder) => Task.FromResult(initialFolder);
+
+    public Task<string?> PickOpenFileAsync(string title, string filter) => Task.FromResult<string?>(null);
+
+    public Task<string?> PickSaveFileAsync(string title, string defaultFileName, string filter) => Task.FromResult<string?>(null);
+}
+
+public sealed class FakePlatform : Vernuko.Presentation.Common.IPlatformServices
+{
+    public List<Uri> Opened { get; } = [];
+
+    public string? Clipboard { get; private set; }
+
+    public void OpenUri(Uri uri) => Opened.Add(uri);
+
+    public void OpenFolder(string path)
+    {
+    }
+
+    public void CopyToClipboard(string text) => Clipboard = text;
+
+    public Task WriteTextFileAsync(string path, string content) => File.WriteAllTextAsync(path, content);
+
+    public Task<string> ReadTextFileAsync(string path) => File.ReadAllTextAsync(path);
+}

@@ -1,0 +1,160 @@
+<UserControl x:Class="Vernuko.Desktop.Views.AppointmentEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:b="clr-namespace:Vernuko.Desktop.Behaviors">
+    <UserControl.InputBindings>
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveCommand}" />
+        <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+    </UserControl.InputBindings>
+    <Border Style="{StaticResource Card}" Padding="0" Effect="{StaticResource CardShadow}">
+        <DockPanel>
+            <!-- Header -->
+            <DockPanel DockPanel.Dock="Top" Margin="18,14,10,6">
+                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Command="{Binding CancelCommand}" ToolTip="Kapat (Esc)">
+                    <Path Data="{StaticResource IconClose}" Style="{StaticResource Icon}" Width="14" />
+                </Button>
+                <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center" />
+            </DockPanel>
+
+            <!-- Footer -->
+            <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="18,12">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}" MinWidth="130" ToolTip="Ctrl+S">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconCheck}" Style="{StaticResource Icon}" />
+                            <TextBlock Text="Kaydet" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                    <Button DockPanel.Dock="Right" Content="Vazgeç" Command="{Binding CancelCommand}" Margin="0,0,8,0" />
+                    <TextBlock Text="Kaydediliyor…" Style="{StaticResource Muted}" VerticalAlignment="Center" Visibility="{Binding IsBusy, Converter={StaticResource VisibleWhen}}" />
+                </DockPanel>
+            </Border>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="18,0,18,8">
+                <StackPanel>
+                    <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}">
+                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+                    </Border>
+
+                    <!-- Customer -->
+                    <TextBlock Text="MÜŞTERİ" Style="{StaticResource FieldLabel}" />
+                    <Grid>
+                        <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}" Tag="Ad, telefon veya müşteri no ile ara…" Padding="34,0,10,0"
+                                 b:FocusBehavior.FocusOnLoad="True" IsReadOnly="{Binding IsReschedule}" AutomationProperties.Name="Müşteri ara" />
+                        <Path Data="{StaticResource IconSearch}" Style="{StaticResource Icon}" Width="15" HorizontalAlignment="Left" Margin="11,0,0,0" IsHitTestVisible="False" TextElement.Foreground="{StaticResource TextMutedBrush}" />
+                    </Grid>
+                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,4,0,0" Padding="4" Visibility="{Binding CustomerResults.Count, Converter={StaticResource VisibleWhen}}">
+                        <ListBox ItemsSource="{Binding CustomerResults}" SelectedItem="{Binding SelectedCustomer}" Style="{StaticResource PlainListBox}" MaxHeight="220">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Phone}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" />
+                                        <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                    <Button Style="{StaticResource LinkButton}" Margin="0,6,0,0" Command="{Binding StartAddCustomerCommand}"
+                            Visibility="{Binding IsAddingCustomer, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconPlus}" Style="{StaticResource Icon}" Width="13" />
+                            <TextBlock Text="Yeni müşteri ekle" Margin="6,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                    <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="8" Padding="12" Margin="0,8,0,0" Visibility="{Binding IsAddingCustomer, Converter={StaticResource VisibleWhen}}">
+                        <StackPanel>
+                            <UniformGrid Columns="2">
+                                <TextBox Text="{Binding NewFirstName, UpdateSourceTrigger=PropertyChanged}" Tag="Ad" Margin="0,0,6,0" />
+                                <TextBox Text="{Binding NewLastName, UpdateSourceTrigger=PropertyChanged}" Tag="Soyad" />
+                            </UniformGrid>
+                            <TextBox Text="{Binding NewPhone, UpdateSourceTrigger=PropertyChanged}" Tag="Telefon (0532 123 45 67)" Margin="0,8,0,0" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                                <Button Style="{StaticResource GhostButton}" Content="Vazgeç" Command="{Binding CancelAddCustomerCommand}" />
+                                <Button Content="Müşteriyi kaydet" Command="{Binding AddCustomerCommand}" Margin="6,0,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Service / staff -->
+                    <TextBlock Text="HİZMET" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding Services}" SelectedItem="{Binding SelectedService}" DisplayMemberPath="Name" IsEnabled="{Binding IsReschedule, Converter={StaticResource Not}}" AutomationProperties.Name="Hizmet" />
+                    <TextBlock Text="PERSONEL" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding Staff}" SelectedItem="{Binding SelectedStaff}" DisplayMemberPath="DisplayName" AutomationProperties.Name="Personel" />
+
+                    <TextBlock Text="ODA / CİHAZ" Style="{StaticResource FieldLabel}" />
+                    <ItemsControl ItemsSource="{Binding Resources}" Focusable="False">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding Label}" IsChecked="{Binding IsSelected}" Margin="0,2,14,2"
+                                          Command="{Binding DataContext.ResourcesChangedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Date / time -->
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="96" />
+                            <ColumnDefinition Width="80" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="TARİH" Style="{StaticResource FieldLabel}" />
+                            <DatePicker SelectedDate="{Binding Date}" AutomationProperties.Name="Tarih" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                            <TextBlock Text="SAAT" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding Time, UpdateSourceTrigger=PropertyChanged}" Tag="14:30" AutomationProperties.Name="Saat" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Margin="8,0,0,0">
+                            <TextBlock Text="SÜRE (dk)" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding DurationMinutes, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Süre" />
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="UYGUN SAATLER" Style="{StaticResource FieldLabel}" />
+                    <ItemsControl ItemsSource="{Binding Slots}" Focusable="False">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Label}" MinHeight="30" Padding="10,0" Margin="0,0,6,6" FontSize="13"
+                                        Command="{Binding DataContext.PickSlotCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="Bu gün için uygun saat bulunamadı. Saati elle girebilirsiniz; çakışma varsa uyarılırsınız." Style="{StaticResource Muted}"
+                               Visibility="{Binding NoSlots, Converter={StaticResource VisibleWhen}}" />
+
+                    <!-- Package -->
+                    <StackPanel Visibility="{Binding HasPackages, Converter={StaticResource VisibleWhen}}">
+                        <TextBlock Text="SEANS PAKETİ" Style="{StaticResource FieldLabel}" />
+                        <ComboBox ItemsSource="{Binding Packages}" SelectedItem="{Binding SelectedPackage}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding Label, Mode=OneWay}" />
+                                        <Run Text=" — kalan " Foreground="{StaticResource TextSecondaryBrush}" /><Run Text="{Binding RemainingSessions, Mode=OneWay}" FontWeight="SemiBold" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock Text="Seans, randevu tamamlandığında düşülür. İptal edilen randevu hak tüketmez." Style="{StaticResource Muted}" Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Visibility="{Binding ShowBodyArea, Converter={StaticResource VisibleWhen}}">
+                        <TextBlock Text="BÖLGE" Style="{StaticResource FieldLabel}" />
+                        <TextBox Text="{Binding BodyArea, UpdateSourceTrigger=PropertyChanged}" Tag="Ör. Bacak, Koltuk altı" />
+                    </StackPanel>
+
+                    <TextBlock Text="NOT" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MultilineTextBox}" Tag="Randevu notu (isteğe bağlı)" />
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</UserControl>

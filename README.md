@@ -1,0 +1,98 @@
+# Vernuko
+
+Windows için **çevrimdışı çalışan** randevu, sekreter ve işletme yönetim yazılımı. Türkiye öncelikli; güzellik ve lazer merkezlerinden kliniklere, kuaförlerden eğitim kurumlarına kadar farklı meslekler **tek bir randevu motorunu** kullanır.
+
+> **Durum: Faz 0 tamamlandı, Faz 1 çekirdeği çalışır durumda (v0.1.0, geliştirme sürümü — ticari kullanıma hazır değil).**
+> İş kuralları, veritabanı, yedekleme ve lisans istemcisi gerçek SQLite dosyaları üzerinde 120+ otomatik testle doğrulandı. WPF arayüzü derleniyor ve tüm bağlamaları statik olarak kontrol ediliyor, **ancak henüz Windows'ta çalıştırılarak görsel olarak doğrulanmadı** (bkz. "Bilinen sınırlar").
+
+## Ne çalışıyor (Faz 1)
+- **Kurulum sihirbazı** (10 adım, atlanabilir adımlar), 14 meslek profili; "Güzellik ve Lazer Merkezi" tek profil.
+- **Randevu motoru:** gün/hafta/ay, personel/oda/hizmet filtreleri, hazırlık–temizlik aralıkları, personel + oda + cihaz çakışma kontrolü (uygulama + eşzamanlı işlem + veritabanı tetikleyicisi), müsait saat önerisi, 10 randevu durumu ve kuralları, erteleme, iptal/iptali geri alma, izin ve kapalı günler, yaz saati güvenli zaman yönetimi.
+- **Hızlı randevu paneli:** takvimden ayrılmadan müşteri arama/ekleme, hizmet, personel, oda, uygun saat çipleri, paket seçimi; klavye kısayolları.
+- **Müşteriler:** Türkçe uyumlu arama (ı/İ/ş/ğ…), mükerrer kayıt uyarısı (otomatik birleştirme yok), arşiv, KVKK için tam JSON dışa aktarım ve anonimleştirme, CSV liste.
+- **Paket & seans:** satış, kalan hak, bölge, tamamlanınca düşme, iptalde korunma, geri alma, gerekçeli düzeltme, dondurma/uzatma, geçmiş.
+- **Ödemeler:** tahsilat, kapora, iade, indirim, ters kayıtla düzeltme (silme yok), çift tıklamaya dayanıklı kayıt, günlük kasa, açık bakiyeler. *Resmî fatura düzenlemez.*
+- **Güvenlik:** kullanıcılar, 7 rol, 28 işlem izni, PBKDF2 parola, hesap ve ekran kilidi, hash zincirli denetim günlüğü.
+- **Şifreli yedekleme:** AES-256-GCM, kurtarma anahtarı, doğrulama, geri yükleme (yeni bilgisayarda dahil), 7/4/3 saklama, zamanlanmış ve kapanışta yedek.
+- **Lisans istemcisi:** ECDSA imzalı lisans belgesi, çevrimdışı tolerans, saat geri alma koruması; süre bitince **salt-okunur mod — veri asla silinmez**.
+- **Manuel WhatsApp** (wa.me) hatırlatma; "Entegrasyonlar ve Maliyetler" ekranı (tüm ücretli entegrasyonlar kapalı, limit 0 ₺).
+- **Demo modu** (`--demo`) ayrı veritabanında; **smoke test modu** (`--smoke-test`).
+
+## Henüz olmayanlar
+Otomatik SMS/WhatsApp, Google Drive/OneDrive/Dropbox yedeği, lisans sunucusu ve satış, tekrarlayan randevu, bekleme listesi, komisyon/stok, onam/fotoğraf, diğer mesleklerin özel modülleri, çoklu bilgisayar, kurulum paketi ve otomatik güncelleme. Plan: [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## Gereksinimler
+- Çalıştırma: Windows 10 veya 11 (x64).
+- Geliştirme: .NET SDK 10.0.1xx veya üzeri. Linux/macOS'ta tüm proje derlenir ve testler çalışır (WPF uygulaması yalnızca Windows'ta çalışır).
+
+## Hızlı başlangıç
+```bash
+dotnet build Vernuko.sln
+```
+```bash
+dotnet test tests/Vernuko.Tests/Vernuko.Tests.csproj
+```
+Windows'ta uygulamayı çalıştırma:
+```bash
+dotnet run --project src/Vernuko.Desktop
+```
+Örnek verilerle (gerçek verilerden tamamen ayrı demo veritabanı; giriş bilgisi giriş ekranında yazar):
+```bash
+dotnet run --project src/Vernuko.Desktop -- --demo
+```
+Tüm ekranların görüntüsünü alıp bağlama hatalarını denetleme (Windows):
+```bash
+dotnet run --project src/Vernuko.Desktop -- --smoke-test smoke-output
+```
+Veriler: `%LOCALAPPDATA%\Vernuko\Data` (demo: `%LOCALAPPDATA%\Vernuko\Demo`). Varsayılan yedek klasörü: `Belgeler\Vernuko Yedekler` — harici disk önerilir.
+
+## Klavye kısayolları
+Ctrl+K arama · Ctrl+N yeni randevu · Ctrl+S kaydet · Ctrl+L kilitle · Esc kapat · F5 yenile · Alt+←/→ gün · Alt+T bugün.
+
+## Proje yapısı
+```
+src/
+  Vernuko.Core              ortak çekirdek (Result, para, telefon, Türkçe metin, saat dilimi)
+  Vernuko.Security          kullanıcı, rol, izin, parola, denetim zinciri
+  Vernuko.BusinessProfiles  meslek profilleri, işletme ayarları
+  Vernuko.Customers         müşteri kartı
+  Vernuko.Appointments      randevu motoru
+  Vernuko.Packages          seans paketleri ve defter
+  Vernuko.Payments          cari hesap / kasa
+  Vernuko.Licensing         lisans belgesi ve değerlendirme
+  Vernuko.Messaging         wa.me, şablonlar, SMS arayüzü
+  Vernuko.Reporting         özetler
+  Vernuko.Backups           şifreli yedek biçimi, saklama, hedefler
+  Vernuko.Persistence       EF Core + SQLite, migration, tetikleyiciler
+  Vernuko.Application       kullanım senaryoları
+  Vernuko.Infrastructure    DPAPI, cihaz kimliği, yollar, günlük
+  Vernuko.Presentation      MVVM view model'ler
+  Vernuko.Desktop           WPF uygulaması
+tests/Vernuko.Tests         domain, entegrasyon, view model, XAML kontrolleri
+docs/                       mimari, kararlar ve araştırma
+```
+
+## Belgeler
+| Belge | İçerik |
+|---|---|
+| [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md) | A. Rakip araştırması ve özellik matrisi ([kaynaklı raporlar](docs/research/)) |
+| [docs/BUSINESS_PROFILES.md](docs/BUSINESS_PROFILES.md) | B. Meslek modül matrisi |
+| [docs/DATABASE.md](docs/DATABASE.md) | C. Veritabanı mimarisi |
+| [docs/LICENSING.md](docs/LICENSING.md) | D. Lisans altyapısı kararı (ve ödeme/imzalama) |
+| [docs/BACKUP_RECOVERY.md](docs/BACKUP_RECOVERY.md) | E. Yedekleme ve kurtarma |
+| [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) | F. Mesajlaşma ve entegrasyonlar |
+| [docs/UI_DESIGN.md](docs/UI_DESIGN.md) | G. Arayüz ve tasarım sistemi |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | H. P0/P1/P2 iş listesi, fazlar, riskler |
+| [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) | Gereksinimler ve I. başarı kriterleri |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Mimari ve teknoloji kararları |
+| [docs/SECURITY.md](docs/SECURITY.md) | Güvenlik ve KVKK |
+| [docs/COST_MODEL.md](docs/COST_MODEL.md) | Maliyet modeli |
+| [docs/TEST_PLAN.md](docs/TEST_PLAN.md) | Test planı ve 30 senaryonun karşılığı |
+| [CHANGELOG.md](CHANGELOG.md) | Sürüm notları |
+
+## Bilinen sınırlar
+- **Arayüz Windows'ta çalıştırılarak doğrulanmadı.** Geliştirme ortamı Linux'tu; Wine 9 .NET 10'u çalıştıramadığı için ekran görüntüsü alınamadı. Windows CI işi ve `--smoke-test` bunu doğrulamak için hazır.
+- Yerel veritabanı dosyası şifreli değil (yedekler şifreli). BitLocker önerilir; veritabanı şifreleme P1.
+- Performans hedefleri gerçek cihazlarda ölçülmedi.
+- Hukuki konular (bulut yedek ve KVKK yurt dışı aktarım, İYS, sağlık verisi) avukat görüşü gerektirir — bkz. [docs/SECURITY.md](docs/SECURITY.md).
+- **Stripe Türkiye'de kayıtlı işletmelere açık değil**; satış altyapısı için karar gerekiyor — bkz. [docs/LICENSING.md](docs/LICENSING.md).

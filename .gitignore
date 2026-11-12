@@ -17,3 +17,5 @@ publish/
 *.db-wal
 *.vbk
 coverage*/
+smoke-output/
+smoke/

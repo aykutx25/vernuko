@@ -12,7 +12,7 @@ namespace Vernuko.Application.Services;
 public sealed class DemoDataSeeder(SetupService setup, AuthService auth, CustomerService customers, CatalogService catalog, AppointmentService appointments, PackageService packages, PaymentService payments, TimeProvider time)
 {
     public const string DemoUsername = "demo";
-    public const string DemoPassword = "Demo-Vernuko-2026";
+    public const string DemoPassword = "Randevu-Deneme-2026";
 
     public async Task<Result> SeedAsync(CancellationToken ct = default)
     {
