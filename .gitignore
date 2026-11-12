@@ -19,3 +19,5 @@ publish/
 coverage*/
 smoke-output/
 smoke/
+releases/
+Releases/
