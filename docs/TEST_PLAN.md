@@ -55,7 +55,18 @@ Ek testler: denetim zinciri kurcalama, iyimser eşzamanlılık, hesap kilidi + o
 ## Sonuçlar (bu sürüm)
 v0.2.2 — Linux (.NET 10.0.15, Release, 0 uyarı): **140 test — 139 geçti, 1 atlandı (yalnızca Windows), 0 başarısız**.
 
-**İlk gerçek Windows çalıştırması (2026-11-12, kullanıcının bilgisayarı, `dotnet run`):** demo girişi, yeni randevu paneli ve açılır kutular elle denendi; `--smoke-test` 11 sayfa ve 20 sekmeyi çizdi, **0 bağlama hatası**, parola kutusu kontrolü başarılı. Bu çalıştırmada üç hata bulundu ve düzeltildi (parola kutusu değeri iletmiyordu, açılır kutular iç veriyi gösteriyordu, kısayollar odak olmadan çalışmıyordu); her biri için regresyon testi/kontrolü eklendi.
+**İlk gerçek Windows çalıştırması (2026-11-12, kullanıcının bilgisayarı, `dotnet run`):** demo girişi, yeni randevu paneli ve açılır kutular elle denendi; `--smoke-test` 11 sayfa ve 20 sekmeyi çizdi, **0 bağlama hatası**, parola kutusu kontrolü başarılı. Windows'ta elle denemeyle bulunan ve düzeltilen hatalar (hepsi kullanıcı tarafından Windows'ta yeniden denenip doğrulandı, v0.2.5):
+
+| # | Hata | Düzeltme ve koruma |
+|---|---|---|
+| 1 | Parola kutusu yazılan parolayı iletmiyordu → her giriş yanlış sayılıp hesap kilitleniyordu | Bağlama düzeltildi; boş giriş kilide sayılmaz; smoke testte parola bağlama kontrolü + `WindowsFeedbackTests` |
+| 2 | Açılır kutular "ServiceDto { Id = … }" gösteriyordu | ComboBox şablonu; statik XAML testi `ComboBox_templates_show_the_display_member_in_the_closed_box` |
+| 3 | Kısayollar (Ctrl+N vb.) odak yokken çalışmıyordu | Pencere düzeyinde kısayollar; `Shortcuts_work_without_keyboard_focus_and_respect_modal_dialogs` |
+| 4 | Tarih kutuları eski Windows görünümündeydi; arama çubuğundaki Ctrl+K etiketi kaymıştı | Özel DatePicker şablonu, hizalama |
+| 5 | Bekleme listesine müşteri eklenemiyordu (ad yazılıp listeden seçilmeyince); "Müşteri" sütunu kayboluyordu | Yazılan adı eşleştirme + açık yönlendirme; `MinColumnWidth`; `Waitlist_accepts_a_typed_name…` |
+| 6 | Programı kapatırken hata çıkıyordu (yedekleme kapalıyken) | Kapanış sıralaması; smoke testte ana pencereyi aç-kapat kontrolü |
+
+Ders: Linux'taki statik kontroller ve view model testleri bu hataların hiçbirini yakalayamadı; hepsi gerçek Windows'ta ilk birkaç dakikada çıktı. Windows CI (smoke test) çalışır hale getirilmeli.
 
 v0.2.0 — Linux: 136 test — 135 geçti, 1 atlandı; üç ardışık çalıştırmada aynı sonuç. Windows CI işi (`.github/workflows/ci.yml`) aynı testleri Windows'ta çalıştırır, smoke testi koşar ve deneme kurulum paketi üretir; bu oturumdan CI sonuçlarına erişilemediği için sonuç görülmedi.
 
