@@ -57,6 +57,16 @@
                                            Text="• İşletmenizin faaliyet alanını seçeceksiniz&#x0a;• Çalışma gün ve saatlerinizi belirleyeceksiniz&#x0a;• Personel ve hizmetlerinizi ekleyeceksiniz (atlanabilir)&#x0a;• Yönetici hesabınızı oluşturacaksınız&#x0a;• Şifreli yedekleme tercihinizi yapacaksınız" />
                             </StackPanel>
                         </Border>
+                        <Border Style="{StaticResource Card}" Padding="22" Margin="0,14,0,0">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="Yedekten geri yükle…" Command="{Binding RestoreFromBackupCommand}" VerticalAlignment="Center" Margin="16,0,0,0" />
+                                <StackPanel>
+                                    <TextBlock Text="Bilgisayar mı değiştiriyorsunuz?" FontWeight="SemiBold" />
+                                    <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"
+                                               Text="Eski bilgisayardan aldığınız Vernuko yedeğini (.vbk) ve kurtarma anahtarınızı kullanarak tüm kayıtlarınızı buraya taşıyın. Kurulum adımlarını yeniden yapmanız gerekmez." />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
                         <TextBlock Margin="0,16,0,0" Style="{StaticResource Muted}" Text="Sadece denemek mi istiyorsunuz? Vernuko'yu '--demo' parametresiyle başlatarak gerçek verilerinizden tamamen ayrı bir demo veritabanını kullanabilirsiniz." />
                     </StackPanel>
 

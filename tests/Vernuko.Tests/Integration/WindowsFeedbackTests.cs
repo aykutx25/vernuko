@@ -127,3 +127,48 @@ public class EndToEndScenarioTests
         Assert.Equal(6, shots.Count);
     }
 }
+
+public class MoveToNewComputerTests
+{
+    [Fact]
+    public async Task New_computer_restores_a_backup_from_the_setup_wizard_and_signs_in_with_old_credentials()
+    {
+        // Old computer: data and an encrypted backup.
+        await using var oldPc = await TestApp.CreateAsync();
+        var key = (await oldPc.SetupBeautyAsync()).RecoveryKey!;
+        var customer = await oldPc.AddCustomerAsync("Taşınan", "Müşteri", "0532 111 22 33");
+        var backup = (await oldPc.Get<BackupService>().CreateBackupAsync(Vernuko.Backups.BackupTrigger.Manual)).Value;
+        var file = Path.Combine(oldPc.Root, "backups", backup.FileName);
+
+        // New computer: fresh installation, different Windows account key.
+        await using var newPc = await TestApp.CreateAsync(protector: new TestSecretProtector());
+        var root = newPc.Get<RootViewModel>();
+        await root.StartAsync();
+        var wizard = Assert.IsType<SetupWizardViewModel>(root.Screen);
+        var dialogs = newPc.Get<FakeDialogs>();
+
+        // Wrong recovery key: refused, wizard stays.
+        dialogs.OpenFileAnswers.Enqueue(file);
+        dialogs.PromptAnswers.Enqueue("AAAA-BBBB-CCCC-DDDD-EEEE-FFFF-GGGG-HHHH");
+        await wizard.RestoreFromBackupCommand.ExecuteAsync(null);
+        Assert.NotNull(wizard.ErrorMessage);
+        Assert.IsType<SetupWizardViewModel>(root.Screen);
+
+        // Right key: data moves over, login screen with a hint, old credentials work.
+        dialogs.OpenFileAnswers.Enqueue(file);
+        dialogs.PromptAnswers.Enqueue(key);
+        await wizard.RestoreFromBackupCommand.ExecuteAsync(null);
+        await root.LastScreenChange;
+        var login = Assert.IsType<LoginViewModel>(root.Screen);
+        Assert.Contains("Yedek bu bilgisayara yüklendi", login.InfoMessage);
+        Assert.True((await newPc.Get<AuthService>().LoginAsync(TestApp.AdminUser, TestApp.AdminPassword)).IsSuccess);
+        Assert.Contains((await newPc.Get<CustomerService>().SearchAsync("Taşınan")).Value, c => c.Id == customer);
+
+        // Backups keep working on the new computer (key re-protected for this Windows account).
+        Assert.True((await newPc.Get<BackupService>().GetStatusAsync()).KeyConfigured);
+
+        // Once the computer is set up, the unauthenticated restore path is closed.
+        var again = await newPc.Get<BackupService>().RestoreIntoNewInstallationAsync(file, key);
+        Assert.Equal("backup.not_new_installation", again.Error.Code);
+    }
+}

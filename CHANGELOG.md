@@ -2,6 +2,12 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.2.10] — 2026-11-12
+
+### Eklendi
+- **Yeni bilgisayara taşıma:** kurulum sihirbazının ilk ekranında "Yedekten geri yükle…". Eski bilgisayardan alınan şifreli yedek (.vbk) ve kurtarma anahtarıyla tüm kayıtlar (kullanıcılar, müşteriler, paketler, ödemeler, fotoğraflar) yeni bilgisayara gelir; kurulum adımları yeniden yapılmaz, eski kullanıcı adı ve parolayla giriş yapılır. Güvenlik: bu yol yalnızca henüz kurulmamış bir bilgisayarda açık; yanlış anahtar reddedilir.
+- Giriş ekranı bilgi mesajı gösterebiliyor (ör. "Yedek bu bilgisayara yüklendi").
+
 ## [0.2.9] — 2026-11-12
 
 ### Doğrulandı

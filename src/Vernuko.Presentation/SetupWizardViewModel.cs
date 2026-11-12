@@ -97,6 +97,7 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
     private readonly AuthService _auth;
     private readonly IDialogService _dialogs;
     private readonly IPlatformServices _platform;
+    private readonly BackupService _backups;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StepIndex), nameof(StepTitle), nameof(CanGoBack), nameof(CanSkip), nameof(IsLastInputStep), nameof(Progress))]
@@ -157,8 +158,9 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isCompleted;
 
-    public SetupWizardViewModel(SetupService setup, AuthService auth, IDialogService dialogs, IPlatformServices platform, IAppEnvironment env)
+    public SetupWizardViewModel(SetupService setup, AuthService auth, IDialogService dialogs, IPlatformServices platform, IAppEnvironment env, BackupService backups)
     {
+        _backups = backups;
         _setup = setup;
         _auth = auth;
         _dialogs = dialogs;
@@ -171,6 +173,9 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
     }
 
     public event EventHandler? Completed;
+
+    /// <summary>Raised after a backup from another computer was restored instead of running the wizard.</summary>
+    public event EventHandler? RestoredFromBackup;
 
     public ObservableCollection<ProfileOption> Profiles { get; }
 
@@ -361,6 +366,47 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
         if (RecoveryKey is null)
         {
             RecoveryKeyWrittenDown = true;
+        }
+    });
+
+    /// <summary>
+    /// Moving to a new computer: restore the encrypted backup (with the recovery key) instead of setting up again.
+    /// Users, customers, packages, payments and photos come back; sign in with the old username and password.
+    /// </summary>
+    [RelayCommand]
+    private Task RestoreFromBackupAsync() => RunAsync(async () =>
+    {
+        var path = await _dialogs.PickOpenFileAsync("Eski bilgisayardan aldığınız yedeği seçin", "Vernuko yedeği|*.vbk");
+        if (path is null)
+        {
+            return;
+        }
+
+        var info = await BackupService.DescribeAsync(path, null, CancellationToken.None);
+        if (info.Problem is not null)
+        {
+            ErrorMessage = info.Problem;
+            return;
+        }
+
+        var key = await _dialogs.PromptAsync("Kurtarma anahtarı", "Yedeklemeyi açarken size verilen kurtarma anahtarını girin (tireler isteğe bağlı):");
+        if (key is null)
+        {
+            return;
+        }
+
+        var when = info.CreatedAtUtc is { } c ? $"{Formatting.ShortDate(c.ToLocalTime())} {Formatting.Time(c.ToLocalTime())}" : "bilinmeyen tarih";
+        if (!await _dialogs.ConfirmAsync("Yedekten geri yükle",
+                $"{when} tarihli yedek bu bilgisayara yüklenecek. Ardından eski bilgisayardaki kullanıcı adı ve parolanızla giriş yapacaksınız. Devam edilsin mi?",
+                "Geri yükle"))
+        {
+            return;
+        }
+
+        if (Check(await _backups.RestoreIntoNewInstallationAsync(path, key)))
+        {
+            IsCompleted = true;
+            RestoredFromBackup?.Invoke(this, EventArgs.Empty);
         }
     });
 

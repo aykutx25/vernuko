@@ -70,7 +70,7 @@ Ortak gereksinimler: refresh token'lar DPAPI ile korunur; kesintide kaldığı y
 ## Felaket senaryoları
 | Senaryo | Sonuç |
 |---|---|
-| Bilgisayar bozuldu | Yeni bilgisayara kur → kurulumu tamamla → Ayarlar › Yedekleme › Dosyadan geri yükle → kurtarma anahtarı |
+| Bilgisayar bozuldu / değişti | Yeni bilgisayara kur → kurulum sihirbazının ilk ekranında **Yedekten geri yükle…** → .vbk dosyası + kurtarma anahtarı → eski kullanıcı adı ve parolayla giriş. Kurulum adımları yeniden yapılmaz; kullanıcılar, müşteriler, paketler, ödemeler ve fotoğraflar gelir; yedekleme yeni Windows hesabı için yeniden korunur. Bu yol yalnızca henüz kurulmamış (kullanıcısı olmayan) bir bilgisayarda açıktır; sonrasında geri yükleme yetkili kullanıcıyla Ayarlar › Yedekleme'den yapılır (test: `New_computer_restores_a_backup_from_the_setup_wizard_and_signs_in_with_old_credentials`) |
 | Kurtarma anahtarı kayıp, eski bilgisayar çalışıyor | Ayarlar › Yeni kurtarma anahtarı oluştur (eski yedekler eski anahtarla açılır; yeni yedek alın) |
 | Kurtarma anahtarı kayıp, bilgisayar yok | Yedekler açılamaz. Bu bilinçli bir tasarım; anahtar Vernuko tarafından saklanmaz. |
 | Yedek dosyası bozuk | Doğrulama reddeder, canlı veri etkilenmez; bir önceki yedek seçilir |

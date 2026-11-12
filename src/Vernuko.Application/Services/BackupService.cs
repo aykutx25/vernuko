@@ -270,6 +270,34 @@ public sealed class BackupService(
             return Error.Forbidden;
         }
 
+        return await RestoreCoreAsync(backupPath, recoveryKey, ct);
+    }
+
+    /// <summary>
+    /// "Bilgisayar değiştiriyorum": restores a backup on a NEW installation, from the setup wizard, before any user
+    /// exists. Allowed only while this PC has no completed setup and no users (there is nothing to protect yet);
+    /// afterwards only the permission-checked <see cref="RestoreAsync"/> can replace data.
+    /// </summary>
+    public async Task<Result<RestoreResult>> RestoreIntoNewInstallationAsync(string backupPath, string recoveryKey, CancellationToken ct = default)
+    {
+        await using (var db = await factory.CreateDbContextAsync(ct))
+        {
+            if (await db.BusinessSettings.AnyAsync(s => s.SetupCompletedAtUtc != null, ct) || await db.Users.AnyAsync(ct))
+            {
+                return new Error("backup.not_new_installation", "Bu bilgisayarda Vernuko zaten kurulmuş. Geri yüklemeyi giriş yaptıktan sonra Ayarlar › Yedekleme'den yapın.");
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(recoveryKey))
+        {
+            return Error.Validation("backup.recovery_key", "Yeni bilgisayarda geri yükleme için kurtarma anahtarı gerekir.");
+        }
+
+        return await RestoreCoreAsync(backupPath, recoveryKey, ct);
+    }
+
+    private async Task<Result<RestoreResult>> RestoreCoreAsync(string backupPath, string? recoveryKey, CancellationToken ct)
+    {
         if (!await Gate.WaitAsync(TimeSpan.FromMinutes(5), ct))
         {
             return new Error("backup.busy", "Başka bir yedekleme işlemi sürüyor.");

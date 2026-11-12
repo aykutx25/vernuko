@@ -42,6 +42,7 @@ public sealed partial class RootViewModel : ViewModelBase
         {
             var wizard = _services.GetRequiredService<SetupWizardViewModel>();
             wizard.Completed += (_, _) => RunSafely(ShowShellAsync);
+            wizard.RestoredFromBackup += (_, _) => RunSafely(() => ShowLoginAsync("Yedek bu bilgisayara yüklendi. Eski bilgisayardaki kullanıcı adı ve parolanızla giriş yapın."));
             Screen = wizard;
             return;
         }
@@ -49,11 +50,14 @@ public sealed partial class RootViewModel : ViewModelBase
         await ShowLoginAsync();
     }
 
-    public async Task ShowLoginAsync()
+    public Task ShowLoginAsync() => ShowLoginAsync(null);
+
+    public async Task ShowLoginAsync(string? info)
     {
         var login = _services.GetRequiredService<LoginViewModel>();
         login.LoggedIn += (_, _) => RunSafely(ShowShellAsync);
         await login.LoadAsync();
+        login.InfoMessage = info;
         Screen = login;
     }
 
