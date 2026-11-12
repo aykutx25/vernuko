@@ -8,7 +8,10 @@ using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Vernuko.Application.Common;
 using Vernuko.Application.Services;
+using Vernuko.Core;
 using Vernuko.Presentation;
+using Vernuko.Presentation.Common;
+using Vernuko.Presentation.Diagnostics;
 using Vernuko.Presentation.Pages;
 
 namespace Vernuko.Desktop;
@@ -23,6 +26,41 @@ internal static class SmokeTest
     private static readonly List<string> UnhandledErrors = [];
 
     public static void RecordUnhandled(Exception ex) => UnhandledErrors.Add(ex.GetType().Name + ": " + ex.Message);
+
+    /// <summary>Real time shifted to next week's Wednesday 10:00 (Istanbul): inside business hours whenever the check runs.</summary>
+    public static TimeProvider CreateClock()
+    {
+        var zone = TimeZones.Find(TimeZones.Turkey);
+        var nowUtc = DateTime.UtcNow;
+        var local = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, zone);
+        var daysToWednesday = ((int)DayOfWeek.Wednesday - (int)local.DayOfWeek + 7) % 7 + 7;
+        var target = DateTime.SpecifyKind(local.Date.AddDays(daysToWednesday).AddHours(10), DateTimeKind.Unspecified);
+        return new ShiftedClock(TimeZoneInfo.ConvertTimeToUtc(target, zone) - nowUtc);
+    }
+
+    private sealed class ShiftedClock(TimeSpan offset) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => System.GetUtcNow() + offset;
+
+        public override TimeZoneInfo LocalTimeZone => TimeZones.Find(TimeZones.Turkey);
+    }
+
+    /// <summary>Answers every dialog without UI: confirm = yes, prompts = their default (or a fixed reason).</summary>
+    public sealed class AutoDialogService : IDialogService
+    {
+        public Task<bool> ConfirmAsync(string title, string message, string confirmText = "Evet", string cancelText = "Vazgeç", bool destructive = false) => Task.FromResult(true);
+
+        public Task ShowMessageAsync(string title, string message) => Task.CompletedTask;
+
+        public Task<string?> PromptAsync(string title, string message, string? initialValue = null, bool required = true) =>
+            Task.FromResult<string?>(string.IsNullOrEmpty(initialValue) ? "Otomatik kontrol" : initialValue);
+
+        public Task<string?> PickFolderAsync(string title, string? initialFolder) => Task.FromResult(initialFolder);
+
+        public Task<string?> PickOpenFileAsync(string title, string filter) => Task.FromResult<string?>(null);
+
+        public Task<string?> PickSaveFileAsync(string title, string defaultFileName, string filter) => Task.FromResult<string?>(null);
+    }
 
     public static async Task<int> RunAsync(IServiceProvider services, string outputDirectory)
     {
@@ -109,6 +147,19 @@ internal static class SmokeTest
                     await RenderAsync(root, 1366, 768, Path.Combine(outputDirectory, "payment-dialog.png"));
                     shell.CloseOverlay();
                 }
+            }
+
+            // The product's success flow, end to end, in the real WPF app (screenshot after each step).
+            var steps = await EndToEndScenario.RunAsync(shell, services, Path.Combine(outputDirectory, "senaryo-yedek"),
+                name => RenderAsync(root, 1366, 768, Path.Combine(outputDirectory, $"senaryo-{name}.png")));
+            foreach (var step in steps)
+            {
+                report.AppendLine($"senaryo {(step.Ok ? "ok  " : "HATA")} {step.Name}: {step.Detail}");
+            }
+
+            if (steps.Count == 0 || steps.Any(s => !s.Ok))
+            {
+                return Finish(outputDirectory, report, listener, 7);
             }
 
             // Regression check from the first Windows run: closing the main window threw when the exit-backup check

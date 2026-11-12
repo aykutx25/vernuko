@@ -2,6 +2,11 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.2.8] — 2026-11-12
+
+### Eklendi
+- **Başarı senaryosu otomatik:** `kontrol.cmd` artık gerçek Windows ekranlarında müşteri ekler, 8 seanslık paket satar, paketten randevu verir, "geldi" ve "tamamla" yapar, kalan seansın 7 olduğunu doğrular, şifreli yedek alır, sonradan bir kayıt ekler, yedekten geri yükler ve kaydın geri alındığını, 7 seansın korunduğunu doğrular. Her adımın ekran görüntüsü `vernuko-kontrol\senaryo-*.png` olarak kaydedilir. Aynı senaryo Linux testlerinde de çalışır.
+
 ## [0.2.7] — 2026-11-12
 
 ### Değişti

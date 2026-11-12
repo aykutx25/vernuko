@@ -43,9 +43,19 @@ public partial class App : System.Windows.Application
         env.CleanTemp();
 
         var services = new ServiceCollection();
+        if (smoke)
+        {
+            // Deterministic check run: business-day morning clock and auto-answered dialogs (nobody is at the keyboard).
+            services.AddSingleton<TimeProvider>(SmokeTest.CreateClock());
+            services.AddSingleton<IDialogService, SmokeTest.AutoDialogService>();
+        }
+        else
+        {
+            services.AddSingleton<IDialogService, WpfDialogService>();
+        }
+
         services.AddVernuko(env);
         services.AddVernukoPresentation();
-        services.AddSingleton<IDialogService, WpfDialogService>();
         services.AddSingleton<IPlatformServices, WpfPlatformServices>();
         services.AddSingleton<IUpdateService, VelopackUpdateService>();
         _services = services.BuildServiceProvider();

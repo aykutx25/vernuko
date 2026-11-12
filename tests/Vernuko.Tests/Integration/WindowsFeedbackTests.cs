@@ -107,3 +107,23 @@ public class TypedCustomerTests
         Assert.Equal("Hakan Cımbız", Assert.Single(page.Items).CustomerName);
     }
 }
+
+public class EndToEndScenarioTests
+{
+    [Fact]
+    public async Task Success_flow_scenario_passes_through_the_view_models()
+    {
+        await using var app = await TestApp.CreateAsync();
+        await app.SetupBeautyAsync();
+        var shell = app.Get<ShellViewModel>();
+        await shell.InitializeAsync();
+        var shots = new List<string>();
+
+        var steps = await Vernuko.Presentation.Diagnostics.EndToEndScenario.RunAsync(
+            shell, app.Get<IServiceProvider>(), Path.Combine(app.Root, "senaryo-yedek"), name => { shots.Add(name); return Task.CompletedTask; });
+
+        Assert.True(steps.All(s => s.Ok), string.Join("\n", steps.Select(s => $"{(s.Ok ? "ok  " : "FAIL")} {s.Name}: {s.Detail}")));
+        Assert.Equal(["müşteri ekle", "paket sat", "randevu ver", "tamamla", "seans düştü", "yedek al", "geri yükle"], steps.Select(s => s.Name));
+        Assert.Equal(6, shots.Count);
+    }
+}

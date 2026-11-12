@@ -1,6 +1,7 @@
 @echo off
 rem Vernuko yerel kontrol: GitHub'daki otomatik kontrolun aynisini bu bilgisayarda yapar.
-rem 1) guncel kodu indirir  2) derler  3) tum testleri calistirir  4) tum ekranlari acip kontrol eder (smoke test)
+rem 1) guncel kodu indirir  2) derler  3) tum testleri calistirir  4) tum ekranlari acip kontrol eder ve basari
+rem senaryosunu gercek ekranlarda yurutur: musteri, paket, randevu, tamamla (8->7), yedek, geri yukleme
 rem Kullanim: cift tiklayin ya da PowerShell'de:  .\kontrol.cmd
 setlocal
 cd /d "%~dp0"
@@ -25,7 +26,7 @@ dotnet test tests\Vernuko.Tests\Vernuko.Tests.csproj -c Release --no-build
 if errorlevel 1 goto fail
 
 echo.
-echo [4/4] Ekranlar kontrol ediliyor (pencere acilmaz, 1-2 dakika)...
+echo [4/4] Ekranlar ve kullanim senaryosu kontrol ediliyor (pencere acilmaz, 2-3 dakika)...
 if exist "%OUT%" rmdir /s /q "%OUT%"
 start "" /wait "src\Vernuko.Desktop\bin\Release\net10.0-windows\Vernuko.exe" --smoke-test "%OUT%"
 set SMOKE=%errorlevel%
