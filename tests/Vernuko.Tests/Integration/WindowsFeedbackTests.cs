@@ -82,3 +82,28 @@ public class ShortcutTests
         Assert.True(condition());
     }
 }
+
+public class TypedCustomerTests
+{
+    [Fact]
+    public async Task Waitlist_accepts_a_typed_name_that_matches_one_customer_and_explains_otherwise()
+    {
+        await using var app = await TestApp.CreateAsync();
+        await app.SetupBeautyAsync();
+        await app.AddCustomerAsync("Hakan", "Cımbız", "0533 222 33 44");
+        var page = app.Get<Vernuko.Presentation.Pages.WaitlistViewModel>();
+        await page.OnNavigatedToAsync(null);
+
+        // Unknown name: clear instruction instead of "Müşteri seçin."
+        page.CustomerSearch = "Hakan Cımvbız";
+        await page.AddCommand.ExecuteAsync(null);
+        Assert.Contains("kayıtlı müşteri yok", page.ErrorMessage);
+        Assert.Empty(page.Items);
+
+        // Typed (not picked) but unique: accepted.
+        page.CustomerSearch = "hakan cımbız";
+        await page.AddCommand.ExecuteAsync(null);
+        Assert.Null(page.ErrorMessage);
+        Assert.Equal("Hakan Cımbız", Assert.Single(page.Items).CustomerName);
+    }
+}

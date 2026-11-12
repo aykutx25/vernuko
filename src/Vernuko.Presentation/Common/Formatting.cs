@@ -79,4 +79,24 @@ public sealed record Option<T>(string Label, T Value)
 public static class ResultExtensions
 {
     public static IReadOnlyList<T> OrEmpty<T>(this Vernuko.Core.Result<IReadOnlyList<T>> result) => result.IsSuccess ? result.Value : [];
+
+    /// <summary>
+    /// When a name was typed but not picked from the suggestions: use the single exact match, otherwise explain what
+    /// to do (pick from the list, or add the customer first). Returns the customer or a Turkish error message.
+    /// </summary>
+    public static async Task<(Vernuko.Application.CustomerListItem? Customer, string? Error)> ResolveTypedCustomerAsync(
+        Vernuko.Application.Services.CustomerService customers, string typed)
+    {
+        if (string.IsNullOrWhiteSpace(typed))
+        {
+            return (null, "Müşteri adını veya telefonunu yazıp aşağıda çıkan listeden seçin.");
+        }
+
+        var found = (await customers.SearchAsync(typed, take: 6)).OrEmpty();
+        var exact = found.Where(c => string.Equals(c.FullName.Trim(), typed.Trim(), StringComparison.CurrentCultureIgnoreCase)).ToList();
+        return found.Count == 1 ? (found[0], null)
+            : exact.Count == 1 ? (exact[0], null)
+            : found.Count == 0 ? (null, $"\"{typed.Trim()}\" adında kayıtlı müşteri yok. Önce Müşteriler ekranından ekleyin, sonra burada seçin.")
+            : (null, "Bu isimle birden fazla müşteri var; aşağıdaki listeden doğru kişiyi seçin.");
+    }
 }

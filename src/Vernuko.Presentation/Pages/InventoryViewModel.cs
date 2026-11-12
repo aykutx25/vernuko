@@ -279,10 +279,22 @@ public sealed partial class InventoryViewModel(InventoryService inventory, Catal
     [RelayCommand]
     private Task SellAsync() => RunAsync(async () =>
     {
-        if (Selected is null || SaleCustomer is null)
+        if (Selected is null)
         {
-            ErrorMessage = "Ürün ve müşteri seçin.";
+            ErrorMessage = "Soldaki listeden satılacak ürünü seçin.";
             return;
+        }
+
+        if (SaleCustomer is null)
+        {
+            var (resolved, error) = await ResultExtensions.ResolveTypedCustomerAsync(customers, CustomerSearch);
+            if (resolved is null)
+            {
+                ErrorMessage = error;
+                return;
+            }
+
+            SaleCustomer = resolved;
         }
 
         var price = Money.Parse(SalePriceText);

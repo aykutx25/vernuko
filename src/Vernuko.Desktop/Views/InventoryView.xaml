@@ -89,7 +89,10 @@
                                 <Separator Margin="0,16" />
                                 <TextBlock Text="Müşteriye ürün sat" Style="{StaticResource SectionTitle}" />
                                 <TextBlock Text="MÜŞTERİ" Style="{StaticResource FieldLabel}" />
-                                <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}" Tag="Ad veya telefon ile ara…" IsEnabled="{Binding CanSell}" AutomationProperties.Name="Müşteri ara" />
+                                <Grid>
+                                    <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}" Tag="Ad veya telefon yazın, listeden seçin" Padding="34,0,10,0" IsEnabled="{Binding CanSell}" AutomationProperties.Name="Müşteri ara" />
+                                    <Path Data="{StaticResource IconSearch}" Style="{StaticResource Icon}" Width="15" HorizontalAlignment="Left" Margin="11,0,0,0" IsHitTestVisible="False" TextElement.Foreground="{StaticResource TextMutedBrush}" />
+                                </Grid>
                                 <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,4,0,0" Padding="4" Visibility="{Binding CustomerResults.Count, Converter={StaticResource VisibleWhen}}">
                                     <ListBox ItemsSource="{Binding CustomerResults}" SelectedItem="{Binding SaleCustomer}" Style="{StaticResource PlainListBox}" MaxHeight="180">
                                         <ListBox.ItemTemplate>

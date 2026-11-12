@@ -112,8 +112,14 @@ public sealed partial class WaitlistViewModel(WaitlistService waitlist, Customer
     {
         if (Customer is null)
         {
-            ErrorMessage = "Müşteri seçin.";
-            return;
+            var (resolved, error) = await ResultExtensions.ResolveTypedCustomerAsync(customers, CustomerSearch);
+            if (resolved is null)
+            {
+                ErrorMessage = error;
+                return;
+            }
+
+            Customer = resolved;
         }
 
         var r = await waitlist.AddAsync(Customer.Id, Service?.Value, Staff?.Value, DateOnly.FromDateTime(From), DateOnly.FromDateTime(To), PreferredTime, Notes);

@@ -2,6 +2,15 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.2.3] — 2026-11-12 — Görünüm düzeltmeleri (Windows geri bildirimi)
+
+### Düzeltildi
+- **Tarih kutuları** Windows'un eski varsayılan görünümündeydi (yazı üstte, kutu uzun, eski takvim simgesi). Diğer kutularla aynı yükseklik, köşe ve odak rengine sahip yeni tasarım.
+- **Arama çubuğu:** "Ctrl + K" etiketi kutunun tüm yüksekliğini kaplıyordu; ortalandı.
+- **Bekleme listesine müşteri eklenemiyordu:** ad yazılıp listeden seçilmediğinde yalnızca "Müşteri seçin" deniyordu. Artık yazılan ad tek bir müşteriyle eşleşiyorsa otomatik seçilir; kayıtlı değilse ya da birden fazla eşleşme varsa ne yapılacağı açıkça yazılır. Aynı düzeltme stok ekranındaki ürün satışında da var.
+- **Bekleme listesi tablosunda "Müşteri" sütunu görünmüyordu** (sabit genişlikli sütunlar yer bırakmayınca sıfıra düşüyordu). Tablo 1366 px ekrana sığacak şekilde yeniden düzenlendi; tüm tablolarda sütunların sıfıra düşmesi engellendi.
+- Sayfa kaydırma alanlarında beliren kesik çizgili odak çerçevesi kaldırıldı.
+
 ## [0.2.2] — 2026-11-12 — Windows'ta doğrulama ve düzeltmeler
 
 ### Düzeltildi
