@@ -26,6 +26,14 @@ jobs:
       - run: dotnet restore Vernuko.sln
       - run: dotnet build Vernuko.sln -c Release --no-restore
       - run: dotnet test tests/Vernuko.Tests/Vernuko.Tests.csproj -c Release --no-build
+      - name: Publish license server (linux-x64)
+        run: dotnet publish src/Vernuko.LicenseServer/Vernuko.LicenseServer.csproj -c Release -r linux-x64 --self-contained -o license-server
+      - name: Upload license server
+        uses: actions/upload-artifact@v4
+        with:
+          name: vernuko-license-server-linux-x64
+          path: license-server
+          if-no-files-found: error
 
   windows:
     name: Build, test and UI smoke test (Windows)

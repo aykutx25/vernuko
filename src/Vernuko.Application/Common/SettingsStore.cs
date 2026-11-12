@@ -24,6 +24,15 @@ public static class SettingsStore
         }
     }
 
+    public static async Task RemoveAsync(VernukoDbContext db, string key, CancellationToken ct = default)
+    {
+        var existing = await db.AppSettings.FirstOrDefaultAsync(s => s.Key == key, ct);
+        if (existing is not null)
+        {
+            db.AppSettings.Remove(existing);
+        }
+    }
+
     public static async Task<DateTime?> GetUtcAsync(VernukoDbContext db, string key, CancellationToken ct = default)
     {
         var raw = await GetAsync(db, key, ct);

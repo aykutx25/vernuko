@@ -268,7 +268,24 @@
                         <TextBlock Text="{Binding LicenseText}" FontSize="15" TextWrapping="Wrap" />
                         <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0" Text="Lisans süresi dolsa bile verileriniz silinmez veya kilitlenmez; Vernuko salt-okunur moda geçer ve yedek almanıza, dışa aktarmanıza izin verir." />
                         <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0"><Run Text="Cihaz kimliği (gizlilik için özetlenmiş): " /><Run Text="{Binding DeviceId, Mode=OneWay}" FontFamily="Consolas" /></TextBlock>
-                        <Button Content="Lisans dosyası yükle…" Command="{Binding ImportLicenseCommand}" HorizontalAlignment="Left" Margin="0,14,0,0" Visibility="{Binding CanManageLicense, Converter={StaticResource VisibleWhen}}" />
+                        <StackPanel Visibility="{Binding CanManageLicense, Converter={StaticResource VisibleWhen}}">
+                            <StackPanel Visibility="{Binding OnlineLicensing, Converter={StaticResource VisibleWhen}}" Margin="0,14,0,0">
+                                <TextBlock Text="LİSANS ANAHTARI" Style="{StaticResource FieldLabel}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox Text="{Binding LicenseKey, UpdateSourceTrigger=PropertyChanged}" Width="300" Tag="VRNK-XXXXX-XXXXX-XXXXX-XXXXX" FontFamily="Consolas" AutomationProperties.Name="Lisans anahtarı" />
+                                    <Button Style="{StaticResource PrimaryButton}" Content="Etkinleştir" Command="{Binding ActivateLicenseCommand}" Margin="8,0,0,0" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                           Text="Sunucuya yalnızca lisans anahtarı ve özetlenmiş cihaz kimliği gönderilir; randevu ve müşteri bilgileri gönderilmez. Lisans yaklaşık haftada bir kendiliğinden yenilenir; internet yoksa çevrimdışı süre boyunca çalışmaya devam eder." />
+                                <WrapPanel Margin="0,10,0,0" Visibility="{Binding HasActivation, Converter={StaticResource VisibleWhen}}">
+                                    <Button Content="Şimdi doğrula" Command="{Binding RefreshLicenseOnlineCommand}" Margin="0,0,8,6" />
+                                    <Button Content="Bu bilgisayardan kaldır (taşıma)…" Command="{Binding DeactivateLicenseCommand}" Margin="0,0,8,6" />
+                                </WrapPanel>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,14,0,0" Text="{Binding OnlineLicensingNote}"
+                                       Visibility="{Binding OnlineLicensing, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}" />
+                            <Button Content="Lisans dosyası yükle…" Command="{Binding ImportLicenseCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                        </StackPanel>
 
                         <TextBlock Text="Açık kaynak" Style="{StaticResource SectionTitle}" Margin="0,24,0,6" />
                         <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"

@@ -14,6 +14,11 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Vernuko.Presentation\Vernuko.Presentation.csproj" />
     <ProjectReference Include="..\..\src\Vernuko.Infrastructure\Vernuko.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Vernuko.LicenseServer\Vernuko.LicenseServer.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The license server tests start the real server on a loopback port. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

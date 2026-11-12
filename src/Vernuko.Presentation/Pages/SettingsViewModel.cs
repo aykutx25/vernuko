@@ -19,6 +19,7 @@ public sealed partial class SettingsViewModel(
     AuthService auth,
     BackupService backups,
     LicenseService license,
+    LicenseOnlineService licenseOnline,
     AuditService audit,
     IDeviceIdentity device,
     IDialogService dialogs,
@@ -114,6 +115,16 @@ public sealed partial class SettingsViewModel(
     // License
     [ObservableProperty]
     private string _licenseText = string.Empty;
+
+    [ObservableProperty]
+    private string _licenseKey = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasActivation;
+
+    public bool OnlineLicensing => licenseOnline.IsAvailable;
+
+    public string? OnlineLicensingNote => licenseOnline.UnavailableReason;
 
     // Account
     [ObservableProperty]
@@ -213,6 +224,7 @@ public sealed partial class SettingsViewModel(
         await LoadUsersAsync();
         await LoadBackupAsync();
         LicenseText = (await license.RefreshAsync()).Message;
+        HasActivation = await license.GetDocumentAsync() is not null;
         if (CanViewAudit)
         {
             await LoadAuditAsync();
@@ -520,6 +532,50 @@ public sealed partial class SettingsViewModel(
         {
             LicenseText = r.Value.Message;
             InfoMessage = "Lisans yüklendi.";
+        }
+    });
+
+    [RelayCommand]
+    private Task ActivateLicenseAsync() => RunAsync(async () =>
+    {
+        var r = await licenseOnline.ActivateAsync(LicenseKey);
+        if (Check(r))
+        {
+            LicenseText = r.Value.Message;
+            LicenseKey = string.Empty;
+            HasActivation = true;
+            InfoMessage = "Lisans etkinleştirildi.";
+        }
+    });
+
+    [RelayCommand]
+    private Task RefreshLicenseOnlineAsync() => RunAsync(async () =>
+    {
+        var r = await licenseOnline.RefreshAsync();
+        if (Check(r))
+        {
+            LicenseText = r.Value.Message;
+            InfoMessage = "Lisans sunucuyla doğrulandı.";
+        }
+    });
+
+    /// <summary>Moving to a new computer: frees the seat. Data stays; this computer becomes read-only.</summary>
+    [RelayCommand]
+    private Task DeactivateLicenseAsync() => RunAsync(async () =>
+    {
+        if (!await dialogs.ConfirmAsync("Lisansı bu bilgisayardan kaldır",
+                "Lisans bu bilgisayardan kaldırılacak ve yeni bilgisayarda aynı anahtarla etkinleştirilebilecek.\n\nBu bilgisayardaki veriler SİLİNMEZ; program salt-okunur moda geçer (görüntüleme, yedek alma ve dışa aktarma çalışır). Önce yedek almanız önerilir.",
+                "Kaldır"))
+        {
+            return;
+        }
+
+        var r = await licenseOnline.DeactivateAsync();
+        if (Check(r))
+        {
+            LicenseText = r.Value.Message;
+            HasActivation = false;
+            InfoMessage = "Lisans bu bilgisayardan kaldırıldı. Yeni bilgisayarda lisans anahtarıyla etkinleştirin.";
         }
     });
 

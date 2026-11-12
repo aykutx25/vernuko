@@ -35,7 +35,7 @@
 | P0-12 | WPF arayüz: kabuk, randevu gün/hafta/ay, yan panelde hızlı randevu, müşteri, hizmet, personel, paket, ödeme, rapor, ayarlar | P0-3..11 | Smoke test (Windows) 0 bağlama hatası; başarı kriterleri elle uçtan uca | ✅ smoke test + **başarı senaryosu gerçek WPF ekranlarında otomatik** (iki Windows bilgisayarda, 2026-11-12) · 🟡 kurulum sihirbazının elle tamamlanması ayrıca denenmeli |
 | P0-13 | Windows CI: derleme + test + smoke test + ekran görüntüsü artefaktı | P0-12 | Workflow yeşil | ✅ yerelde `kontrol.cmd` ile (Windows'ta 141/141 + smoke test temiz, 2026-11-12) · GitHub Actions yalnızca elle |
 | P0-14 | Kurulum paketi (Velopack), güncelleme öncesi yedek, imzalı yükleyici (OV + bulut HSM) | P0-12 | Temiz Windows 10/11'de kur-kaldır-güncelle | 🟡 paket + taslak sürüm iş akışı + güncelleme öncesi yedek (test) + Windows'ta paket üretildi ve kuruldu · ⏸ **imza: sahip kararıyla ertelendi (2026-11-12)** — kabul edilen risk: Akıllı Uygulama Denetimi açık Windows 11 bilgisayarlarda program açılmaz, diğerlerinde SmartScreen uyarısı çıkar; gerektiğinde kod değişmeden eklenir (`vpk pack --signParams`) |
-| P0-15 | Lisans sunucusu + ödeme (Paddle/iyzico) + aktivasyon | P0-10 | Webhook idempotent; ödeme olmadan lisans yok | ⬜ Faz 6 |
+| P0-15 | Lisans sunucusu + ödeme (Paddle/iyzico) + aktivasyon | P0-10 | Webhook idempotent; ödeme olmadan lisans yok | ✅ sunucu + etkinleştirme/yenileme/taşıma + Paddle webhook + güncelleme izni (gerçek sunucuyla uçtan uca test) · ⬜ gerçek Paddle hesabıyla deneme, iyzico webhook, anahtarın e-postayla gönderimi, VPS kurulumu |
 
 ## P1 — İlk ticari sürümü güçlendirir
 | # | İş | Bağımlılık | Kabul kriteri | Durum |
@@ -68,4 +68,4 @@
 | Artifact Signing Türkiye'ye kapalı | SmartScreen uyarıları | OV + bulut HSM; itibar zamanla oluşur |
 | Bulut yedek = yurt dışı aktarım (KVKK) | Hukuki risk | Avukat görüşü; varsayılan kapalı; açık uyarı |
 | Sağlık profilleri | Mevzuat (MBYS/e-Nabız) | Yalnızca ön büro; tıbbi kayıt yok |
-| Yerel deneme sayacı kurcalanabilir | Gelir kaybı | Sunucu tarafı deneme kaydı (Faz 6) |
+| Yerel deneme sayacı kurcalanabilir | Gelir kaybı | ✅ Sunucu tarafı deneme kaydı (Faz 6); çevrimdışı kalan bilgisayarda hâlâ yerel sayaç geçerli |

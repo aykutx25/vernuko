@@ -16,6 +16,8 @@ env:
   TAG_NAME: ${{ github.ref_name }}
   REPO_URL: https://github.com/${{ github.repository }}
   VERNUKO_UPDATE_URL: ${{ vars.VERNUKO_UPDATE_URL }}
+  VERNUKO_LICENSE_SERVER_URL: ${{ vars.VERNUKO_LICENSE_SERVER_URL }}
+  VERNUKO_LICENSE_KEYS: ${{ vars.VERNUKO_LICENSE_KEYS }}
 
 jobs:
   release:
@@ -37,8 +39,10 @@ jobs:
       - name: Publish desktop app
         # VERNUKO_UPDATE_URL is a repository *variable* (not a secret): the HTTPS address of the update feed,
         # e.g. https://github.com/<owner>/<public-releases-repo> or a static host. Empty = no auto-update.
+        # VERNUKO_LICENSE_SERVER_URL (HTTPS) and VERNUKO_LICENSE_KEYS ("kid:base64-public-key|…") are repository
+        # variables too: public values only. Empty = license files only, no online activation.
         shell: pwsh
-        run: dotnet publish src/Vernuko.Desktop/Vernuko.Desktop.csproj -c Release -r win-x64 --self-contained "-p:Version=$env:VERNUKO_VERSION" "-p:VernukoUpdateUrl=$env:VERNUKO_UPDATE_URL" -o publish
+        run: dotnet publish src/Vernuko.Desktop/Vernuko.Desktop.csproj -c Release -r win-x64 --self-contained "-p:Version=$env:VERNUKO_VERSION" "-p:VernukoUpdateUrl=$env:VERNUKO_UPDATE_URL" "-p:VernukoLicenseServerUrl=$env:VERNUKO_LICENSE_SERVER_URL" "-p:VernukoLicenseKeys=$env:VERNUKO_LICENSE_KEYS" -o publish
       - name: UI smoke test
         shell: pwsh
         run: |

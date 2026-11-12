@@ -58,6 +58,7 @@ public partial class MainWindow : Window
         if (++_ticks % 10 == 0)
         {
             await _root.RunMessagingAsync();
+            await _root.RunLicenseCheckInAsync();
         }
 
         // Every 30 minutes: scheduled backup check and status refresh (only while the app is running).

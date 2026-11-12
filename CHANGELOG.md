@@ -2,6 +2,19 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.7.0] — 2026-11-12 — Faz 6: lisans sunucusu
+
+### Eklendi
+- **Lisans sunucusu** (`src/Vernuko.LicenseServer`, ayrıntı `docs/LICENSE_SERVER.md`): lisans anahtarıyla etkinleştirme, haftalık yenileme, cihaz sınırı, yeni bilgisayara taşıma, sunucu tarafı deneme kaydı, güncelleme izni, elle lisans oluşturma/uzatma/iptal (yönetici anahtarıyla), denetim kaydı, IP başına istek sınırı. Sunucuya müşteri ve randevu verisi gitmez.
+- **Paddle Billing webhook'u:** imza doğrulama, aynı olay iki kez gelirse tek işlem, geç gelen eski olayların yok sayılması, 7 günlük ödeme toleransı. Gerçek bir Paddle hesabıyla **henüz denenmedi**.
+- **Ayarlar › Lisans:** anahtarla etkinleştirme, "Şimdi doğrula", "Bu bilgisayardan kaldır (taşıma)". Program açıkken lisans kendiliğinden yenilenir. İnternet yoksa çevrimdışı süre boyunca çalışmaya devam eder.
+- Sunucudan verilen güncellemeler yalnızca etkinleştirilmiş kurulumlara iner.
+- CI'da Linux için lisans sunucusu paketi üretiliyor.
+
+### Bilinen sınırlar
+- iyzico webhook'u yok; TL satışı elle lisans oluşturmayla yapılır. Anahtarın e-postayla gönderimi ve yönetici ekranı yok.
+- Sunucu henüz bir VPS'e kurulmadı. Sunucu adresi ve açık anahtar tanımlanana kadar masaüstü "lisans sunucusu tanımlı değil" der; lisans dosyası yükleme çalışmaya devam eder.
+
 ## [0.6.0] — 2026-11-12 — Faz 3: hizmete özel oda ve cihaz kuralı
 
 ### Eklendi

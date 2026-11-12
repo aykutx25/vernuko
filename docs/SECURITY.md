@@ -11,6 +11,7 @@
 | Finansal kayıtlar | Sessiz silme/değiştirme | Append-only tetikleyiciler, ters kayıt |
 | Denetim kaydı | Geçmişin değiştirilmesi | Append-only + hash zinciri; doğrulama ekranı. (Dosyaya tam erişimi olan saldırgan zinciri yeniden hesaplayabilir; bu kurcalamayı *tespit* eder, tam engellemez. Harici imzalı kontrol noktaları P2.) |
 | Lisans | Taklit / süre uzatma | ECDSA imza, özel anahtar istemcide yok, saat geri alma koruması |
+| Lisans sunucusu | Anahtar tahmini, sahte ödeme bildirimi, yönetici erişimi | 100 bit anahtar + IP başına dakikada 30 istek; Paddle HMAC imzası + olay kimliği tekrar koruması; yönetici anahtarının yalnızca SHA-256 özeti sunucuda, sabit zamanlı karşılaştırma; sırlar dosyada (600 izin), depoda değil; müşteri verisi sunucuya gitmez |
 | Güncelleme | Sahte paket | Güncelleme kaynağı derleme anında sabitlenir, yalnızca HTTPS; çalışma anında değiştirilemez; Velopack paket SHA doğrulaması. Authenticode imzalı yükleyici OV sertifika alınınca (bkz. RELEASE.md) |
 | Müşteri fotoğraf/belge dosyaları | Diskten okunması | Dosya başına AES-256-GCM; dosya anahtarı DPAPI ile ve yedek anahtarıyla sarılı; önizleme yalnızca bellekte; her görüntüleme denetim kaydında; şifresiz kopya yalnızca kullanıcının açık "dışa aktar" onayıyla |
 | Prim/stok kayıtları | Sonradan değiştirilmesi | `CommissionEntries`, `StockMovements` append-only tetikleyicili; düzeltme ters kayıtla |

@@ -86,6 +86,7 @@ src/
   Vernuko.Infrastructure    DPAPI, cihaz kimliği, yollar, günlük
   Vernuko.Presentation      MVVM view model'ler
   Vernuko.Desktop           WPF uygulaması
+  Vernuko.LicenseServer     lisans sunucusu (ayrı Linux sunucusunda; docs/LICENSE_SERVER.md)
 tests/Vernuko.Tests         domain, entegrasyon, view model, XAML kontrolleri
 docs/                       mimari, kararlar ve araştırma
 ```

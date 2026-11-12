@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.TryAddSingleton(new PasswordHasher());
         services.AddSingleton<LicenseService>();
         services.AddSingleton<ILicenseGate>(sp => sp.GetRequiredService<LicenseService>());
+        services.AddSingleton<LicenseOnlineService>();
         services.AddSingleton<AppServiceDeps>();
         services.AddSingleton<DatabaseInitializer>();
         services.AddSingleton<BackupKeyStore>();

@@ -26,6 +26,14 @@
   <ItemGroup Condition="'$(VernukoUpdateUrl)' != ''">
     <AssemblyMetadata Include="VernukoUpdateUrl" Value="$(VernukoUpdateUrl)" />
   </ItemGroup>
+  <!-- License server (HTTPS) and trusted license public keys ("kid:base64-SPKI|kid2:…"), set by the release
+       pipeline from repository variables. Public keys are not secret; the private key stays on the server. -->
+  <ItemGroup Condition="'$(VernukoLicenseServerUrl)' != ''">
+    <AssemblyMetadata Include="VernukoLicenseServerUrl" Value="$(VernukoLicenseServerUrl)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VernukoLicenseKeys)' != ''">
+    <AssemblyMetadata Include="VernukoLicenseKeys" Value="$(VernukoLicenseKeys)" />
+  </ItemGroup>
   <!-- AGPL-3.0: the license and third-party notices ship with every build and installer. -->
   <ItemGroup>
     <None Include="..\..\LICENSE" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

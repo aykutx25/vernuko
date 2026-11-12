@@ -54,6 +54,8 @@ public partial class App : System.Windows.Application
             services.AddSingleton<IDialogService, WpfDialogService>();
         }
 
+        // Smoke/demo runs never contact the license server.
+        services.AddSingleton(smoke || demo ? new LicensingOptions { PublicKeys = BuildSettings.LicenseKeys() } : BuildSettings.Licensing());
         services.AddVernuko(env);
         services.AddVernukoPresentation();
         services.AddSingleton<IPlatformServices, WpfPlatformServices>();

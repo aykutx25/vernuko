@@ -2,6 +2,8 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Velopack;
 using Velopack.Sources;
+using Vernuko.Application.Common;
+using Vernuko.Application.Services;
 using Vernuko.Presentation.Common;
 
 namespace Vernuko.Desktop.Services;
@@ -19,7 +21,7 @@ internal sealed class VelopackUpdateService : IUpdateService
     private UpdateInfo? _found;
     private bool _downloaded;
 
-    public VelopackUpdateService(ILogger<VelopackUpdateService> logger)
+    public VelopackUpdateService(ILogger<VelopackUpdateService> logger, LicenseService license, IDeviceIdentity device)
     {
         _logger = logger;
         var url = typeof(VelopackUpdateService).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
@@ -38,9 +40,13 @@ internal sealed class VelopackUpdateService : IUpdateService
 
         try
         {
+            // A feed on the Vernuko license server is only served to activated installations: every request
+            // carries the activation id and the hashed device id (no other data).
             IUpdateSource source = uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
                 ? new GithubSource(url, null, false)
-                : new SimpleWebSource(uri);
+                : uri.AbsolutePath.Contains("/v1/updates/feed", StringComparison.Ordinal)
+                    ? new SimpleWebSource(uri, new LicensedDownloader(license, device))
+                    : new SimpleWebSource(uri);
             _manager = new UpdateManager(source);
             if (!_manager.IsInstalled)
             {
@@ -110,5 +116,32 @@ internal sealed class VelopackUpdateService : IUpdateService
         {
             _manager.ApplyUpdatesAndRestart(_found.TargetFullRelease);
         }
+    }
+}
+
+/// <summary>Adds the activation headers the license server's update feed requires.</summary>
+internal sealed class LicensedDownloader(LicenseService license, IDeviceIdentity device) : IFileDownloader
+{
+    private readonly HttpClientFileDownloader _inner = new();
+
+    public async Task DownloadFile(string url, string targetFile, Action<int> progress, IDictionary<string, string>? headers = null, double timeout = 30, CancellationToken cancelToken = default) =>
+        await _inner.DownloadFile(url, targetFile, progress, await WithActivationAsync(headers), timeout, cancelToken);
+
+    public async Task<byte[]> DownloadBytes(string url, IDictionary<string, string>? headers = null, double timeout = 30) =>
+        await _inner.DownloadBytes(url, await WithActivationAsync(headers), timeout);
+
+    public async Task<string> DownloadString(string url, IDictionary<string, string>? headers = null, double timeout = 30) =>
+        await _inner.DownloadString(url, await WithActivationAsync(headers), timeout);
+
+    private async Task<IDictionary<string, string>> WithActivationAsync(IDictionary<string, string>? headers)
+    {
+        var all = headers is null ? new Dictionary<string, string>() : new Dictionary<string, string>(headers);
+        if (await license.GetDocumentAsync() is { } doc)
+        {
+            all["X-Vernuko-Activation"] = doc.ActivationId;
+            all["X-Vernuko-Device"] = device.DeviceHash;
+        }
+
+        return all;
     }
 }

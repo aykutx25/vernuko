@@ -57,15 +57,14 @@ Vernuko'nun kaynak kodu **AGPL-3.0-only** ile açılır (`LICENSE`). Sahibin kar
 - Lisans sunucusu kapalıysa geçerli müşteriler `grace` süresi boyunca etkilenmez.
 - Testler: `Expired_license_is_read_only_but_data_stays_readable_and_exportable`, `Hardware_change_keeps_data_and_switches_to_read_only_until_reactivation`, `Offline_use_works_until_grace_ends_then_read_only`, `Clock_rollback_cannot_extend_validity_but_does_not_lock_by_itself`.
 
-## Lisans sunucusu (Faz 6 — henüz yok)
-Görevler: işletme hesapları, lisans üretimi, cihaz aktivasyonu/kaldırma, abonelik durumu, paket/özellik yetkileri, iptal, yönetici paneli, destek işlemleri, denetim kaydı. **Müşterinin randevu/müşteri verisi bu sunucuya asla gönderilmez.**
-
-Asgari mimari:
-- ASP.NET Core minimal API + PostgreSQL (veya SQLite + Litestream benzeri yedek), tek VPS, ters vekil (TLS), otomatik güvenlik güncellemeleri.
-- İmzalama özel anahtarı: ayrı dosya/HSM, uygulama kullanıcısı dışında okunamaz; anahtar kimliğiyle yıllık döndürme; eski açık anahtarlar istemcide kalır.
-- Ödeme webhook'ları: imza doğrulama, **olay kimliğiyle idempotent işleme**, sıra dışı gelişe dayanıklı durum makinesi (olay zamanı + son durum), yeniden deneme. Tarayıcı yönlendirmesine güvenip lisans üretilmez.
-- Ödeme başarısızlığı toleransı: 7 gün uyarı + `grace`; sonra yenileme belgesi verilmez → istemci salt-okunur.
-- Yedekleme: günlük şifreli veritabanı yedeği başka bölgede; izleme: sağlık uç noktası + uptime kontrolü; felaket kurtarma: yeni VPS'e IaC betiği + son yedekten geri yükleme (hedef RTO 4 saat). Sunucu kapalıyken istemciler `grace` ile çalışmaya devam eder.
+## Lisans sunucusu (Faz 6 — uygulandı)
+Ayrıntı, kurulum ve işletme: [LICENSE_SERVER.md](LICENSE_SERVER.md). Özet:
+- `src/Vernuko.LicenseServer`: ASP.NET Core minimal API + SQLite, tek süreç, TLS ters vekil arkasında. **Müşterinin randevu/müşteri verisi bu sunucuya gönderilmez.**
+- Etkinleştirme (anahtar + özetlenmiş cihaz kimliği), haftalık yenileme, "bu bilgisayardan kaldır" (taşıma), cihaz sınırı, sunucu tarafı deneme kaydı (yeniden kurulumla deneme baştan başlamaz), güncelleme izni (Velopack dosyaları yalnızca etkin aboneliğe).
+- Paddle Billing webhook'u: `Paddle-Signature` HMAC-SHA256 doğrulama, olay kimliğiyle idempotent, `occurred_at` ile sıra dışı olaylara dayanıklı. Bilinmeyen fiyat lisans üretmez.
+- Ödeme toleransı 7 gün + çevrimdışı 14 gün; iptal ödenen dönemi kısaltmaz.
+- Masaüstü: Ayarlar › Lisans'ta anahtarla etkinleştirme, "Şimdi doğrula", "Bu bilgisayardan kaldır". Sunucu adresi ve açık anahtarlar derleme anında sabitlenir (yerel bir ayarla başka sunucuya yönlendirilemez).
+- ⚠️ Gerçek Paddle hesabıyla denenmedi; iyzico webhook'u yok (TL satışı elle lisans); anahtarın e-postayla gönderimi yok.
 
 ## Lisans türleri (planlanan)
 Deneme · aylık · yıllık · tek cihaz · çok cihaz · işletme · çok şube · kurumsal. Özellik yetkileri belgede `feat` listesiyle taşınır; çekirdek operasyon (randevu, müşteri, paket, yetki, yedek, dışa aktarma) hiçbir pakette kısıtlanmaz.

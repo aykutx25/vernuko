@@ -88,6 +88,22 @@ public sealed partial class RootViewModel : ViewModelBase
         }
     }
 
+    /// <summary>License check-in with the license server (at most every 6 hours; offline is fine).</summary>
+    public async Task RunLicenseCheckInAsync()
+    {
+        try
+        {
+            await _services.GetRequiredService<LicenseOnlineService>().AutoRefreshAsync();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogError(ex, "License check-in failed");
+        }
+    }
+
     /// <summary>Scheduled backups run only while the app is open — Vernuko never pretends to back up a switched-off PC.</summary>
     public async Task RunScheduledBackupIfDueAsync()
     {

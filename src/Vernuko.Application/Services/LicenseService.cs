@@ -12,6 +12,12 @@ public sealed class LicensingOptions
 {
     /// <summary>Trusted license-signing public keys (key id → SubjectPublicKeyInfo DER). Never private keys.</summary>
     public IReadOnlyDictionary<string, byte[]> PublicKeys { get; init; } = new Dictionary<string, byte[]>();
+
+    /// <summary>
+    /// License server (HTTPS; plain HTTP only for a loopback test server). Null: online activation is off and
+    /// licenses are loaded from a file.
+    /// </summary>
+    public Uri? ServerUrl { get; init; }
 }
 
 /// <summary>
@@ -76,6 +82,65 @@ public sealed class LicenseService(IDbContextFactory<VernukoDbContext> factory, 
             return Error.Forbidden;
         }
 
+        return await StoreAsync(signedLicenseJson, "license.imported", "yüklendi", ct);
+    }
+
+    /// <summary>
+    /// Saves a license document received from the license server (activation or periodic refresh). No permission
+    /// check: the signature and device are verified, and a refresh must also work for a receptionist's session.
+    /// </summary>
+    public Task<Result<LicenseStatus>> StoreFromServerAsync(string signedLicenseJson, bool activation, CancellationToken ct = default) =>
+        StoreAsync(signedLicenseJson, activation ? "license.activated" : "license.refreshed", activation ? "etkinleştirildi" : "yenilendi", ct);
+
+    /// <summary>The verified license document on this computer, if any.</summary>
+    public async Task<LicenseDocument?> GetDocumentAsync(CancellationToken ct = default)
+    {
+        await using var db = await factory.CreateDbContextAsync(ct);
+        var signed = await SettingsStore.GetAsync(db, SettingKeys.LicenseSigned, ct);
+        return signed is not null && _verifier.Verify(signed) is { IsSuccess: true } v ? v.Value : null;
+    }
+
+    /// <summary>After the seat was freed on the server: forget the local license (data stays; app becomes read-only).</summary>
+    public async Task<LicenseStatus> RemoveLocalAsync(string reason, CancellationToken ct = default)
+    {
+        var now = time.GetUtcNow().UtcDateTime;
+        await using (var db = await factory.CreateDbContextAsync(ct))
+        {
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
+            await SettingsStore.RemoveAsync(db, SettingKeys.LicenseSigned, ct);
+            await audit.AppendAsync(db, "license.removed", "License", null, reason, ct);
+            await db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+        }
+
+        return await RefreshAsync(ct);
+    }
+
+    /// <summary>
+    /// The server remembers the first trial start of this computer; an earlier date there wins, so reinstalling
+    /// cannot restart the trial. A later server date is ignored (never shortens a running trial unfairly).
+    /// </summary>
+    public async Task<LicenseStatus> AdoptServerTrialStartAsync(DateTime serverStartUtc, CancellationToken ct = default)
+    {
+        var now = time.GetUtcNow().UtcDateTime;
+        await using (var db = await factory.CreateDbContextAsync(ct))
+        {
+            var local = await SettingsStore.GetUtcAsync(db, SettingKeys.LicenseTrialStartedUtc, ct);
+            if (local is { } l && serverStartUtc < l && serverStartUtc <= now)
+            {
+                await using var tx = await db.Database.BeginTransactionAsync(ct);
+                await SettingsStore.SetUtcAsync(db, SettingKeys.LicenseTrialStartedUtc, serverStartUtc, now, ct);
+                await audit.AppendAsync(db, "license.trial_synced", "License", null, $"Deneme başlangıcı sunucudaki kayda göre {serverStartUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}", ct);
+                await db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+            }
+        }
+
+        return await RefreshAsync(ct);
+    }
+
+    private async Task<Result<LicenseStatus>> StoreAsync(string signedLicenseJson, string action, string verb, CancellationToken ct)
+    {
         var verified = _verifier.Verify(signedLicenseJson);
         if (verified.IsFailure)
         {
@@ -92,7 +157,7 @@ public sealed class LicenseService(IDbContextFactory<VernukoDbContext> factory, 
         {
             await using var tx = await db.Database.BeginTransactionAsync(ct);
             await SettingsStore.SetAsync(db, SettingKeys.LicenseSigned, signedLicenseJson, now, ct);
-            await audit.AppendAsync(db, "license.imported", "License", null, $"Lisans {verified.Value.LicenseId} ({verified.Value.Edition}) yüklendi, geçerlilik {verified.Value.ValidUntilUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}", ct);
+            await audit.AppendAsync(db, action, "License", null, $"Lisans {verified.Value.LicenseId} ({verified.Value.Edition}) {verb}, geçerlilik {verified.Value.ValidUntilUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}", ct);
             await db.SaveChangesAsync(ct);
             await tx.CommitAsync(ct);
         }
