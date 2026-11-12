@@ -23,10 +23,10 @@ public static class BusinessProfileCatalog
                 ProfileFeature.Waitlist, ProfileFeature.MaintenanceReminders),
             [ResourceKind.Room, ResourceKind.Device],
             [
-                new("Lazer Epilasyon", "Lazer", 30, 0, 10, ResourceKind.Room),
-                new("Cilt Bakımı", "Cilt", 60, 0, 10, ResourceKind.Room),
+                new("Lazer Epilasyon", "Lazer", 30, 0, 10, ResourceKind.Room, ["Lazer"]),
+                new("Cilt Bakımı", "Cilt", 60, 0, 10, ResourceKind.Room, ["Cilt Bakım"]),
                 new("Bölgesel İncelme", "Vücut", 45, 0, 10, ResourceKind.Room),
-                new("Medikal Cilt Bakımı", "Cilt", 45, 0, 10, ResourceKind.Room),
+                new("Medikal Cilt Bakımı", "Cilt", 45, 0, 10, ResourceKind.Room, ["Cilt Bakım"]),
                 new("Kaş Tasarımı", "Bakım", 20),
             ],
             [

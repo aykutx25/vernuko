@@ -57,8 +57,8 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
             return items.Count == 0 ? Error.NotFound("Randevu") : items[0];
         }, ct);
 
-    public Task<Result<IReadOnlyList<AvailableSlot>>> GetAvailableSlotsAsync(SlotQuery q, CancellationToken ct = default) =>
-        ReadAsync<IReadOnlyList<AvailableSlot>>(Permission.AppointmentsView, async db =>
+    public Task<Result<IReadOnlyList<SlotSuggestion>>> GetAvailableSlotsAsync(SlotQuery q, CancellationToken ct = default) =>
+        ReadAsync<IReadOnlyList<SlotSuggestion>>(Permission.AppointmentsView, async db =>
         {
             var (settings, zone) = await BusinessContext.LoadAsync(db, ct);
             var service = await db.Services.AsNoTracking().FirstOrDefaultAsync(s => s.Id == q.ServiceId, ct);
@@ -67,15 +67,59 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
                 return Error.NotFound("Hizmet");
             }
 
-            var ctx = await AppointmentQueries.LoadDayContextAsync(db, settings, zone, q.Day, q.StaffMemberId, q.ResourceIds, ct);
-            if (q.IgnoreAppointmentId is { } ignore)
+            IReadOnlyList<IReadOnlyList<Guid>> combinations = [q.ResourceIds];
+            if (q.SearchAllowedResources)
             {
-                ctx = ctx with { Bookings = ctx.Bookings.Where(b => b.AppointmentId != ignore).ToList() };
+                var allowedIds = await db.ServiceResources.AsNoTracking().Where(x => x.ServiceId == service.Id).Select(x => x.ResourceId).ToListAsync(ct);
+                if (allowedIds.Count > 0)
+                {
+                    var allowed = await db.Resources.AsNoTracking().Where(x => allowedIds.Contains(x.Id) && x.IsActive).OrderBy(x => x.Name).Select(x => new ResourceRef(x.Id, x.Kind)).ToListAsync(ct);
+                    var selectedIds = q.ResourceIds.ToList();
+                    var selected = await db.Resources.AsNoTracking().Where(x => selectedIds.Contains(x.Id)).Select(x => new ResourceRef(x.Id, x.Kind)).ToListAsync(ct);
+                    combinations = AllowedCombinations(selected, allowed);
+                }
             }
 
-            var template = new AppointmentSlotTemplate(q.DurationMinutesOverride ?? service.DurationMinutes, service.PrepMinutes, service.CleanupMinutes, q.StaffMemberId, q.ResourceIds);
-            return AvailabilityCalculator.FindSlots(ctx, template, settings.SlotMinutes, UtcNow).ToList();
+            var found = new Dictionary<TimeOnly, SlotSuggestion>();
+            foreach (var resourceIds in combinations)
+            {
+                var ctx = await AppointmentQueries.LoadDayContextAsync(db, settings, zone, q.Day, q.StaffMemberId, resourceIds, ct);
+                if (q.IgnoreAppointmentId is { } ignore)
+                {
+                    ctx = ctx with { Bookings = ctx.Bookings.Where(b => b.AppointmentId != ignore).ToList() };
+                }
+
+                var template = new AppointmentSlotTemplate(q.DurationMinutesOverride ?? service.DurationMinutes, service.PrepMinutes, service.CleanupMinutes, q.StaffMemberId, resourceIds);
+                foreach (var s in AvailabilityCalculator.FindSlots(ctx, template, settings.SlotMinutes, UtcNow))
+                {
+                    found.TryAdd(s.LocalStart, new SlotSuggestion(s.LocalStart, s.StartUtc, resourceIds));
+                }
+            }
+
+            return found.Values.OrderBy(s => s.LocalStart).ToList();
         }, ct);
+
+    private sealed record ResourceRef(Guid Id, ResourceKind Kind);
+
+    /// <summary>
+    /// Every way to pick one allowed resource of each linked kind (e.g. 2 laser rooms × 1 device = 2), the current
+    /// selection first. Selected resources of other kinds are kept. Capped so a large catalogue stays fast.
+    /// </summary>
+    private static List<IReadOnlyList<Guid>> AllowedCombinations(IReadOnlyList<ResourceRef> selected, IReadOnlyList<ResourceRef> allowed)
+    {
+        const int Max = 24;
+        var kinds = allowed.Select(a => a.Kind).Distinct().ToList();
+        var keep = selected.Where(s => !kinds.Contains(s.Kind)).Select(s => s.Id).ToList();
+        IEnumerable<List<Guid>> combos = [keep];
+        foreach (var kind in kinds)
+        {
+            // Selected allowed resources of this kind are tried before the others.
+            var options = allowed.Where(a => a.Kind == kind).OrderByDescending(a => selected.Any(s => s.Id == a.Id)).Select(a => a.Id).ToList();
+            combos = combos.SelectMany(c => options.Select(o => c.Append(o).ToList())).ToList();
+        }
+
+        return combos.Take(Max).Select(c => (IReadOnlyList<Guid>)c).ToList();
+    }
 
     /// <summary>
     /// Books an appointment inside a write-locked transaction (check + insert are atomic, also across processes).
@@ -568,7 +612,27 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
             issues.Add(new SchedulingIssue("staff.service", $"{staff.DisplayName} bu hizmeti verenler arasında tanımlı değil.", IssueSeverity.RequiresConfirmation));
         }
 
-        if (service.RequiredResourceKind is { } kind && resources.All(x => x.Kind != kind))
+        var allowedIds = await db.ServiceResources.AsNoTracking().Where(x => x.ServiceId == service.Id).Select(x => x.ResourceId).ToListAsync(ct);
+        if (allowedIds.Count > 0)
+        {
+            // Explicit rule: one allowed resource of every linked kind, nothing else of those kinds. A missing device
+            // would also skip its double-booking check, so these are blocking, not just warnings.
+            var allowed = await db.Resources.AsNoTracking().Where(x => allowedIds.Contains(x.Id) && x.IsActive).ToListAsync(ct);
+            foreach (var group in allowed.GroupBy(x => x.Kind))
+            {
+                var kindName = BusinessProfileCatalog.ResourceKindName(group.Key).ToLower(TurkishText.Culture);
+                var wrong = resources.Where(x => x.Kind == group.Key && group.All(a => a.Id != x.Id)).ToList();
+                if (wrong.Count > 0)
+                {
+                    issues.Add(new SchedulingIssue("resource.not_allowed", $"{service.Name} {string.Join(", ", wrong.Select(w => w.Name))} ile yapılamaz. Uygun {kindName}: {string.Join(", ", group.Select(a => a.Name))}.", IssueSeverity.Blocking));
+                }
+                else if (resources.All(x => x.Kind != group.Key))
+                {
+                    issues.Add(new SchedulingIssue("resource.missing", $"{service.Name} için {kindName} seçilmeli: {string.Join(" veya ", group.Select(a => a.Name))}.", IssueSeverity.Blocking));
+                }
+            }
+        }
+        else if (service.RequiredResourceKind is { } kind && resources.All(x => x.Kind != kind))
         {
             issues.Add(new SchedulingIssue("resource.missing", $"Bu hizmet için {BusinessProfileCatalog.ResourceKindName(kind).ToLower(TurkishText.Culture)} seçilmedi.", IssueSeverity.RequiresConfirmation));
         }

@@ -335,6 +335,21 @@ namespace Vernuko.Persistence.Migrations
                     b.ToTable("Services", (string)null);
                 });
 
+            modelBuilder.Entity("Vernuko.Appointments.ServiceResource", b =>
+                {
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ServiceId", "ResourceId");
+
+                    b.HasIndex("ResourceId");
+
+                    b.ToTable("ServiceResources", (string)null);
+                });
+
             modelBuilder.Entity("Vernuko.Appointments.StaffMember", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1579,6 +1594,21 @@ namespace Vernuko.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("BranchId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Appointments.ServiceResource", b =>
+                {
+                    b.HasOne("Vernuko.Appointments.Resource", null)
+                        .WithMany()
+                        .HasForeignKey("ResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Vernuko.Appointments.ServiceDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

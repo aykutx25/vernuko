@@ -22,9 +22,13 @@ public sealed partial class ResourceChoice(ResourceDto resource) : ObservableObj
     public string Label => $"{Resource.Name} ({Resource.KindName})";
 }
 
-public sealed record SlotChoice(TimeOnly Time)
+/// <param name="ResourceIds">Rooms/devices the time is free in; picking the slot selects them.</param>
+/// <param name="ResourceHint">Shown when they differ from the current selection, e.g. "Lazer Odası 2".</param>
+public sealed record SlotChoice(TimeOnly Time, IReadOnlyList<Guid>? ResourceIds = null, string? ResourceHint = null)
 {
-    public string Label => Time.ToString("HH:mm", TurkishText.Culture);
+    public string TimeText => Time.ToString("HH:mm", TurkishText.Culture);
+
+    public string Label => ResourceHint is null ? TimeText : $"{TimeText} · {ResourceHint}";
 }
 
 /// <summary>
@@ -145,6 +149,13 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
 
     public bool HasPackages => Packages.Count > 0;
 
+    public bool HasResourceRule => SelectedService?.AllowedResourceIds is { Count: > 0 };
+
+    /// <summary>e.g. "Lazer Epilasyon yalnızca şunlarla yapılır: Lazer Odası 1, Lazer Odası 2, Lazer Cihazı".</summary>
+    public string? ResourceRuleText => SelectedService?.AllowedResourceIds is { Count: > 0 } allowed
+        ? $"{SelectedService.Name} yalnızca şunlarla yapılır: {string.Join(", ", Resources.Where(r => allowed.Contains(r.Resource.Id)).Select(r => r.Resource.Name))}"
+        : null;
+
     public IReadOnlyList<Option<RecurrenceFrequency>> FrequencyOptions { get; } =
     [
         new("Gün", RecurrenceFrequency.Daily), new("Hafta", RecurrenceFrequency.Weekly), new("Ay", RecurrenceFrequency.Monthly),
@@ -245,10 +256,16 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
 
     partial void OnSelectedServiceChanged(ServiceDto? value)
     {
+        OnPropertyChanged(nameof(HasResourceRule));
+        OnPropertyChanged(nameof(ResourceRuleText));
         if (value is not null && !IsReschedule)
         {
             DurationMinutes = value.DurationMinutes.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            if (value.RequiredResourceKind is { } kind && !Resources.Any(r => r.IsSelected && r.Resource.Kind == kind))
+            if (value.AllowedResourceIds is { Count: > 0 } allowed)
+            {
+                SelectAllowedResources(allowed);
+            }
+            else if (value.RequiredResourceKind is { } kind && !Resources.Any(r => r.IsSelected && r.Resource.Kind == kind))
             {
                 var first = Resources.FirstOrDefault(r => r.Resource.Kind == kind);
                 if (first is not null)
@@ -280,8 +297,51 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// The service may only use some rooms/devices (laser → laser rooms + laser device): drop disallowed ones of
+    /// those kinds and pick the first allowed one where none is selected. Other kinds are left alone.
+    /// </summary>
+    private void SelectAllowedResources(IReadOnlyList<Guid> allowed)
+    {
+        var allowedChoices = Resources.Where(r => allowed.Contains(r.Resource.Id)).ToList();
+        foreach (var kind in allowedChoices.Select(r => r.Resource.Kind).Distinct())
+        {
+            foreach (var r in Resources.Where(r => r.Resource.Kind == kind && r.IsSelected && !allowed.Contains(r.Resource.Id)))
+            {
+                r.IsSelected = false;
+            }
+
+            if (!allowedChoices.Any(r => r.Resource.Kind == kind && r.IsSelected))
+            {
+                allowedChoices.First(r => r.Resource.Kind == kind).IsSelected = true;
+            }
+        }
+    }
+
     [RelayCommand]
-    private void PickSlot(SlotChoice slot) => Time = slot.Label;
+    private async Task PickSlotAsync(SlotChoice slot)
+    {
+        Time = slot.TimeText;
+        if (slot.ResourceIds is not { } ids || SelectedService?.AllowedResourceIds is not { Count: > 0 } allowed)
+        {
+            return;
+        }
+
+        // Switch to the rooms/devices this time is free in (only the kinds the service is limited to).
+        var kinds = Resources.Where(r => allowed.Contains(r.Resource.Id)).Select(r => r.Resource.Kind).Distinct().ToList();
+        var changed = false;
+        foreach (var r in Resources.Where(r => kinds.Contains(r.Resource.Kind)))
+        {
+            var select = ids.Contains(r.Resource.Id);
+            changed |= r.IsSelected != select;
+            r.IsSelected = select;
+        }
+
+        if (changed)
+        {
+            await LoadSlotsAsync();
+        }
+    }
 
     [RelayCommand]
     private Task ResourcesChangedAsync() => LoadSlotsAsync();
@@ -527,17 +587,22 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
         }
 
         int? duration = int.TryParse(DurationMinutes, out var d) ? d : null;
+        var selected = Resources.Where(x => x.IsSelected).Select(x => x.Resource.Id).ToList();
         var r = await _appointments.GetAvailableSlotsAsync(new SlotQuery(
-            DateOnly.FromDateTime(Date), SelectedService.Id, SelectedStaff.Id, Resources.Where(x => x.IsSelected).Select(x => x.Resource.Id).ToList(), duration, _rescheduleId));
+            DateOnly.FromDateTime(Date), SelectedService.Id, SelectedStaff.Id, selected, duration, _rescheduleId,
+            SearchAllowedResources: SelectedService.AllowedResourceIds is { Count: > 0 }));
         foreach (var s in r.OrEmpty())
         {
-            Slots.Add(new SlotChoice(s.LocalStart));
+            var other = s.ResourceIds.Where(id => !selected.Contains(id)).ToList();
+            var hint = other.Count == 0 ? null : string.Join(", ", Resources.Where(x => other.Contains(x.Resource.Id)).Select(x => x.Resource.Name));
+            Slots.Add(new SlotChoice(s.LocalStart, s.ResourceIds, hint));
         }
 
         NoSlots = Slots.Count == 0;
         if (string.IsNullOrEmpty(Time) && Slots.Count > 0)
         {
-            Time = Slots[0].Label;
+            // Only auto-fill a time that fits the current selection; a different room needs a deliberate click.
+            Time = Slots.FirstOrDefault(s => s.ResourceHint is null)?.TimeText ?? string.Empty;
         }
     }
 }

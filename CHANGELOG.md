@@ -2,6 +2,14 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.6.0] — 2026-11-12 — Faz 3: hizmete özel oda ve cihaz kuralı
+
+### Eklendi
+- **Hizmet yalnızca belirli oda/cihazlarda:** Hizmetler ekranında "Yalnızca şu oda / cihazlarda" listesi. Örnek: Lazer Epilasyon → Lazer Odası 1, Lazer Odası 2 ve Lazer Cihazı. Lazer cilt bakım odasına ya da cihazsız verilmek istenirse randevu **kaydedilmez** (onayla da geçilemez) ve uygun oda/cihazlar yazılır. Hiçbiri işaretli değilse eski davranış sürer.
+- Kurulum sihirbazı, Güzellik ve Lazer profilinde bu eşleşmeleri oda/cihaz adlarından kendisi kurar (lazer → "Lazer" geçen oda ve cihazlar, cilt bakımı → "Cilt Bakım" odası). Sonradan Hizmetler ekranından değiştirilebilir.
+- **Randevu paneli:** hizmet seçilince uygun oda ve cihaz kendiliğinden işaretlenir, uygun olmayan oda kaldırılır, kural panelde yazılır. Önerilen saatler diğer uygun odaları da tarar: Lazer Odası 1 doluysa "10:00 · Lazer Odası 2" gibi gösterilir; tıklanınca oda değişir.
+- Demo verisi bu kurallara uyar; kurallara uymayan demo randevusu sessizce atlanmaz, hata verir.
+
 ## [0.5.0] — 2026-11-12 — Faz 5: otomatik randevu hatırlatma
 
 ### Eklendi

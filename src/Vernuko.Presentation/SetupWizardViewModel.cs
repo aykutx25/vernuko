@@ -72,6 +72,9 @@ public sealed partial class EditableService : ObservableObject
     public string? Category { get; init; }
 
     public ResourceKind? RequiredResource { get; init; }
+
+    /// <summary>Rooms/devices whose name contains one of these words are linked to the service at setup.</summary>
+    public IReadOnlyList<string>? ResourceKeywords { get; init; }
 }
 
 public sealed partial class EditableResource : ObservableObject
@@ -444,7 +447,8 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
             Money.Parse(s.Price) is { IsSuccess: true } m ? m.Value.Minor : 0,
             0,
             int.TryParse(s.CleanupMinutes, out var c) ? c : 0,
-            s.RequiredResource)).ToList();
+            s.RequiredResource,
+            s.ResourceKeywords)).ToList();
         var resources = Resources.Where(r => !string.IsNullOrWhiteSpace(r.Name)).Select(r => new SetupResource(r.Name.Trim(), r.Kind)).ToList();
         return new SetupRequest(
             SelectedProfile?.Profile.Id ?? BusinessProfileId.General,
@@ -559,6 +563,7 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
                 Price = "0",
                 Category = s.Category,
                 RequiredResource = s.RequiredResource,
+                ResourceKeywords = s.ResourceKeywords,
             });
         }
 

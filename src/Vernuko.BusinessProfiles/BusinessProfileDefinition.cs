@@ -2,7 +2,8 @@ using Vernuko.Core;
 
 namespace Vernuko.BusinessProfiles;
 
-public sealed record ServiceTemplate(string Name, string Category, int DurationMinutes, int PrepMinutes = 0, int CleanupMinutes = 0, ResourceKind? RequiredResource = null);
+/// <param name="ResourceKeywords">Suggested rooms/devices whose name contains one of these words are linked to the service at setup.</param>
+public sealed record ServiceTemplate(string Name, string Category, int DurationMinutes, int PrepMinutes = 0, int CleanupMinutes = 0, ResourceKind? RequiredResource = null, IReadOnlyList<string>? ResourceKeywords = null);
 
 public sealed record ResourceTemplate(string Name, ResourceKind Kind);
 

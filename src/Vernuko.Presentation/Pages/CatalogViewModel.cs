@@ -90,6 +90,9 @@ public sealed partial class CatalogViewModel(CatalogService catalog, SettingsSer
 
     public ObservableCollection<PackageTemplateDto> Templates { get; } = [];
 
+    /// <summary>Rooms/devices the edited service is limited to (none ticked = no limit).</summary>
+    public ObservableCollection<ResourceChoice> ServiceResourceChoices { get; } = [];
+
     public IReadOnlyList<Option<ResourceKind?>> RequirementOptions { get; } =
         new[] { new Option<ResourceKind?>("Gerekmez", null) }.Concat(Enum.GetValues<ResourceKind>().Select(k => new Option<ResourceKind?>(BusinessProfileCatalog.ResourceKindName(k), k))).ToList();
 
@@ -123,6 +126,10 @@ public sealed partial class CatalogViewModel(CatalogService catalog, SettingsSer
         ServicePrice = (value.PriceMinor / 100m).ToString("0.##", TurkishText.Culture);
         ServiceRequires = RequirementOptions.FirstOrDefault(o => o.Value == value.RequiredResourceKind);
         ServiceActive = value.IsActive;
+        foreach (var c in ServiceResourceChoices)
+        {
+            c.IsSelected = value.AllowedResourceIds?.Contains(c.Resource.Id) == true;
+        }
     }
 
     partial void OnSelectedResourceChanged(ResourceDto? value)
@@ -164,6 +171,10 @@ public sealed partial class CatalogViewModel(CatalogService catalog, SettingsSer
         ServicePrice = "0";
         ServiceRequires = RequirementOptions[0];
         ServiceActive = true;
+        foreach (var c in ServiceResourceChoices)
+        {
+            c.IsSelected = false;
+        }
     }
 
     [RelayCommand]
@@ -181,7 +192,8 @@ public sealed partial class CatalogViewModel(CatalogService catalog, SettingsSer
             return;
         }
 
-        var r = await catalog.SaveServiceAsync(new ServiceDto(SelectedService?.Id ?? Guid.Empty, ServiceName, ServiceCategory, duration, prep, cleanup, price.Value.Minor, ServiceRequires?.Value, ServiceActive));
+        var allowed = ServiceResourceChoices.Where(c => c.IsSelected).Select(c => c.Resource.Id).ToList();
+        var r = await catalog.SaveServiceAsync(new ServiceDto(SelectedService?.Id ?? Guid.Empty, ServiceName, ServiceCategory, duration, prep, cleanup, price.Value.Minor, ServiceRequires?.Value, ServiceActive, allowed));
         if (Check(r))
         {
             await ReloadAsync();
@@ -257,9 +269,14 @@ public sealed partial class CatalogViewModel(CatalogService catalog, SettingsSer
         }
 
         Resources.Clear();
+        ServiceResourceChoices.Clear();
         foreach (var r in (await catalog.GetResourcesAsync(includeInactive: true)).OrEmpty())
         {
             Resources.Add(r);
+            if (r.IsActive)
+            {
+                ServiceResourceChoices.Add(new ResourceChoice(r));
+            }
         }
 
         Templates.Clear();

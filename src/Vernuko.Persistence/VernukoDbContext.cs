@@ -70,6 +70,8 @@ public sealed class VernukoDbContext : DbContext
 
     public DbSet<Messaging.OutboxMessage> Outbox => Set<Messaging.OutboxMessage>();
 
+    public DbSet<ServiceResource> ServiceResources => Set<ServiceResource>();
+
     public DbSet<ConsentTemplate> ConsentTemplates => Set<ConsentTemplate>();
 
     public DbSet<CustomerConsent> CustomerConsents => Set<CustomerConsent>();

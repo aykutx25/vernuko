@@ -249,14 +249,20 @@ public static class EndToEndScenario
 
     private static async Task<SlotChoice?> PickSlotInNextHourAsync(AppointmentEditorViewModel editor, DateTime now)
     {
+        // A service limited to specific rooms/devices: the editor has already selected allowed ones and its
+        // suggestions cover the other allowed rooms too, so the selection is left as it is.
+        var limited = editor.SelectedService?.AllowedResourceIds is { Count: > 0 };
         var kind = editor.SelectedService?.RequiredResourceKind;
-        var rooms = editor.Resources.Where(r => kind is null || r.Resource.Kind == kind).ToList();
+        var rooms = limited ? new List<ResourceChoice>() : editor.Resources.Where(r => kind is null || r.Resource.Kind == kind).ToList();
         IEnumerable<ResourceChoice?> candidates = rooms.Count == 0 ? new ResourceChoice?[] { null } : rooms;
         foreach (var room in candidates)
         {
-            foreach (var r in editor.Resources)
+            if (!limited)
             {
-                r.IsSelected = r == room;
+                foreach (var r in editor.Resources)
+                {
+                    r.IsSelected = r == room;
+                }
             }
 
             foreach (var staff in editor.Staff)
@@ -270,7 +276,7 @@ public static class EndToEndScenario
                 });
                 if (slot is not null)
                 {
-                    editor.PickSlotCommand.Execute(slot);
+                    await editor.PickSlotCommand.ExecuteAsync(slot);
                     return slot;
                 }
             }

@@ -126,6 +126,24 @@ public class EndToEndScenarioTests
         Assert.Equal(["müşteri ekle", "paket sat", "randevu ver", "tamamla", "seans düştü", "yedek al", "geri yükle"], steps.Select(s => s.Name));
         Assert.Equal(6, shots.Count);
     }
+
+    [Fact]
+    public async Task Scenario_respects_the_laser_room_and_device_rule()
+    {
+        // Same as a real install from the wizard: laser only in the laser rooms and with the laser device.
+        await using var app = await TestApp.CreateAsync();
+        await app.SetupBeautyAsync();
+        var c = await app.CatalogAsync();
+        Assert.True((await app.Get<CatalogService>().SaveServiceAsync(c.Laser with { AllowedResourceIds = [c.Room1.Id, c.Room2.Id, c.LaserDevice.Id] })).IsSuccess);
+        var shell = app.Get<ShellViewModel>();
+        await shell.InitializeAsync();
+
+        var steps = await Vernuko.Presentation.Diagnostics.EndToEndScenario.RunAsync(
+            shell, app.Get<IServiceProvider>(), Path.Combine(app.Root, "senaryo-yedek"), _ => Task.CompletedTask);
+
+        Assert.True(steps.All(s => s.Ok), string.Join("\n", steps.Select(s => $"{(s.Ok ? "ok  " : "FAIL")} {s.Name}: {s.Detail}")));
+        Assert.Contains("Lazer Cihazı", steps.Single(s => s.Name == "randevu ver").Detail, StringComparison.Ordinal);
+    }
 }
 
 public class MoveToNewComputerTests

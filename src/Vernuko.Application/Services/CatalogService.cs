@@ -13,8 +13,11 @@ public sealed class CatalogService(AppServiceDeps deps) : AppServiceBase(deps)
 {
     public Task<Result<IReadOnlyList<ServiceDto>>> GetServicesAsync(bool includeInactive = false, CancellationToken ct = default) =>
         ReadAsync<IReadOnlyList<ServiceDto>>(Permission.AppointmentsView, async db =>
-            (await db.Services.AsNoTracking().Where(s => includeInactive || s.IsActive).OrderBy(s => s.Category).ThenBy(s => s.Name).ToListAsync(ct))
-                .Select(ToDto).ToList(), ct);
+        {
+            var services = await db.Services.AsNoTracking().Where(s => includeInactive || s.IsActive).OrderBy(s => s.Category).ThenBy(s => s.Name).ToListAsync(ct);
+            var links = await db.ServiceResources.AsNoTracking().ToListAsync(ct);
+            return services.Select(s => ToDto(s) with { AllowedResourceIds = links.Where(l => l.ServiceId == s.Id).Select(l => l.ResourceId).ToList() }).ToList();
+        }, ct);
 
     public Task<Result<Guid>> SaveServiceAsync(ServiceDto dto, CancellationToken ct = default) =>
         WriteAsync<Guid>(Permission.CatalogManage, async db =>
@@ -47,6 +50,18 @@ public sealed class CatalogService(AppServiceDeps deps) : AppServiceBase(deps)
             }
 
             s.SetActive(dto.IsActive);
+            if (dto.AllowedResourceIds is { } allowed)
+            {
+                var existingLinks = await db.ServiceResources.Where(x => x.ServiceId == s.Id).ToListAsync(ct);
+                var ids = allowed.Distinct().ToList();
+                var valid = await db.Resources.Where(r => ids.Contains(r.Id)).Select(r => r.Id).ToListAsync(ct);
+                db.ServiceResources.RemoveRange(existingLinks.Where(l => !valid.Contains(l.ResourceId)));
+                foreach (var id in valid.Where(id => existingLinks.All(l => l.ResourceId != id)))
+                {
+                    db.ServiceResources.Add(new ServiceResource(s.Id, id));
+                }
+            }
+
             await Audit.AppendAsync(db, "service.saved", "Service", s.Id, $"Hizmet kaydedildi: {s.Name}", ct);
             return s.Id;
         }, ct);

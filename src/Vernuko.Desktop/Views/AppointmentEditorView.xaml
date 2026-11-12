@@ -94,6 +94,8 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    <TextBlock Text="{Binding ResourceRuleText}" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,2,0,0"
+                               Visibility="{Binding HasResourceRule, Converter={StaticResource VisibleWhen}}" />
 
                     <!-- Date / time -->
                     <Grid Margin="0,4,0,0">

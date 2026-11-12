@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Vernuko.Appointments;
 using Vernuko.Messaging;
 
 namespace Vernuko.Persistence.Configurations;
@@ -20,5 +21,17 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outb
         b.HasIndex(e => new { e.Status, e.NextAttemptUtc });
         b.HasIndex(e => e.AppointmentId);
         b.HasIndex(e => e.SentAtUtc);
+    }
+}
+
+internal sealed class ServiceResourceConfiguration : IEntityTypeConfiguration<ServiceResource>
+{
+    public void Configure(EntityTypeBuilder<ServiceResource> b)
+    {
+        b.ToTable("ServiceResources");
+        b.HasKey(e => new { e.ServiceId, e.ResourceId });
+        b.HasOne<ServiceDefinition>().WithMany().HasForeignKey(e => e.ServiceId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<Resource>().WithMany().HasForeignKey(e => e.ResourceId).OnDelete(DeleteBehavior.Cascade);
+        b.HasIndex(e => e.ResourceId);
     }
 }

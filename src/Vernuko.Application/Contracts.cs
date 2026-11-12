@@ -10,7 +10,7 @@ namespace Vernuko.Application;
 // ---------- Setup ----------
 public sealed record SetupStaff(string DisplayName, string? Title);
 
-public sealed record SetupServiceItem(string Name, string? Category, int DurationMinutes, long PriceMinor, int PrepMinutes, int CleanupMinutes, ResourceKind? RequiredResourceKind);
+public sealed record SetupServiceItem(string Name, string? Category, int DurationMinutes, long PriceMinor, int PrepMinutes, int CleanupMinutes, ResourceKind? RequiredResourceKind, IReadOnlyList<string>? ResourceKeywords = null);
 
 public sealed record SetupResource(string Name, ResourceKind Kind);
 
@@ -65,7 +65,7 @@ public sealed record CustomerDetailsDto(
 }
 
 // ---------- Catalog ----------
-public sealed record ServiceDto(Guid Id, string Name, string? Category, int DurationMinutes, int PrepMinutes, int CleanupMinutes, long PriceMinor, ResourceKind? RequiredResourceKind, bool IsActive)
+public sealed record ServiceDto(Guid Id, string Name, string? Category, int DurationMinutes, int PrepMinutes, int CleanupMinutes, long PriceMinor, ResourceKind? RequiredResourceKind, bool IsActive, IReadOnlyList<Guid>? AllowedResourceIds = null)
 {
     public string DisplayPrice => new Money(PriceMinor).ToDisplayString();
 }
@@ -169,7 +169,14 @@ public sealed record BookingOutcome(Guid? AppointmentId, IReadOnlyList<Schedulin
     public bool NeedsConfirmation => !Saved && Issues.Count > 0 && Issues.All(i => i.Severity == IssueSeverity.RequiresConfirmation);
 }
 
-public sealed record SlotQuery(DateOnly Day, Guid ServiceId, Guid StaffMemberId, IReadOnlyList<Guid> ResourceIds, int? DurationMinutesOverride = null, Guid? IgnoreAppointmentId = null);
+/// <param name="SearchAllowedResources">
+/// When the service is limited to specific rooms/devices, also look in the other allowed ones (e.g. "Lazer Odası 2"
+/// when room 1 is full). The selected resources are tried first.
+/// </param>
+public sealed record SlotQuery(DateOnly Day, Guid ServiceId, Guid StaffMemberId, IReadOnlyList<Guid> ResourceIds, int? DurationMinutesOverride = null, Guid? IgnoreAppointmentId = null, bool SearchAllowedResources = false);
+
+/// <summary>A free start time and the rooms/devices it is free in.</summary>
+public sealed record SlotSuggestion(TimeOnly LocalStart, DateTime StartUtc, IReadOnlyList<Guid> ResourceIds);
 
 // ---------- Packages ----------
 public sealed record SellPackageRequest(

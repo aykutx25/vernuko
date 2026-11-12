@@ -109,9 +109,27 @@ public sealed class SetupService(IDbContextFactory<VernukoDbContext> factory, Pa
             db.Services.Add(service);
         }
 
+        var createdResources = new List<Resource>();
         foreach (var res in r.Resources.Where(x => !string.IsNullOrWhiteSpace(x.Name)))
         {
-            db.Resources.Add(new Resource(Branch.DefaultId, res.Name, res.Kind));
+            var resource = new Resource(Branch.DefaultId, res.Name, res.Kind);
+            createdResources.Add(resource);
+            db.Resources.Add(resource);
+        }
+
+        // Profile suggestions: link rooms/devices whose name contains the service's keywords (e.g. laser → "Lazer").
+        foreach (var (item, service) in r.Services.Zip(services))
+        {
+            foreach (var keyword in item.ResourceKeywords ?? [])
+            {
+                foreach (var resource in createdResources.Where(x => TurkishText.ToSearchKey(x.Name).Contains(TurkishText.ToSearchKey(keyword), StringComparison.Ordinal)))
+                {
+                    if (!db.ServiceResources.Local.Any(l => l.ServiceId == service.Id && l.ResourceId == resource.Id))
+                    {
+                        db.ServiceResources.Add(new ServiceResource(service.Id, resource.Id));
+                    }
+                }
+            }
         }
 
         foreach (var suggestion in profile.SuggestedPackages)

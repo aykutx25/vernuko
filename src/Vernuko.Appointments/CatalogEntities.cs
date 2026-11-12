@@ -165,6 +165,28 @@ public sealed class StaffService
     public Guid ServiceId { get; private set; }
 }
 
+/// <summary>
+/// A room or device a service may use. When a service has links, a booking must include one linked resource of
+/// every linked kind (e.g. laser: one of the laser rooms + the laser device) and no unlinked resource of those kinds.
+/// Without links the older "requires a room" rule applies.
+/// </summary>
+public sealed class ServiceResource
+{
+    private ServiceResource()
+    {
+    }
+
+    public ServiceResource(Guid serviceId, Guid resourceId)
+    {
+        ServiceId = serviceId;
+        ResourceId = resourceId;
+    }
+
+    public Guid ServiceId { get; private set; }
+
+    public Guid ResourceId { get; private set; }
+}
+
 /// <summary>A bookable room, device, chair, unit, lift, studio ...</summary>
 public sealed class Resource : Entity
 {
