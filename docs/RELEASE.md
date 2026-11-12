@@ -24,7 +24,9 @@
 Her `push`'ta çalışan CI de imzasız bir **deneme kurulum paketi** üretir (`vernuko-installer-ci` artefaktı); müşteriye dağıtılmaz.
 
 ## Yerelde paket üretme
-Windows'ta:
+En kolayı: depo kökündeki **`kurulum-olustur.cmd`** dosyasına çift tıklayın (veya PowerShell'de `.\kurulum-olustur.cmd`). Derler, paketler, `releases\VernukoApp-win-Setup.exe` dosyasını üretir ve kurulumu başlatır; hata olursa durup gösterir.
+
+Elle, Windows'ta:
 ```bash
 dotnet publish src/Vernuko.Desktop/Vernuko.Desktop.csproj -c Release -r win-x64 --self-contained -o publish
 ```
