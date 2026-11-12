@@ -7,6 +7,7 @@ using Vernuko.Application.Services;
 using Vernuko.BusinessProfiles;
 using Vernuko.Licensing;
 using Vernuko.Presentation.Common;
+using Vernuko.Presentation.Dialogs;
 using Vernuko.Presentation.Pages;
 using Vernuko.Security;
 
@@ -196,6 +197,74 @@ public sealed partial class ShellViewModel : ViewModelBase
 
     public bool Has(Permission permission) => _session.Has(permission);
 
+    /// <summary>
+    /// Window-wide keyboard shortcuts. The view maps keys to <see cref="Shortcut"/> and calls this from the window,
+    /// so shortcuts work wherever the keyboard focus is (including nowhere, e.g. right after login).
+    /// Returns true when the shortcut was used. While a modal dialog is open only Esc (close it) is accepted.
+    /// </summary>
+    public bool HandleShortcut(Shortcut shortcut)
+    {
+        if (Overlay is not null)
+        {
+            if (shortcut != Shortcut.Close)
+            {
+                return false;
+            }
+
+            switch (Overlay)
+            {
+                case PaymentDialogViewModel payment:
+                    payment.CancelCommand.Execute(null);
+                    return true;
+                case SellPackageDialogViewModel sale:
+                    sale.CancelCommand.Execute(null);
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        switch (shortcut)
+        {
+            case Shortcut.NewAppointment when Has(Permission.AppointmentsManage):
+                NewAppointmentCommand.Execute(null);
+                return true;
+            case Shortcut.Lock:
+                LockCommand.Execute(null);
+                return true;
+        }
+
+        if (CurrentPage is not AppointmentsViewModel appointments)
+        {
+            return false;
+        }
+
+        var editor = appointments.Editor;
+        switch (shortcut)
+        {
+            case Shortcut.Save when editor is not null:
+                editor.SaveCommand.Execute(null);
+                return true;
+            case Shortcut.Close when editor is not null:
+                editor.CancelCommand.Execute(null);
+                return true;
+            case Shortcut.Refresh:
+                appointments.RefreshCommand.Execute(null);
+                return true;
+            case Shortcut.Previous when editor is null:
+                appointments.PreviousPeriodCommand.Execute(null);
+                return true;
+            case Shortcut.Next when editor is null:
+                appointments.NextPeriodCommand.Execute(null);
+                return true;
+            case Shortcut.Today when editor is null:
+                appointments.TodayCommand.Execute(null);
+                return true;
+            default:
+                return false;
+        }
+    }
+
     private void BuildNavigation()
     {
         NavItems.Clear();
@@ -238,6 +307,18 @@ public sealed partial class ShellViewModel : ViewModelBase
 public interface IShellAware
 {
     ShellViewModel? Shell { get; set; }
+}
+
+public enum Shortcut
+{
+    NewAppointment,
+    Lock,
+    Save,
+    Close,
+    Refresh,
+    Previous,
+    Next,
+    Today,
 }
 
 public sealed record CustomerSearchRequest(string Query);

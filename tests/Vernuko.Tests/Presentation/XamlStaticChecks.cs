@@ -73,6 +73,21 @@ public partial class XamlStaticChecks
         Assert.True(missing.Count == 0, "View models without a DataTemplate: " + string.Join(", ", missing));
     }
 
+    [Fact]
+    public void ComboBox_templates_show_the_display_member_in_the_closed_box()
+    {
+        // Regression from the first Windows run: a custom ComboBox template without ContentTemplateSelector shows
+        // the record's ToString() ("ServiceDto { Id = … }") instead of DisplayMemberPath.
+        foreach (var (file, text) in AllXaml())
+        {
+            foreach (Match m in SelectionBoxPresenterRegex().Matches(text))
+            {
+                Assert.True(m.Value.Contains("ContentTemplateSelector=\"{TemplateBinding ItemTemplateSelector}\"", StringComparison.Ordinal),
+                    $"{Path.GetFileName(file)}: ComboBox selection presenter must bind ContentTemplateSelector to ItemTemplateSelector");
+            }
+        }
+    }
+
     private static HashSet<string> KnownMembers()
     {
         var assemblies = new[]
@@ -120,4 +135,7 @@ public partial class XamlStaticChecks
 
     [GeneratedRegex(@"\{Binding\s+(?:Path=)?([A-Za-z_.()]+)?[,}]")]
     private static partial Regex BindingRegex();
+
+    [GeneratedRegex(@"<ContentPresenter[^>]*SelectionBoxItem[^>]*/>", RegexOptions.Singleline)]
+    private static partial Regex SelectionBoxPresenterRegex();
 }

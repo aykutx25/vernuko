@@ -37,3 +37,48 @@ public class WindowsFeedbackTests
         Assert.Equal("Kullanıcı adı ve parolayı girin.", login.ErrorMessage);
     }
 }
+
+public class ShortcutTests
+{
+    [Fact]
+    public async Task Shortcuts_work_without_keyboard_focus_and_respect_modal_dialogs()
+    {
+        await using var app = await TestApp.CreateAsync();
+        await app.SetupBeautyAsync();
+        var shell = app.Get<ShellViewModel>();
+        await shell.InitializeAsync();
+        var page = Assert.IsType<Vernuko.Presentation.Pages.AppointmentsViewModel>(shell.CurrentPage);
+        var day = page.SelectedDate;
+
+        Assert.True(shell.HandleShortcut(Shortcut.Next));
+        Assert.Equal(day.AddDays(1), page.SelectedDate);
+        Assert.True(shell.HandleShortcut(Shortcut.Today));
+        Assert.Equal(day, page.SelectedDate);
+
+        // Ctrl+N opens the quick booking panel; Esc closes it.
+        Assert.True(shell.HandleShortcut(Shortcut.NewAppointment));
+        await WaitUntilAsync(() => page.Editor is not null);
+        Assert.False(shell.HandleShortcut(Shortcut.Previous)); // date keys are ignored while the panel is open
+        Assert.True(shell.HandleShortcut(Shortcut.Close));
+        await WaitUntilAsync(() => page.Editor is null);
+
+        // A modal dialog swallows everything except Esc.
+        var dialog = app.Get<Vernuko.Presentation.Dialogs.PaymentDialogViewModel>();
+        var closed = false;
+        dialog.Closed += (_, _) => closed = true;
+        shell.ShowOverlay(dialog);
+        Assert.False(shell.HandleShortcut(Shortcut.NewAppointment));
+        Assert.True(shell.HandleShortcut(Shortcut.Close));
+        Assert.True(closed);
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        for (var i = 0; i < 50 && !condition(); i++)
+        {
+            await Task.Delay(50);
+        }
+
+        Assert.True(condition());
+    }
+}
