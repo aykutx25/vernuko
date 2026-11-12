@@ -13,7 +13,7 @@ Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [
 
 ### Bilinen sınırlar
 - İki gerçek bilgisayarda yerel ağda **henüz denenmedi**; testler aynı makinede gerçek TLS bağlantısıyla yapıldı.
-- Ana bilgisayar kapalıyken bağlı bilgisayarlar çalışmaz. Başka bilgisayardaki değişiklik, sayfa yenilenince görünür.
+- Ana bilgisayar kapalıyken bağlı bilgisayarlar çalışmaz. Başka bilgisayarda verilen randevu, takvimde en geç bir dakika içinde görünür (anlık bildirim yok).
 
 ## [0.8.0] — 2026-11-12 — Faz 3: firma müşterisi
 

@@ -135,6 +135,39 @@ public class ConnectedComputerTests
         Assert.Equal(Vernuko.Core.Error.Forbidden.Code, (await afterRestart.DisableHostAsync()).Error.Code);
     }
 
+    [Fact]
+    public async Task Calendar_on_a_connected_computer_shows_bookings_made_on_the_main_computer()
+    {
+        await using var host = await TestApp.CreateAsync();
+        await host.SetupBeautyAsync();
+        await using var hostMode = new MultiComputerService(host.Services, host.Get<ILogger<MultiComputerService>>()) { Port = 0, Bind = IPAddress.Loopback };
+        Assert.True((await hostMode.EnableHostAsync()).IsSuccess);
+        var paired = await RemoteConnection.PairAsync(new Uri($"https://127.0.0.1:{hostMode.Server!.Address.Port}/"), hostMode.NewConnectionCode().Value.Code, "Resepsiyon");
+        await using var client = ClientContainer(host, new TestEnvironment(Path.Combine(host.Root, "client")), paired.Value);
+
+        var root = client.GetRequiredService<RootViewModel>();
+        await root.StartAsync();
+        var login = Assert.IsType<LoginViewModel>(root.Screen);
+        login.Username = TestApp.AdminUser;
+        login.Password = TestApp.AdminPassword;
+        await login.LoginCommand.ExecuteAsync(null);
+        await root.LastScreenChange;
+        var shell = Assert.IsType<ShellViewModel>(root.Screen);
+        await shell.NavigateAsync("appointments");
+        var page = Assert.IsType<AppointmentsViewModel>(shell.CurrentPage);
+        page.SelectedDate = new DateTime(2026, 11, 12);
+        await page.RefreshAsync();
+        Assert.Empty(page.Rows.OfType<AppointmentRow>());
+
+        var c = await host.CatalogAsync();
+        var customer = await host.AddCustomerAsync("Ana", "Bilgisayardan", "0532 111 00 99");
+        var booked = await host.Get<AppointmentService>().CreateAsync(new Vernuko.Application.CreateAppointmentRequest(customer, c.SkinCare.Id, c.Derya.Id, [c.Room2.Id], TestApp.Local(15), null, null, null, null), confirmWarnings: true);
+        Assert.True(booked.Value.Saved);
+
+        await root.RefreshSharedViewsAsync();
+        Assert.Contains(page.Rows.OfType<AppointmentRow>(), r => r.Customer == "Ana Bilgisayardan");
+    }
+
     [Theory]
     [InlineData("192.168.1.20", "https://192.168.1.20:47250/")]
     [InlineData("RESEPSIYON-PC", "https://resepsiyon-pc:47250/")]

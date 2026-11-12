@@ -54,6 +54,12 @@ public partial class MainWindow : Window
             App.Services.GetRequiredService<IAuthService>().Lock();
         }
 
+        // Every minute with several computers: show bookings made on the other computers.
+        if (_ticks % 2 == 1 && _session.IsAuthenticated)
+        {
+            await _root.RefreshSharedViewsAsync();
+        }
+
         // Every 5 minutes: automatic reminders (off unless the business enabled them and set a limit).
         if (++_ticks % 10 == 0)
         {

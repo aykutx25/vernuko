@@ -50,4 +50,4 @@ Bağlanan PC (istemci)                              Ana bilgisayar
 
 **Henüz denenmedi:** iki gerçek Windows bilgisayarda yerel ağ üzerinden (Güvenlik Duvarı izni, bilgisayar adıyla bağlanma, Wi-Fi kopmaları). İlk gerçek kurulumda `kontrol.cmd` sonrası elle denenmeli.
 
-**Bilinen sınırlar:** ana bilgisayar kapalıyken bağlı bilgisayarlar çalışmaz (bilinçli); takvim diğer bilgisayardaki değişikliği sayfa yenilenince/gezinince gösterir (anlık bildirim yok); bağlı bilgisayarda müşteri fotoğrafı/ek dosya 32 MB ile sınırlı.
+**Bilinen sınırlar:** ana bilgisayar kapalıyken bağlı bilgisayarlar çalışmaz (bilinçli); takvim ekranı birden çok bilgisayar varken dakikada bir kendini yeniler (anlık bildirim yok; randevu düzenlenirken yenilenmez); bağlı bilgisayarda müşteri fotoğrafı/ek dosya 32 MB ile sınırlı.

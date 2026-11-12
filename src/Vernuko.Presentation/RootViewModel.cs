@@ -95,6 +95,27 @@ public sealed partial class RootViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// With several computers, the calendar on screen is refreshed regularly so bookings made on another computer
+    /// appear without navigating (not while an appointment is being edited). Never throws.
+    /// </summary>
+    public async Task RefreshSharedViewsAsync()
+    {
+        if (_computer.Role == ComputerRole.Standalone || Shell?.CurrentPage is not Pages.AppointmentsViewModel { IsEditorOpen: false } page || _session.IsLocked)
+        {
+            return;
+        }
+
+        try
+        {
+            await page.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogWarning(ex, "Calendar refresh failed");
+        }
+    }
+
     /// <summary>License check-in with the license server (at most every 6 hours; offline is fine).</summary>
     public async Task RunLicenseCheckInAsync()
     {
