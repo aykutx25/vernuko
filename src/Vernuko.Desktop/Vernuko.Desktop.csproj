@@ -7,6 +7,8 @@
     <AssemblyName>Vernuko</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\vernuko.ico</ApplicationIcon>
+    <!-- Velopack needs to run before WPF starts (see Program.cs). -->
+    <StartupObject>Vernuko.Desktop.Program</StartupObject>
     <SatelliteResourceLanguages>tr;en</SatelliteResourceLanguages>
     <!-- App/Window lifetimes are managed by WPF (disposed in OnExit), not IDisposable. -->
     <NoWarn>$(NoWarn);CA1001</NoWarn>
@@ -14,10 +16,15 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Velopack" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vernuko.Presentation\Vernuko.Presentation.csproj" />
     <ProjectReference Include="..\Vernuko.Infrastructure\Vernuko.Infrastructure.csproj" />
+  </ItemGroup>
+  <!-- Update feed (HTTPS) is set by the release pipeline: dotnet publish -p:VernukoUpdateUrl=https://… -->
+  <ItemGroup Condition="'$(VernukoUpdateUrl)' != ''">
+    <AssemblyMetadata Include="VernukoUpdateUrl" Value="$(VernukoUpdateUrl)" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\vernuko.ico" />

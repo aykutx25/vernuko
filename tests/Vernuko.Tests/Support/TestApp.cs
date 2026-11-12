@@ -106,6 +106,8 @@ public sealed class TestApp : IAsyncDisposable
         services.AddSingleton<Vernuko.Presentation.Common.IDialogService>(sp => sp.GetRequiredService<FakeDialogs>());
         services.AddSingleton<FakePlatform>();
         services.AddSingleton<Vernuko.Presentation.Common.IPlatformServices>(sp => sp.GetRequiredService<FakePlatform>());
+        services.AddSingleton<FakeUpdates>();
+        services.AddSingleton<Vernuko.Presentation.Common.IUpdateService>(sp => sp.GetRequiredService<FakeUpdates>());
         Services = services.BuildServiceProvider();
     }
 
@@ -263,4 +265,28 @@ public sealed class FakePlatform : Vernuko.Presentation.Common.IPlatformServices
     public Task<byte[]> ReadFileBytesAsync(string path) => File.ReadAllBytesAsync(path);
 
     public Task WriteFileBytesAsync(string path, byte[] content) => File.WriteAllBytesAsync(path, content);
+}
+
+public sealed class FakeUpdates : Vernuko.Presentation.Common.IUpdateService
+{
+    public string? Available { get; set; }
+
+    public bool Applied { get; private set; }
+
+    public string CurrentVersion => "0.2.0";
+
+    public string? UnavailableReason => null;
+
+    public Task<Vernuko.Presentation.Common.UpdateCheck> CheckAsync(CancellationToken ct = default) =>
+        Task.FromResult(Available is null
+            ? new Vernuko.Presentation.Common.UpdateCheck(false, null, "Vernuko güncel.")
+            : new Vernuko.Presentation.Common.UpdateCheck(true, Available, "Yeni sürüm var: " + Available));
+
+    public Task<bool> DownloadAsync(IProgress<int>? progress, CancellationToken ct = default)
+    {
+        progress?.Report(100);
+        return Task.FromResult(Available is not null);
+    }
+
+    public void ApplyAndRestart() => Applied = true;
 }

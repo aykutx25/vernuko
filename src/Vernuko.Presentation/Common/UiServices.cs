@@ -33,3 +33,25 @@ public interface IPlatformServices
 
     Task WriteFileBytesAsync(string path, byte[] content);
 }
+
+public sealed record UpdateCheck(bool Available, string? NewVersion, string Message);
+
+/// <summary>
+/// Application updates (Velopack on Windows). Updates are only offered when the app was installed with the setup
+/// package and an HTTPS update source was configured at build time; otherwise <see cref="UnavailableReason"/> says why.
+/// </summary>
+public interface IUpdateService
+{
+    string CurrentVersion { get; }
+
+    /// <summary>Null when updates can be checked; otherwise a Turkish explanation.</summary>
+    string? UnavailableReason { get; }
+
+    Task<UpdateCheck> CheckAsync(CancellationToken ct = default);
+
+    /// <summary>Downloads the update found by the last check. Progress is 0–100.</summary>
+    Task<bool> DownloadAsync(IProgress<int>? progress, CancellationToken ct = default);
+
+    /// <summary>Closes the app, applies the downloaded update and starts the new version.</summary>
+    void ApplyAndRestart();
+}

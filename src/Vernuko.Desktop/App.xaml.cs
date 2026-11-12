@@ -47,6 +47,7 @@ public partial class App : System.Windows.Application
         services.AddVernukoPresentation();
         services.AddSingleton<IDialogService, WpfDialogService>();
         services.AddSingleton<IPlatformServices, WpfPlatformServices>();
+        services.AddSingleton<IUpdateService, VelopackUpdateService>();
         _services = services.BuildServiceProvider();
         var logger = _services.GetRequiredService<ILogger<App>>();
         ViewModelBase.UseLogger(logger);

@@ -24,7 +24,8 @@ public sealed partial class SettingsViewModel(
     IDialogService dialogs,
     IPlatformServices platform,
     CommissionRulesViewModel commissionRules,
-    ConsentTemplatesViewModel consentTemplates) : PageViewModel, IShellAware
+    ConsentTemplatesViewModel consentTemplates,
+    UpdatesViewModel updates) : PageViewModel, IShellAware
 {
     // Business
     [ObservableProperty]
@@ -160,6 +161,8 @@ public sealed partial class SettingsViewModel(
 
     public ConsentTemplatesViewModel ConsentTemplates { get; } = consentTemplates;
 
+    public UpdatesViewModel Updates { get; } = updates;
+
     /// <summary>Commission rules and consent forms are useful for every profile (KVKK açık rıza applies everywhere).</summary>
     public bool ShowCommissionRules => CanManageSettings;
 
@@ -186,6 +189,8 @@ public sealed partial class SettingsViewModel(
         {
             await ConsentTemplates.LoadAsync();
         }
+
+        Updates.Load();
 
         OnPropertyChanged(string.Empty);
     });

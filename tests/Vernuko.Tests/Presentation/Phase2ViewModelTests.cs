@@ -200,3 +200,53 @@ public class Phase2ViewModelTests
         Assert.Equal(40_000, selin.PackageSaleMinor);
     }
 }
+
+public class InstallerAndUpdateTests
+{
+    [Fact]
+    public void Installer_folder_never_contains_the_customer_data_folder()
+    {
+        // Velopack deletes %LOCALAPPDATA%\<packId> on uninstall; the data folder must be outside it (and vice versa).
+        var localAppData = Path.Combine(Path.GetTempPath(), "LocalAppData");
+        var installRoot = Path.GetFullPath(Path.Combine(localAppData, Infrastructure.AppIdentity.InstallPackId)) + Path.DirectorySeparatorChar;
+        var dataRoot = Path.GetFullPath(Path.Combine(localAppData, Infrastructure.AppIdentity.DataFolderName, "Data")) + Path.DirectorySeparatorChar;
+        Assert.False(dataRoot.StartsWith(installRoot, StringComparison.OrdinalIgnoreCase));
+        Assert.False(installRoot.StartsWith(dataRoot, StringComparison.OrdinalIgnoreCase));
+        Assert.NotEqual(Infrastructure.AppIdentity.InstallPackId, Infrastructure.AppIdentity.DataFolderName, StringComparer.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Update_takes_an_encrypted_backup_before_restarting()
+    {
+        await using var app = await TestApp.CreateAsync();
+        await app.SetupBeautyAsync(enableBackup: true);
+        var fake = app.Get<FakeUpdates>();
+        fake.Available = "0.3.0";
+        var vm = app.Get<UpdatesViewModel>();
+        vm.Load();
+        await vm.CheckCommand.ExecuteAsync(null);
+        Assert.True(vm.UpdateAvailable);
+        var before = (await app.Get<BackupService>().ListBackupsAsync()).Count;
+
+        await vm.InstallCommand.ExecuteAsync(null);
+        Assert.Null(vm.ErrorMessage);
+        Assert.True(fake.Applied);
+        var list = await app.Get<BackupService>().ListBackupsAsync();
+        Assert.Equal(before + 1, list.Count);
+        Assert.Contains(list, b => b.Trigger == Backups.BackupTrigger.PreUpdate);
+    }
+
+    [Fact]
+    public async Task Update_is_not_applied_when_the_user_declines()
+    {
+        await using var app = await TestApp.CreateAsync();
+        await app.SetupBeautyAsync();
+        var fake = app.Get<FakeUpdates>();
+        fake.Available = "0.3.0";
+        var vm = app.Get<UpdatesViewModel>();
+        await vm.CheckCommand.ExecuteAsync(null);
+        app.Get<FakeDialogs>().ConfirmAnswer = false;
+        await vm.InstallCommand.ExecuteAsync(null);
+        Assert.False(fake.Applied);
+    }
+}

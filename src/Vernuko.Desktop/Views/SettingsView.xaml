@@ -246,6 +246,11 @@
                 </Border>
             </TabItem>
 
+            <!-- Updates -->
+            <TabItem Header="Güncellemeler" Visibility="{Binding CanManageSettings, Converter={StaticResource VisibleWhen}}">
+                <ContentControl Content="{Binding Updates}" Focusable="False" />
+            </TabItem>
+
             <!-- Audit -->
             <TabItem Header="Denetim kaydı" Visibility="{Binding CanViewAudit, Converter={StaticResource VisibleWhen}}">
                 <DockPanel>

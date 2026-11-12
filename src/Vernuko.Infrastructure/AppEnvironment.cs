@@ -43,7 +43,7 @@ public sealed class AppEnvironment : IAppEnvironment
     public static AppEnvironment CreateDefault(bool isDemo)
     {
         var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create);
-        return new AppEnvironment(Path.Combine(root, "Vernuko", isDemo ? "Demo" : "Data"), isDemo);
+        return new AppEnvironment(Path.Combine(root, AppIdentity.DataFolderName, isDemo ? "Demo" : "Data"), isDemo);
     }
 
     /// <summary>Removes temp leftovers of interrupted operations (may contain decrypted copies).</summary>
