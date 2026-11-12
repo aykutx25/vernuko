@@ -57,6 +57,13 @@ public sealed class Customer : Entity
     /// <summary>Optional T.C. kimlik no. Never required by default.</summary>
     public string? NationalId { get; private set; }
 
+    /// <summary>Firma müşterisi (danışmanlık, muhasebe, hukuk): unvan, vergi dairesi, VKN (10) veya TCKN (11).</summary>
+    public string? CompanyName { get; private set; }
+
+    public string? TaxOffice { get; private set; }
+
+    public string? TaxNumber { get; private set; }
+
     /// <summary>Operational messages (reminders) channel preferences.</summary>
     public bool AllowSms { get; private set; }
 
@@ -164,6 +171,9 @@ public sealed class Customer : Entity
         Address = null;
         Notes = null;
         NationalId = null;
+        CompanyName = null; // a sole proprietor's trade name and tax number are personal data too
+        TaxOffice = null;
+        TaxNumber = null;
         AllowSms = false;
         AllowWhatsApp = false;
         AllowEmail = false;
@@ -222,6 +232,23 @@ public sealed class Customer : Entity
             }
         }
 
+        string? taxNumber = null;
+        if (!string.IsNullOrWhiteSpace(d.TaxNumber))
+        {
+            taxNumber = new string(d.TaxNumber.Where(c => !char.IsWhiteSpace(c)).ToArray());
+            if (!(taxNumber.Length == 10 ? TaxNumberValidator.IsValidVkn(taxNumber) : NationalIdValidator.IsValid(taxNumber)))
+            {
+                return Error.Validation("customer.tax_number", "Vergi numarası geçersiz: firma için 10 haneli VKN, şahıs şirketi için 11 haneli T.C. kimlik numarası girin.");
+            }
+        }
+
+        var company = string.IsNullOrWhiteSpace(d.CompanyName) ? null : d.CompanyName.Trim();
+        var taxOffice = string.IsNullOrWhiteSpace(d.TaxOffice) ? null : d.TaxOffice.Trim();
+        if (company is { Length: > 200 } || taxOffice is { Length: > 100 })
+        {
+            return Error.Validation("customer.company_length", "Firma unvanı en fazla 200, vergi dairesi en fazla 100 karakter olabilir.");
+        }
+
         if (d.BirthDate is { } birth && (birth.Year < 1900 || birth > DateOnly.FromDateTime(DateTime.UtcNow)))
         {
             return Error.Validation("customer.birth_date", "Doğum tarihi geçersiz.");
@@ -240,6 +267,9 @@ public sealed class Customer : Entity
             Phone = phone,
             Email = email,
             NationalId = nationalId,
+            CompanyName = company,
+            TaxOffice = taxOffice,
+            TaxNumber = taxNumber,
             Notes = notes,
             Address = string.IsNullOrWhiteSpace(d.Address) ? null : d.Address.Trim(),
         };
@@ -255,6 +285,9 @@ public sealed class Customer : Entity
         Address = d.Address;
         Notes = d.Notes;
         NationalId = d.NationalId;
+        CompanyName = d.CompanyName;
+        TaxOffice = d.TaxOffice;
+        TaxNumber = d.TaxNumber;
         RefreshSearchKey();
     }
 
@@ -262,7 +295,7 @@ public sealed class Customer : Entity
     {
         var phoneDigits = Phone is null ? string.Empty : Phone.TrimStart('+');
         var localDigits = Phone is { Length: 13 } && Phone.StartsWith("+90", StringComparison.Ordinal) ? "0" + Phone[3..] : string.Empty;
-        SearchKey = string.Join(' ', new[] { TurkishText.ToSearchKey(FullName), phoneDigits, localDigits, Number.ToString(System.Globalization.CultureInfo.InvariantCulture) }
+        SearchKey = string.Join(' ', new[] { TurkishText.ToSearchKey(FullName), phoneDigits, localDigits, Number.ToString(System.Globalization.CultureInfo.InvariantCulture), CompanyName is null ? string.Empty : TurkishText.ToSearchKey(CompanyName), TaxNumber ?? string.Empty }
             .Where(s => s.Length > 0));
     }
 }
@@ -275,4 +308,7 @@ public sealed record CustomerDetails(
     DateOnly? BirthDate = null,
     string? Address = null,
     string? Notes = null,
-    string? NationalId = null);
+    string? NationalId = null,
+    string? CompanyName = null,
+    string? TaxOffice = null,
+    string? TaxNumber = null);

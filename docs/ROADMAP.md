@@ -51,7 +51,7 @@
 | P1-9 | Excel/PDF rapor dışa aktarımı, ICS | P0-5 | Türkçe karakterler doğru | ⬜ |
 | P1-10 | Kaynak sütunlu zaman ızgarası + sürükle-bırak | P0-12 | 1366×768'de okunur | ⬜ |
 | P1-11 | SQLite FTS5 arama (100 bin+ müşteri) | P0-5 | 100 bin kayıtta < 200 ms | ⬜ |
-| P1-12 | Kuaför, SPA, danışmanlık profillerinin özel modülleri | Faz 3 | Profil başına gerçek senaryo testleri | ⬜ |
+| P1-12 | Kuaför, SPA, danışmanlık profillerinin özel modülleri | Faz 3 | Profil başına gerçek senaryo testleri | 🟡 danışmanlık: firma müşterisi + VKN doğrulama (test) · ⬜ kuaför: boya bekleme süresi (personel boşta, koltuk dolu) · ⬜ SPA: hediye kartı · ⬜ çevrim içi görüşme bağlantısı |
 | P1-15 | Hizmete özel oda/cihaz kuralı (lazer → lazer odası + cihaz) | P0-3 | Yanlış oda veya cihazsız randevu kaydedilmez; öneriler diğer uygun odaları tarar | ✅ (test, uçtan uca senaryo dahil) · 🟡 ekran |
 | P1-13 | Gizli uzman notları (yazar bazlı, şifreli) | P0-8 | Sekreter göremez; denetim kaydı | ⬜ |
 | P1-14 | Arayüz yerelleştirme altyapısı (resx) | P0-12 | İngilizce dil paketi derlenir | ⬜ |

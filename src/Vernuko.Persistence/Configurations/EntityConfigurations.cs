@@ -79,6 +79,9 @@ internal sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         b.Property(e => e.Address).HasMaxLength(500);
         b.Property(e => e.Notes).HasMaxLength(Customer.MaxNotesLength);
         b.Property(e => e.NationalId).HasMaxLength(11);
+        b.Property(e => e.CompanyName).HasMaxLength(200);
+        b.Property(e => e.TaxOffice).HasMaxLength(100);
+        b.Property(e => e.TaxNumber).HasMaxLength(11);
         b.Property(e => e.MarketingConsentSource).HasMaxLength(100);
         b.Property(e => e.SearchKey).HasMaxLength(400).IsRequired();
         b.HasIndex(e => e.SearchKey);

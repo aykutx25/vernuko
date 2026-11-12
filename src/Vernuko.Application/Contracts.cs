@@ -59,9 +59,17 @@ public sealed record CustomerDetailsDto(
     bool MarketingConsent,
     string State,
     long BalanceMinor,
-    long Version)
+    long Version,
+    string? CompanyName = null,
+    string? TaxOffice = null,
+    string? TaxNumber = null)
 {
     public string FullName => string.IsNullOrEmpty(LastName) ? FirstName : $"{FirstName} {LastName}";
+
+    /// <summary>"Unvan · Vergi dairesi · VKN" for the customer card, null without company data.</summary>
+    public string? CompanyLine => CompanyName is null && TaxNumber is null
+        ? null
+        : string.Join(" · ", new[] { CompanyName, TaxOffice is null ? null : TaxOffice + " V.D.", TaxNumber }.Where(x => !string.IsNullOrEmpty(x)));
 }
 
 // ---------- Catalog ----------

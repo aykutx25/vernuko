@@ -237,7 +237,7 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
                 exportedAtUtc = UtcNow,
                 customer = new
                 {
-                    c.Number, c.FirstName, c.LastName, c.Phone, c.Email, c.BirthDate, c.Address, c.Notes, c.NationalId,
+                    c.Number, c.FirstName, c.LastName, c.Phone, c.Email, c.BirthDate, c.Address, c.Notes, c.NationalId, c.CompanyName, c.TaxOffice, c.TaxNumber,
                     c.AllowSms, c.AllowWhatsApp, c.AllowEmail, c.MarketingConsent, c.MarketingConsentAtUtc, State = c.State.ToString(), c.CreatedAtUtc,
                 },
                 appointments,
@@ -255,11 +255,11 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
             var rows = await db.Customers.AsNoTracking().Where(c => c.State != CustomerState.Anonymized).OrderBy(c => c.Number).ToListAsync(ct);
             var sb = new StringBuilder();
             sb.Append('﻿');
-            sb.AppendLine("No;Ad;Soyad;Telefon;E-posta;Doğum Tarihi;Durum;Kayıt Tarihi");
+            sb.AppendLine("No;Ad;Soyad;Telefon;E-posta;Doğum Tarihi;Firma;Vergi Dairesi;Vergi No;Durum;Kayıt Tarihi");
             foreach (var c in rows)
             {
                 sb.AppendLine(string.Join(';', c.Number.ToString(CultureInfo.InvariantCulture), Csv(c.FirstName), Csv(c.LastName), Csv(c.DisplayPhone), Csv(c.Email),
-                    c.BirthDate?.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) ?? string.Empty, c.State.ToString(), c.CreatedAtUtc.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)));
+                    c.BirthDate?.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) ?? string.Empty, Csv(c.CompanyName), Csv(c.TaxOffice), Csv(c.TaxNumber), c.State.ToString(), c.CreatedAtUtc.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)));
             }
 
             await Audit.AppendAsync(db, "customers.exported_csv", "Customer", null, $"{rows.Count} müşteri CSV olarak dışa aktarıldı", ct);
@@ -278,7 +278,7 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
     internal static CustomerDetailsDto ToDto(Customer c, long balance, bool canSeeSensitive) => new(
         c.Id, c.Number, c.FirstName, c.LastName, c.DisplayPhone, c.Email, c.BirthDate, c.Address, c.Notes,
         c.NationalId is null ? null : canSeeSensitive ? c.NationalId : "*******" + c.NationalId[^4..],
-        c.AllowSms, c.AllowWhatsApp, c.AllowEmail, c.MarketingConsent, c.State.ToString(), balance, c.Version);
+        c.AllowSms, c.AllowWhatsApp, c.AllowEmail, c.MarketingConsent, c.State.ToString(), balance, c.Version, c.CompanyName, c.TaxOffice, c.TaxNumber);
 
     internal static string? FormatPhone(string? e164) =>
         e164 is null ? null : PhoneNumber.Parse(e164) is { IsSuccess: true } p ? p.Value.ToDisplayString() : e164;

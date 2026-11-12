@@ -65,6 +65,15 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
     private string? _nationalId;
 
     [ObservableProperty]
+    private string? _companyName;
+
+    [ObservableProperty]
+    private string? _taxOffice;
+
+    [ObservableProperty]
+    private string? _taxNumber;
+
+    [ObservableProperty]
     private bool _allowSms = true;
 
     [ObservableProperty]
@@ -111,6 +120,9 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
 
     public bool CanSeePayments => Shell?.Has(Permission.PaymentsView) ?? false;
 
+    /// <summary>Firma bilgileri (unvan, vergi dairesi, VKN) — consulting/accounting/law profiles, or when already filled.</summary>
+    public bool ShowCompany => Shell?.Business?.Features.Contains(BusinessProfiles.ProfileFeature.CompanyClients) == true || Details?.CompanyLine is not null;
+
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         switch (parameter)
@@ -141,7 +153,11 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
         }
     }
 
-    partial void OnDetailsChanged(CustomerDetailsDto? value) => OnPropertyChanged(nameof(HasSelection));
+    partial void OnDetailsChanged(CustomerDetailsDto? value)
+    {
+        OnPropertyChanged(nameof(HasSelection));
+        OnPropertyChanged(nameof(ShowCompany));
+    }
 
     [RelayCommand]
     private Task SearchAsync() => RunAsync(async () =>
@@ -167,7 +183,7 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
         IsNew = true;
         IsEditing = true;
         FirstName = LastName = string.Empty;
-        Phone = Email = Address = Notes = NationalId = null;
+        Phone = Email = Address = Notes = NationalId = CompanyName = TaxOffice = TaxNumber = null;
         BirthDate = null;
         AllowSms = AllowWhatsApp = AllowEmail = true;
         MarketingConsent = false;
@@ -197,6 +213,9 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
         Address = Details.Address;
         Notes = Details.Notes;
         NationalId = CanSeeSensitive ? Details.NationalIdMasked : null;
+        CompanyName = Details.CompanyName;
+        TaxOffice = Details.TaxOffice;
+        TaxNumber = Details.TaxNumber;
         AllowSms = Details.AllowSms;
         AllowWhatsApp = Details.AllowWhatsApp;
         AllowEmail = Details.AllowEmail;
@@ -213,7 +232,7 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
     [RelayCommand]
     private Task SaveAsync() => RunAsync(async () =>
     {
-        var details = new CustomerDetails(FirstName, LastName, Phone, Email, BirthDate is { } b ? DateOnly.FromDateTime(b) : null, Address, Notes, CanSeeSensitive ? NationalId : null);
+        var details = new CustomerDetails(FirstName, LastName, Phone, Email, BirthDate is { } b ? DateOnly.FromDateTime(b) : null, Address, Notes, CanSeeSensitive ? NationalId : null, CompanyName, TaxOffice, TaxNumber);
         Guid id;
         if (IsNew)
         {

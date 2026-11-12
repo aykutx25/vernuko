@@ -82,6 +82,14 @@
                                 <StackPanel Margin="0,0,8,0"><TextBlock Text="DOĞUM TARİHİ" Style="{StaticResource FieldLabel}" /><DatePicker SelectedDate="{Binding BirthDate}" /></StackPanel>
                                 <StackPanel Visibility="{Binding CanSeeSensitive, Converter={StaticResource VisibleWhen}}"><TextBlock Text="T.C. KİMLİK NO (isteğe bağlı)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding NationalId, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
                             </UniformGrid>
+                            <StackPanel Visibility="{Binding ShowCompany, Converter={StaticResource VisibleWhen}}">
+                                <TextBlock Text="FİRMA UNVANI" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Firma unvanı" />
+                                <UniformGrid Columns="2">
+                                    <StackPanel Margin="0,0,8,0"><TextBlock Text="VERGİ DAİRESİ" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TaxOffice, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Vergi dairesi" /></StackPanel>
+                                    <StackPanel><TextBlock Text="VKN / TCKN" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Tag="10 haneli VKN" AutomationProperties.Name="Vergi numarası" /></StackPanel>
+                                </UniformGrid>
+                            </StackPanel>
                             <TextBlock Text="ADRES" Style="{StaticResource FieldLabel}" />
                             <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock Text="NOTLAR" Style="{StaticResource FieldLabel}" />
@@ -125,6 +133,7 @@
                                     </StackPanel>
                                 </DockPanel>
                                 <TextBlock Text="{Binding Details.Notes}" Style="{StaticResource Subtle}" Margin="0,10,0,0" Visibility="{Binding Details.Notes, Converter={StaticResource VisibleWhen}}" />
+                                <TextBlock Margin="0,8,0,0" Text="{Binding Details.CompanyLine}" Style="{StaticResource Muted}" TextWrapping="Wrap" Visibility="{Binding Details.CompanyLine, Converter={StaticResource VisibleWhen}}" />
                                 <TextBlock Margin="0,8,0,0" Visibility="{Binding Details.NationalIdMasked, Converter={StaticResource VisibleWhen}}" Style="{StaticResource Muted}">
                                     <Run Text="T.C.: " /><Run Text="{Binding Details.NationalIdMasked, Mode=OneWay}" />
                                 </TextBlock>

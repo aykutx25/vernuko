@@ -2,6 +2,11 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.8.0] — 2026-11-12 — Faz 3: firma müşterisi
+
+### Eklendi
+- **Firma bilgileri** (Danışmanlık ve Muhasebe profili; bilgisi girilmiş her müşteride de görünür): firma unvanı, vergi dairesi, vergi numarası. 10 haneli VKN kontrol hanesiyle doğrulanır; şahıs şirketleri için 11 haneli T.C. kimlik numarası kabul edilir. Unvan ve vergi numarasıyla arama yapılabilir. Bilgiler JSON/CSV dışa aktarımına girer, anonimleştirmede silinir.
+
 ## [0.7.0] — 2026-11-12 — Faz 6: lisans sunucusu
 
 ### Eklendi

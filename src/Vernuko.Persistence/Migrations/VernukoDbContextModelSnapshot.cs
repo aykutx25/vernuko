@@ -651,6 +651,10 @@ namespace Vernuko.Persistence.Migrations
                     b.Property<DateOnly?>("BirthDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CompanyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -701,6 +705,14 @@ namespace Vernuko.Persistence.Migrations
                     b.Property<string>("State")
                         .IsRequired()
                         .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(11)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TaxOffice")
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("UpdatedAtUtc")
