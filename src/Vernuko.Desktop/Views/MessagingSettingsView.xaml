@@ -1,0 +1,91 @@
+<UserControl x:Class="Vernuko.Desktop.Views.MessagingSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:b="clr-namespace:Vernuko.Desktop.Behaviors">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="980" HorizontalAlignment="Left">
+            <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
+            <Border Style="{StaticResource InfoBanner}" Visibility="{Binding InfoMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding InfoMessage}" TextWrapping="Wrap" /></Border>
+            <Border Style="{StaticResource WarnBanner}"><TextBlock Text="{Binding CostNote}" TextWrapping="Wrap" /></Border>
+
+            <!-- Reminder rules -->
+            <Border Style="{StaticResource Card}" Padding="20" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="Otomatik randevu hatırlatma" Style="{StaticResource SectionTitle}" />
+                    <CheckBox Content="Randevudan önce müşteriye otomatik hatırlatma gönder" IsChecked="{Binding RemindersEnabled}" />
+                    <WrapPanel Margin="0,6,0,0">
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="KANAL" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Channels}" SelectedItem="{Binding Channel}" DisplayMemberPath="Label" Width="210" /></StackPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="KAÇ SAAT ÖNCE" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding HoursBefore, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="SESSİZ SAAT BAŞI" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding QuietStart, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="SESSİZ SAAT SONU" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding QuietEnd, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="AYLIK MESAJ LİMİTİ" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding MonthlyLimit, UpdateSourceTrigger=PropertyChanged}" Width="120" /></StackPanel>
+                        <StackPanel><TextBlock Text="SMS BİRİM FİYATINIZ (₺, tahmin için)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding SmsUnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="120" /></StackPanel>
+                    </WrapPanel>
+                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Text="Hatırlatma, müşteri kartında ilgili kanaldan bildirime izin verilmişse gönderilir. Randevu iptal edilir veya taşınırsa bekleyen hatırlatma iptal edilir; taşınan saate yeni hatırlatma planlanır." />
+                </StackPanel>
+            </Border>
+
+            <!-- SMS -->
+            <Border Style="{StaticResource Card}" Padding="20" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="SMS — İleti Merkezi hesabınız" Style="{StaticResource SectionTitle}" />
+                    <WrapPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="ONAYLI SMS BAŞLIĞI" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding SmsSender, UpdateSourceTrigger=PropertyChanged}" Width="160" /></StackPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="API KEY" Style="{StaticResource FieldLabel}" /><PasswordBox b:PasswordBoxAssistant.BoundPassword="{Binding SmsKey, UpdateSourceTrigger=PropertyChanged}" Width="240" /></StackPanel>
+                        <StackPanel><TextBlock Text="API HASH" Style="{StaticResource FieldLabel}" /><PasswordBox b:PasswordBoxAssistant.BoundPassword="{Binding SmsHash, UpdateSourceTrigger=PropertyChanged}" Width="240" /></StackPanel>
+                    </WrapPanel>
+                    <TextBlock Text="{Binding SmsCredentialText}" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Text="Anahtar ve hash İleti Merkezi panelindeki Ayarlar › Güvenlik bölümünden alınır; panelde &quot;API kullanımına izin ver&quot; açık olmalıdır. Bilgiler bu bilgisayarda Windows hesabınıza bağlı olarak şifreli saklanır." />
+                </StackPanel>
+            </Border>
+
+            <!-- WhatsApp -->
+            <Border Style="{StaticResource Card}" Padding="20" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="WhatsApp Cloud API — Meta işletme hesabınız" Style="{StaticResource SectionTitle}" />
+                    <WrapPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="TELEFON NUMARASI KİMLİĞİ" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding WaPhoneNumberId, UpdateSourceTrigger=PropertyChanged}" Width="200" /></StackPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="ERİŞİM ANAHTARI (TOKEN)" Style="{StaticResource FieldLabel}" /><PasswordBox b:PasswordBoxAssistant.BoundPassword="{Binding WaToken, UpdateSourceTrigger=PropertyChanged}" Width="260" /></StackPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="ŞABLON ADI" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding WaTemplate, UpdateSourceTrigger=PropertyChanged}" Width="180" /></StackPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="DİL" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding WaLanguage, UpdateSourceTrigger=PropertyChanged}" Width="70" /></StackPanel>
+                        <StackPanel><TextBlock Text="API SÜRÜMÜ" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding WaApiVersion, UpdateSourceTrigger=PropertyChanged}" Width="90" /></StackPanel>
+                    </WrapPanel>
+                    <TextBlock Text="{Binding WhatsAppCredentialText}" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                    <TextBlock Text="{Binding TemplateHelp}" Style="{StaticResource Muted}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <WrapPanel Margin="0,12,0,0">
+                <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveCommand}" Margin="0,0,16,8" MinWidth="120" />
+                <TextBox Text="{Binding TestPhone, UpdateSourceTrigger=PropertyChanged}" Tag="Kendi numaranız" Width="170" Margin="0,0,8,8" />
+                <ComboBox ItemsSource="{Binding Channels}" SelectedItem="{Binding TestChannel}" DisplayMemberPath="Label" Width="200" Margin="0,0,8,8" />
+                <Button Content="Deneme mesajı gönder" Command="{Binding SendTestCommand}" Margin="0,0,8,8" />
+            </WrapPanel>
+
+            <!-- Outbox -->
+            <Border Style="{StaticResource Card}" Padding="0" Margin="0,4,0,0">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="16,12">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Yenile" Command="{Binding RefreshCommand}" />
+                        <StackPanel>
+                            <TextBlock Text="Giden mesajlar" Style="{StaticResource SectionTitle}" Margin="0" />
+                            <TextBlock Text="{Binding MonthText}" Style="{StaticResource Muted}" />
+                        </StackPanel>
+                    </DockPanel>
+                    <DataGrid ItemsSource="{Binding Outbox}" MaxHeight="360">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Oluşturma" Binding="{Binding CreatedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                            <DataGridTextColumn Header="Tür" Binding="{Binding PurposeName}" Width="140" />
+                            <DataGridTextColumn Header="Kanal" Binding="{Binding ChannelName}" Width="80" />
+                            <DataGridTextColumn Header="Alıcı" Binding="{Binding RecipientMasked}" Width="130" />
+                            <DataGridTextColumn Header="Durum" Binding="{Binding StatusName}" Width="110" />
+                            <DataGridTextColumn Header="Gönderim" Binding="{Binding SentAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                            <DataGridTextColumn Header="Not" Binding="{Binding LastError}" Width="*" MinWidth="160" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

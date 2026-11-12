@@ -281,6 +281,11 @@
                 </Border>
             </TabItem>
 
+            <!-- Messaging -->
+            <TabItem Header="Mesajlaşma" Visibility="{Binding CanManageSettings, Converter={StaticResource VisibleWhen}}">
+                <ContentControl Content="{Binding Messaging}" Focusable="False" />
+            </TabItem>
+
             <!-- Updates -->
             <TabItem Header="Güncellemeler" Visibility="{Binding CanManageSettings, Converter={StaticResource VisibleWhen}}">
                 <ContentControl Content="{Binding Updates}" Focusable="False" />

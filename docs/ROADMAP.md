@@ -11,7 +11,7 @@
 | 2 | Güzellik & Lazer: paket/seans, bölge, oda/cihaz, ödeme, iptal/iade, prim, stok, onam/fotoğraf, tekrarlayan randevu, bekleme listesi | ✅ iş kuralları ve view model'ler (testli) · 🟡 ekranlar Windows'ta doğrulanacak |
 | 3 | Diğer meslekler (önce kuaför, SPA, danışmanlık) | ⬜ (profil kataloğu hazır) |
 | 4 | Yedekleme: yerel ✅ · OneDrive/Google Drive/Dropbox eşitleme klasörüne şifreli kopya ✅ · API (OAuth) bağlantısı ⬜ (sahip uygulama kaydı açmalı) | ✅ temel |
-| 5 | İletişim: SMS, WhatsApp API, e-posta, hatırlatma planlama | ⬜ (manuel WhatsApp ✅) |
+| 5 | İletişim: SMS, WhatsApp API, e-posta, hatırlatma planlama | ✅ hatırlatma planlayıcı + giden kutusu + İleti Merkezi SMS + WhatsApp Cloud API (testli, gerçek hesapla denenmedi) · ⬜ Netgsm, Verimor, e-posta, ICS |
 | 6 | Lisans sunucusu ve satış (Paddle/iyzico) | ⬜ (istemci doğrulama ✅) |
 | 7 | Çoklu bilgisayar: yerel API, PostgreSQL, eşzamanlılık, veri taşıma | ⬜ |
 | 8 | Üretime hazırlık: güvenlik denetimi, performans, kurulum, imzalama, güncelleme, dokümantasyon | Kısmen: kurulum paketi + güncelleme ✅ (Linux'ta paket üretildi, Windows'ta kur/güncelle denenmedi 🟡) · imzalama ⬜ (sertifika yok) |
@@ -45,8 +45,8 @@
 | P1-3 | Komisyon/prim motoru (hizmet, paket satışı, uygulayan ayrı) | P0-6, P0-7 | Satan ≠ uygulayan senaryosu doğru prim üretir | ✅ (test) · 🟡 ekran |
 | P1-4 | Ürün/malzeme stoku | P0-7 | Seans tamamlamada malzeme düşümü (isteğe bağlı) | ✅ (test) · 🟡 ekran |
 | P1-5 | Onam formları ve müşteri fotoğrafları (şifreli dosya deposu, ayrı yetki) | P0-8, hukuki görüş | Yetkisiz kullanıcı göremez; yedekte yer alır | ✅ (test) · 🟡 ekran · ⚖️ metinler |
-| P1-6 | SMS (Netgsm, İleti Merkezi, Verimor) + outbox + bütçe + segment sayacı | Faz 5 tasarımı | Sağlayıcı kapalı/yanıtsız → kuyrukta bekler; mükerrer yok | ⬜ |
-| P1-7 | WhatsApp Cloud API (işletmenin hesabı, utility şablonları) | P1-6 altyapısı | Hata kodları eşlenir; limit aşımı durdurur | ⬜ |
+| P1-6 | SMS (Netgsm, İleti Merkezi, Verimor) + outbox + bütçe + segment sayacı | Faz 5 tasarımı | Sağlayıcı kapalı/yanıtsız → kuyrukta bekler; mükerrer yok | ✅ İleti Merkezi + outbox + aylık limit + boy tahmini (test) · ⬜ Netgsm, Verimor |
+| P1-7 | WhatsApp Cloud API (işletmenin hesabı, utility şablonları) | P1-6 altyapısı | Hata kodları eşlenir; limit aşımı durdurur | ✅ (test; gerçek hesapla denenmedi) |
 | P1-8 | Google Drive / OneDrive / Dropbox yedek hedefleri | P0-9, KVKK görüşü | Kesinti sonrası devam; kota uyarısı | ✅ eşitleme klasörü yöntemi (test) · ⬜ OAuth API yöntemi |
 | P1-9 | Excel/PDF rapor dışa aktarımı, ICS | P0-5 | Türkçe karakterler doğru | ⬜ |
 | P1-10 | Kaynak sütunlu zaman ızgarası + sürükle-bırak | P0-12 | 1366×768'de okunur | ⬜ |

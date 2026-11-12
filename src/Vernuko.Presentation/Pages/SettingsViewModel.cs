@@ -26,7 +26,8 @@ public sealed partial class SettingsViewModel(
     CloudFolderLocator cloudLocator,
     CommissionRulesViewModel commissionRules,
     ConsentTemplatesViewModel consentTemplates,
-    UpdatesViewModel updates) : PageViewModel, IShellAware
+    UpdatesViewModel updates,
+    MessagingSettingsViewModel messaging) : PageViewModel, IShellAware
 {
     // Business
     [ObservableProperty]
@@ -158,14 +159,22 @@ public sealed partial class SettingsViewModel(
     [
         new("Yerel şifreli yedek (bilgisayar / USB)", BackupStatus?.KeyConfigured == true ? "Aktif" : "Kapalı", "Ücretsiz", "Yedekler sizin diskinizde, AES-256 ile şifreli.", BackupStatus?.KeyConfigured == true),
         new("WhatsApp — manuel gönderim", "Aktif", "Ücretsiz", "Mesaj WhatsApp'ta açılır, siz kontrol edip gönderirsiniz.", true),
-        new("WhatsApp Business Cloud API", "Kapalı", "0 ₺ — aylık limit 0 ₺", "Faz 5: kendi Meta hesabınızla, onaylı şablonlarla. Henüz mevcut değil.", false),
-        new("SMS (Netgsm / İleti Merkezi / Verimor)", "Kapalı", "0 ₺ — aylık limit 0 ₺", "Faz 5: kendi sağlayıcı hesabınızla. Henüz mevcut değil.", false),
+        MessagingRow(Vernuko.Messaging.MessageChannel.WhatsApp, "WhatsApp Business Cloud API (otomatik hatırlatma)", "Kendi Meta hesabınız ve onaylı şablonunuzla."),
+        MessagingRow(Vernuko.Messaging.MessageChannel.Sms, "SMS — İleti Merkezi (otomatik hatırlatma)", "Kendi İleti Merkezi hesabınız ve onaylı başlığınızla. Netgsm ve Verimor henüz yok."),
         new("Bulut kopyası (OneDrive / Google Drive / Dropbox klasörü)", CloudEnabled ? "Aktif" : "Kapalı", "Kendi bulut kotanız",
             "Şifreli yedek, bilgisayarınızdaki bulut klasörüne kopyalanır; yüklemeyi bulut uygulamanız yapar. Ayarlar › Yedekleme'den açılır.", CloudEnabled),
         new("E-posta (SMTP)", "Kapalı", "—", "Planlanıyor.", false),
     ];
 
     public bool CanManageSettings => Shell?.Has(Permission.SettingsManage) ?? false;
+
+    private IntegrationRow MessagingRow(Vernuko.Messaging.MessageChannel channel, string name, string note)
+    {
+        var s = Messaging.Current;
+        var active = s is not null && s.RemindersEnabled && s.ReminderChannel == channel && s.IsConfigured(channel) && s.MonthlyLimit > 0;
+        var cost = s is null ? "—" : $"Kendi hesabınız · aylık limit {s.MonthlyLimit} mesaj";
+        return new IntegrationRow(name, active ? "Aktif" : "Kapalı", cost, note + " Ayarlar › Mesajlaşma.", active);
+    }
 
     public bool CanManageUsers => Shell?.Has(Permission.UsersManage) ?? false;
 
@@ -189,6 +198,8 @@ public sealed partial class SettingsViewModel(
     public ConsentTemplatesViewModel ConsentTemplates { get; } = consentTemplates;
 
     public UpdatesViewModel Updates { get; } = updates;
+
+    public MessagingSettingsViewModel Messaging { get; } = messaging;
 
     /// <summary>Commission rules and consent forms are useful for every profile (KVKK açık rıza applies everywhere).</summary>
     public bool ShowCommissionRules => CanManageSettings;
@@ -218,6 +229,10 @@ public sealed partial class SettingsViewModel(
         }
 
         Updates.Load();
+        if (CanManageSettings)
+        {
+            await Messaging.LoadAsync();
+        }
 
         OnPropertyChanged(string.Empty);
     });

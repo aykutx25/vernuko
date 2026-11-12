@@ -100,6 +100,8 @@ public sealed class TestApp : IAsyncDisposable
             services.AddSingleton(licensing);
         }
 
+        services.AddSingleton<FakeTransports>();
+        services.AddSingleton<Vernuko.Application.Services.IMessageTransportFactory>(sp => sp.GetRequiredService<FakeTransports>());
         services.AddVernukoApplication(Env.DatabasePath);
         services.AddVernukoPresentation();
         services.AddSingleton<FakeDialogs>();
@@ -289,4 +291,35 @@ public sealed class FakeUpdates : Vernuko.Presentation.Common.IUpdateService
     }
 
     public void ApplyAndRestart() => Applied = true;
+}
+
+/// <summary>Records what would be sent; the outcome of the next sends can be scripted.</summary>
+public sealed class FakeTransports : Vernuko.Application.Services.IMessageTransportFactory
+{
+    public List<(Vernuko.Messaging.MessageChannel Channel, string To, string Text, IReadOnlyList<string> Parameters)> Sent { get; } = [];
+
+    public Queue<Vernuko.Messaging.SendOutcome> NextOutcomes { get; } = new();
+
+    public Vernuko.Messaging.IMessageTransport? Create(Vernuko.Messaging.MessageChannel channel, Vernuko.Application.Services.TransportCredentials credentials) =>
+        channel == Vernuko.Messaging.MessageChannel.Sms && string.IsNullOrEmpty(credentials.SmsKey) ? null
+        : channel == Vernuko.Messaging.MessageChannel.WhatsApp && string.IsNullOrEmpty(credentials.WhatsAppToken) ? null
+        : new Transport(this, channel);
+
+    private sealed class Transport(FakeTransports owner, Vernuko.Messaging.MessageChannel channel) : Vernuko.Messaging.IMessageTransport
+    {
+        public string ProviderKey => "fake";
+
+        public Vernuko.Messaging.MessageChannel Channel => channel;
+
+        public Task<Vernuko.Messaging.SendOutcome> SendAsync(Vernuko.Core.PhoneNumber to, string text, IReadOnlyList<string> templateParameters, bool isCommercial, CancellationToken ct)
+        {
+            var outcome = owner.NextOutcomes.Count > 0 ? owner.NextOutcomes.Dequeue() : Vernuko.Messaging.SendOutcome.Ok("fake-" + owner.Sent.Count);
+            if (outcome.Accepted)
+            {
+                owner.Sent.Add((channel, to.E164, text, templateParameters));
+            }
+
+            return Task.FromResult(outcome);
+        }
+    }
 }

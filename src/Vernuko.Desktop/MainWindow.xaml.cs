@@ -54,8 +54,14 @@ public partial class MainWindow : Window
             App.Services.GetRequiredService<AuthService>().Lock();
         }
 
+        // Every 5 minutes: automatic reminders (off unless the business enabled them and set a limit).
+        if (++_ticks % 10 == 0)
+        {
+            await _root.RunMessagingAsync();
+        }
+
         // Every 30 minutes: scheduled backup check and status refresh (only while the app is running).
-        if (++_ticks % 60 == 0 && _session.IsAuthenticated)
+        if (_ticks % 60 == 0 && _session.IsAuthenticated)
         {
             await _root.RunScheduledBackupIfDueAsync();
         }

@@ -9,6 +9,9 @@ public enum MessagePurpose
     AppointmentReminder,
     AppointmentRescheduled,
     AppointmentCancelled,
+
+    /// <summary>A one-off message the business sends to itself to check the provider account.</summary>
+    Test,
 }
 
 /// <summary>Values that can be inserted into a template. Keep it minimal (data minimisation).</summary>

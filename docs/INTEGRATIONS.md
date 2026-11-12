@@ -15,15 +15,25 @@ Kaynaklar: [research/messaging-and-backup-apis.md](research/messaging-and-backup
 | Manuel WhatsApp (wa.me) | **Uygulandı** (randevu satırı › "WhatsApp ile hatırlat") | P0 |
 | Yerel şifreli yedek | **Uygulandı** | P0 |
 | CSV dışa aktarım (müşteri listesi), JSON (müşteri bazlı KVKK talebi) | **Uygulandı** | P0 |
-| SMS (Netgsm → İleti Merkezi → Verimor) | Arayüz (`ISmsProvider`) hazır, adaptör yok — Faz 5 | P1 |
-| WhatsApp Cloud API (işletmenin kendi Meta hesabı) | Faz 5 | P1 |
-| Bulut yedek (Drive → OneDrive → Dropbox) | Faz 4 | P1 |
+| SMS — İleti Merkezi | **Uygulandı (Faz 5):** otomatik randevu hatırlatma, işletmenin kendi hesabı; istek/yanıt biçimi resmi belgeden (2026-11-12) alındı ve testli, **gerçek hesapla henüz denenmedi** | P1 |
+| SMS — Netgsm, Verimor | Yok. Netgsm'in API belgesi alınamadı (sayfa boş şablon); tahminle yazılmadı. Verimor gönderen IP'yi beyaz listeye almayı zorunlu tutuyor | P1 |
+| WhatsApp Cloud API (işletmenin kendi Meta hesabı) | **Uygulandı (Faz 5):** onaylı utility şablonuyla hatırlatma ({{1}} ad, {{2}} tarih, {{3}} saat, {{4}} işletme); belgeye göre testli, **gerçek hesapla henüz denenmedi**; teslim durumu webhook gerektirdiği için "sağlayıcıya iletildi" olarak tutulur | P1 |
+| Bulut yedek (OneDrive / Google Drive / Dropbox) | **Uygulandı (Faz 4):** eşitleme klasörüne şifreli kopya; OAuth API yöntemi yok | P1 |
 | SMTP e-posta | Faz 5 | P1 |
 | ICS dosyası (randevuyu takvime ekle) | Faz 5 | P1 |
 | Excel / PDF raporlar | Faz 5 (ClosedXML MIT; PDF için QuestPDF Community — gelir <1M USD) | P1 |
 | Google / Microsoft Calendar senkronu | Faz 7+ | P2 |
 | Online randevu portalı, web sitesi entegrasyonu | Sunucu gerektirir — Model C | P2 |
 | e-Arşiv / e-Fatura (özel entegratör) | Mevzuat ve entegratör seçimi sonrası | P2 |
+
+## Mesajlaşma (Faz 5 — uygulanan)
+- **Giden kutusu** (`OutboxMessages`): her hatırlatma tekil anahtarla (`reminder:<randevu>:<saat>:<kanal>`) yazılır; aynı randevu saati için ikinci mesaj oluşmaz. Randevu iptal/taşınırsa bekleyen hatırlatma iptal edilir, yeni saate yeni hatırlatma planlanır.
+- **Planlayıcı ve gönderici** yalnızca Vernuko açıkken 5 dakikada bir çalışır. Varsayılan: hatırlatma kapalı, **aylık limit 0** (hiç mesaj gitmez). Sessiz saatler (varsayılan 21:00–09:00) dışında gönderilir; sabah erken randevularda hatırlatma bir önceki akşama alınır. Lisans salt-okunur moddaysa gönderim durur.
+- **Gönderim anında yeniden kontrol:** randevu hâlâ açık ve saati aynı mı, müşteri ilgili kanala izin veriyor mu, aylık limit dolmuş mu.
+- **Hatalar:** geçici hatalar (ağ, zaman aşımı, sağlayıcı hız sınırı, 5xx) 1/5/15/60 dk aralıkla en çok 5 kez denenir; kalıcı hatalar (geçersiz numara, yetki, onaysız başlık/şablon) tekrar denenmez ve Türkçe açıklamayla listelenir.
+- **Kimlik bilgileri** (İleti Merkezi key/hash, WhatsApp token) Windows hesabına bağlı (DPAPI) şifreli saklanır; ekranda gösterilmez; başka bilgisayarda açılmaz (yeniden girilir).
+- **Bilinen sınır:** sağlayıcı mesajı kabul ettikten hemen sonra program çökerse aynı mesaj 10 dakika sonra bir kez daha gönderilebilir (sağlayıcılar tekrar engelleme anahtarı sunmuyor).
+- Ayarlar › **Mesajlaşma**: kanal, kaç saat önce, sessiz saatler, aylık limit, SMS birim fiyatınız (tahmin için), hesap bilgileri, deneme mesajı, giden mesajlar listesi ve aylık özet.
 
 ## Mesajlaşma mimarisi (Faz 5 tasarımı)
 ```

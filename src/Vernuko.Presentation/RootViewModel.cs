@@ -70,6 +70,24 @@ public sealed partial class RootViewModel : ViewModelBase
         await RunScheduledBackupIfDueAsync();
     }
 
+    /// <summary>Automatic reminders (Phase 5): plan and send due messages. Never throws.</summary>
+    public async Task RunMessagingAsync()
+    {
+        try
+        {
+            var messaging = _services.GetRequiredService<AutoMessagingService>();
+            await messaging.PlanRemindersAsync();
+            await messaging.DispatchDueAsync();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogError(ex, "Automatic messaging run failed");
+        }
+    }
+
     /// <summary>Scheduled backups run only while the app is open — Vernuko never pretends to back up a switched-off PC.</summary>
     public async Task RunScheduledBackupIfDueAsync()
     {

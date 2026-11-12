@@ -41,6 +41,8 @@ public static class DependencyInjection
         services.AddSingleton<MessagingService>();
         services.AddSingleton<BackupService>();
         services.AddSingleton<CloudFolderLocator>();
+        services.AddSingleton<AutoMessagingService>();
+        services.TryAddSingleton<IMessageTransportFactory>(_ => new HttpMessageTransportFactory(new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
         services.AddSingleton<DemoDataSeeder>();
         services.AddSingleton<CommissionService>();
         services.AddSingleton<InventoryService>();

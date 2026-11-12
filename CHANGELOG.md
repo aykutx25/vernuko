@@ -2,6 +2,18 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.5.0] — 2026-11-12 — Faz 5: otomatik randevu hatırlatma
+
+### Eklendi
+- **Otomatik hatırlatma:** randevudan belirli saat önce (varsayılan 24) SMS veya WhatsApp. Giden kutusu sayesinde aynı randevu için ikinci mesaj oluşmaz; iptal edilen veya taşınan randevunun bekleyen hatırlatması iptal edilir, yeni saate yeni hatırlatma planlanır.
+- **İleti Merkezi SMS** ve **WhatsApp Cloud API** bağlantıları: işletmenin kendi hesabı; istek ve yanıt biçimleri resmi belgelerden alındı ve testlerle doğrulandı. **Gerçek bir hesapla henüz denenmedi** — ilk kullanımda "Deneme mesajı gönder" ile kontrol edin.
+- **Maliyet kontrolü:** varsayılan kapalı ve aylık limit 0 (hiç mesaj gitmez); limit dolunca gönderim durur; sessiz saatler (21:00–09:00); müşteri izni gönderim anında yeniden kontrol edilir; lisans salt-okunurken gönderim yapılmaz.
+- Ayarlar › Mesajlaşma: kanal, zamanlama, limit, SMS birim fiyatı (tahmin için), şifreli saklanan hesap bilgileri, deneme mesajı, giden mesajlar ve aylık özet. "Entegrasyonlar ve Maliyetler" gerçek durumu gösterir.
+
+### Bilinen sınırlar
+- Netgsm desteği yok (API belgesine erişilemedi); Verimor yok (gönderen IP beyaz listesi zorunlu).
+- Teslim raporu alınmıyor: durum "sağlayıcıya iletildi" olarak tutulur.
+
 ## [0.4.0] — 2026-11-12 — Faz 4: bulut kopyası
 
 ### Eklendi

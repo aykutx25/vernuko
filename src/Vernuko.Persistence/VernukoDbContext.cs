@@ -68,6 +68,8 @@ public sealed class VernukoDbContext : DbContext
 
     public DbSet<WaitlistEntry> Waitlist => Set<WaitlistEntry>();
 
+    public DbSet<Messaging.OutboxMessage> Outbox => Set<Messaging.OutboxMessage>();
+
     public DbSet<ConsentTemplate> ConsentTemplates => Set<ConsentTemplate>();
 
     public DbSet<CustomerConsent> CustomerConsents => Set<CustomerConsent>();

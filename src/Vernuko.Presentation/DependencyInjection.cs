@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddTransient<ConsentTemplatesViewModel>();
         services.AddTransient<CustomerRecordsViewModel>();
         services.AddTransient<UpdatesViewModel>();
+        services.AddTransient<MessagingSettingsViewModel>();
         services.AddTransient<PaymentDialogViewModel>();
         services.AddTransient<SellPackageDialogViewModel>();
         return services;
