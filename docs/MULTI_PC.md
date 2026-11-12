@@ -38,6 +38,16 @@ Bağlanan PC (istemci)                              Ana bilgisayar
 5. Masaüstü: ana bilgisayar modu (gömülü Kestrel), istemci modu (başlangıç, kurulum sihirbazı seçeneği), istemciye özel ekran kısıtları, yenileme.
 6. Uçtan uca: başarı senaryosunun istemciden ana bilgisayara karşı çalıştırılması; belgeler.
 
+## İki bilgisayarda deneme (elle, ~10 dakika)
+1. **Ana bilgisayar** (verilerin olduğu bilgisayar): Vernuko'yu açın, yönetici olarak giriş yapın → Ayarlar › Çoklu bilgisayar › **Bu bilgisayar ana bilgisayar olsun**. Windows Güvenlik Duvarı sorarsa **Özel ağlar** için izin verin (Ortak ağlara gerek yok). Ekranda yazan adresi not edin, **Bağlantı kodu göster**'e basın.
+2. **İkinci bilgisayar:** Vernuko'yu kurun ve açın → kurulum sihirbazının ilk ekranında **Ana bilgisayara bağlan…** → adresi (ör. `192.168.1.20` veya bilgisayar adı) ve kodu girin. Vernuko yeniden başlar ve giriş ekranı gelir. Ana bilgisayardaki kullanıcı adı ve parolayla girin.
+3. Kontrol edin:
+   - İkinci bilgisayarda müşteri ekleyin. Ana bilgisayarda Müşteriler'de görünmeli.
+   - Ana bilgisayarda randevu verin. İkinci bilgisayarın takviminde en geç bir dakikada görünmeli.
+   - Aynı saat, oda ve personele iki bilgisayardan randevu vermeyi deneyin. Yalnızca biri kaydedilmeli.
+   - Ana bilgisayarda Ayarlar › Çoklu bilgisayar › ikinci bilgisayarı **Kaldır**. İkinci bilgisayar giriş ekranına dönmeli; girişte "eşleşmemiş" uyarısı çıkmalı.
+4. Sorun çıkarsa: iki bilgisayarın aynı ağda olduğunu, ana bilgisayarda Vernuko'nun açık olduğunu ve 47250 numaralı portun Güvenlik Duvarı'nda yalnızca **Özel** ağ için açık olduğunu kontrol edin (Güvenlik Duvarı'nı kapatmayın). Günlükler: `%LOCALAPPDATA%\Vernuko\Data\logs`.
+
 ## Durum (0.9.0)
 | Adım | Durum |
 |---|---|
