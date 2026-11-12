@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Vernuko.Application.Common;
 using Vernuko.Application.Services;
 using Vernuko.Backups;
@@ -32,12 +33,15 @@ public sealed partial class RootViewModel : ViewModelBase
 
     public ShellViewModel? Shell => Screen as ShellViewModel;
 
+    /// <summary>The latest event-driven screen change (incl. a scheduled backup it started). Never faults.</summary>
+    public Task LastScreenChange { get; private set; } = Task.CompletedTask;
+
     public async Task StartAsync()
     {
         if (!await _setup.IsCompletedAsync())
         {
             var wizard = _services.GetRequiredService<SetupWizardViewModel>();
-            wizard.Completed += async (_, _) => await ShowShellAsync();
+            wizard.Completed += (_, _) => RunSafely(ShowShellAsync);
             Screen = wizard;
             return;
         }
@@ -48,7 +52,7 @@ public sealed partial class RootViewModel : ViewModelBase
     public async Task ShowLoginAsync()
     {
         var login = _services.GetRequiredService<LoginViewModel>();
-        login.LoggedIn += async (_, _) => await ShowShellAsync();
+        login.LoggedIn += (_, _) => RunSafely(ShowShellAsync);
         await login.LoadAsync();
         Screen = login;
     }
@@ -56,7 +60,7 @@ public sealed partial class RootViewModel : ViewModelBase
     public async Task ShowShellAsync()
     {
         var shell = _services.GetRequiredService<ShellViewModel>();
-        shell.LoggedOut += async (_, _) => await ShowLoginAsync();
+        shell.LoggedOut += (_, _) => RunSafely(ShowLoginAsync);
         Screen = shell;
         await shell.InitializeAsync();
         await RunScheduledBackupIfDueAsync();
@@ -76,9 +80,39 @@ public sealed partial class RootViewModel : ViewModelBase
                 }
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (ObjectDisposedException)
         {
+            // The app is shutting down while the backup was running; nothing to report.
+        }
+        catch (Exception ex)
+        {
+            // A background backup must never take the app down. The failure is stored in the backup status
+            // (shown in the status bar) and logged.
+            Logger?.LogError(ex, "Scheduled backup failed");
             ErrorMessage = "Zamanlanmış yedekleme yapılamadı.";
+        }
+    }
+
+    /// <summary>
+    /// Runs screen changes started from events (login, logout, setup finished). Event handlers are async void, so an
+    /// exception would otherwise crash the process — found when the Windows test run disposed the app mid-way.
+    /// </summary>
+    private void RunSafely(Func<Task> work) => LastScreenChange = RunSafelyCoreAsync(work);
+
+    private async Task RunSafelyCoreAsync(Func<Task> work)
+    {
+        try
+        {
+            await work();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Shutting down.
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogError(ex, "Screen change failed");
+            ErrorMessage = "Beklenmeyen bir hata oluştu. Verileriniz korunuyor; programı yeniden başlatmanız gerekebilir.";
         }
     }
 
@@ -98,10 +132,10 @@ public sealed partial class RootViewModel : ViewModelBase
     {
         var vm = _services.GetRequiredService<LockViewModel>();
         vm.Refresh();
-        vm.SwitchUserRequested += async (_, _) =>
+        vm.SwitchUserRequested += (_, _) =>
         {
             LockScreen = null;
-            await ShowLoginAsync();
+            RunSafely(ShowLoginAsync);
         };
         return vm;
     }

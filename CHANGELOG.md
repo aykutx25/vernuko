@@ -2,6 +2,12 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.2.6] — 2026-11-12
+
+### Düzeltildi
+- Arka planda çalışan zamanlanmış yedekleme veya ekran geçişi (giriş, çıkış, kurulum sonrası) beklenmeyen bir hata aldığında süreci düşürebiliyordu. Artık hata günlüğe yazılır ve ekranda bildirilir, program çalışmaya devam eder. Windows'ta yerel kontrolde (`kontrol.cmd`) bulundu: 141 testin hepsi geçti ama bittikten sonra arka planda süren bir yedek işi test sürecini çökertti.
+- Kurulum sihirbazı testi artık arka plandaki ilk yedeğin bitmesini bekliyor (zamanlamaya bağlı kararsızlık giderildi).
+
 ## [0.2.5] — 2026-11-12
 
 ### Düzeltildi

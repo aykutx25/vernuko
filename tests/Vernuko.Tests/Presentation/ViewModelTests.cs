@@ -52,7 +52,7 @@ public class ViewModelTests
         Assert.False(wizard.StartUsingCommand.CanExecute(null));
         wizard.RecoveryKeyWrittenDown = true;
         await wizard.StartUsingCommand.ExecuteAsync(null);
-        await Task.Delay(200);
+        await root.LastScreenChange; // shell + first scheduled backup finish before the app is disposed
 
         var shell = Assert.IsType<ShellViewModel>(root.Screen);
         Assert.Equal("Işıltı Güzellik", shell.BusinessName);
