@@ -180,6 +180,9 @@ public sealed class Appointment : Entity
 
     public Guid? CreatedByUserId { get; private set; }
 
+    /// <summary>Recurring series this appointment belongs to (null for single appointments).</summary>
+    public Guid? SeriesId { get; private set; }
+
     public IReadOnlyCollection<AppointmentBooking> Bookings => _bookings;
 
     public IReadOnlyCollection<AppointmentStatusChange> History => _history;
@@ -198,7 +201,8 @@ public sealed class Appointment : Entity
         string? bodyArea,
         Guid? customerPackageId,
         Guid? userId,
-        DateTime nowUtc)
+        DateTime nowUtc,
+        Guid? seriesId = null)
     {
         if (initialStatus is not (AppointmentStatus.Created or AppointmentStatus.Confirmed or AppointmentStatus.PendingConfirmation))
         {
@@ -223,6 +227,7 @@ public sealed class Appointment : Entity
             BodyArea = string.IsNullOrWhiteSpace(bodyArea) ? null : bodyArea.Trim(),
             CustomerPackageId = customerPackageId,
             CreatedByUserId = userId,
+            SeriesId = seriesId,
         };
         appointment.RebuildBookings(slot);
         appointment._history.Add(new AppointmentStatusChange(appointment.Id, null, initialStatus, Guard.Utc(nowUtc), userId, null));
@@ -328,6 +333,18 @@ public sealed class Appointment : Entity
     }
 
     public void UpdateNotes(string? notes) => Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+
+    /// <summary>
+    /// Releases the calendar resources while several appointments of a series are moved together, so intermediate
+    /// states do not trip the database overlap guard. <see cref="Reschedule"/> re-activates them.
+    /// </summary>
+    public void SuspendBookings()
+    {
+        foreach (var booking in _bookings)
+        {
+            booking.IsActive = false;
+        }
+    }
 
     public void LinkPackage(Guid? customerPackageId) => CustomerPackageId = customerPackageId;
 

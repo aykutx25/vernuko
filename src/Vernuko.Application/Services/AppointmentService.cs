@@ -171,29 +171,207 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
             }
 
             var service = await db.Services.AsNoTracking().FirstAsync(s => s.Id == appt.ServiceId, ct);
-            var current = appt.CurrentSlot();
-            var prepared = await PrepareSlotAsync(db, settings, zone, service, r.StaffMemberId ?? current.StaffMemberId, r.ResourceIds ?? current.ResourceIds,
-                r.NewStartLocal, r.DurationMinutes ?? current.DurationMinutes, appt.Id, ct);
-            if (prepared.IsFailure)
-            {
-                return prepared.Error;
-            }
-
-            var (slot, issues) = prepared.Value;
-            if (issues.Any(i => i.Severity == IssueSeverity.Blocking) || (issues.Count > 0 && !confirmWarnings))
-            {
-                return new BookingOutcome(null, issues);
-            }
-
             var oldStart = TimeZones.ToLocal(appt.StartUtc, zone);
-            var res = appt.Reschedule(slot, UtcNow, UserId);
-            if (res.IsFailure)
+            var shift = r.NewStartLocal - oldStart;
+
+            // The appointment itself plus (optionally) every later open appointment of the same series.
+            var group = new List<Appointment> { appt };
+            if (r.ApplyToFollowing && appt.SeriesId is { } seriesId)
             {
-                return res.Error;
+                var following = await db.Appointments.Include(a => a.Bookings).Include(a => a.History)
+                    .Where(a => a.SeriesId == seriesId && a.Id != appt.Id && a.StartUtc > appt.StartUtc)
+                    .OrderBy(a => a.StartUtc)
+                    .ToListAsync(ct);
+                group.AddRange(following.Where(a => AppointmentStatusRules.CanReschedule(a.Status)));
             }
 
-            await Audit.AppendAsync(db, "appointment.rescheduled", "Appointment", appt.Id, $"Randevu {oldStart:yyyy-MM-dd HH:mm} → {TimeZones.ToLocal(slot.StartUtc, zone):yyyy-MM-dd HH:mm}", ct);
-            return new BookingOutcome(appt.Id, issues);
+            var ignore = group.Select(a => a.Id).ToHashSet();
+            var plan = new List<(Appointment Appointment, AppointmentSlot Slot)>();
+            var allIssues = new List<SchedulingIssue>();
+            foreach (var a in group)
+            {
+                var current = a.CurrentSlot();
+                var newLocal = a == appt ? r.NewStartLocal : TimeZones.ToLocal(a.StartUtc, zone) + shift;
+                var prepared = await PrepareSlotAsync(db, settings, zone, service, r.StaffMemberId ?? current.StaffMemberId, r.ResourceIds ?? current.ResourceIds,
+                    newLocal, r.DurationMinutes ?? current.DurationMinutes, a.Id, ct, ignore);
+                if (prepared.IsFailure)
+                {
+                    return prepared.Error;
+                }
+
+                var (slot, issues) = prepared.Value;
+                var prefix = group.Count > 1 ? $"{newLocal:dd.MM.yyyy HH:mm}: " : string.Empty;
+                allIssues.AddRange(issues.Select(i => i with { Message = prefix + i.Message }));
+                plan.Add((a, slot));
+            }
+
+            if (allIssues.Any(i => i.Severity == IssueSeverity.Blocking) || (allIssues.Count > 0 && !confirmWarnings))
+            {
+                return new BookingOutcome(null, allIssues);
+            }
+
+            if (plan.Count > 1)
+            {
+                foreach (var (a, _) in plan)
+                {
+                    a.SuspendBookings();
+                }
+
+                await db.SaveChangesAsync(ct);
+            }
+
+            foreach (var (a, slot) in plan)
+            {
+                var res = a.Reschedule(slot, UtcNow, UserId);
+                if (res.IsFailure)
+                {
+                    return res.Error;
+                }
+            }
+
+            await Audit.AppendAsync(db, "appointment.rescheduled", "Appointment", appt.Id,
+                $"Randevu {oldStart:yyyy-MM-dd HH:mm} → {r.NewStartLocal:yyyy-MM-dd HH:mm}" + (plan.Count > 1 ? $" (serinin {plan.Count - 1} sonraki randevusu da taşındı)" : string.Empty), ct);
+            return new BookingOutcome(appt.Id, allIssues);
+        }, ct);
+
+    /// <summary>
+    /// Books a recurring series ("her hafta, 8 kez"). Every occurrence is validated like a single booking. Dates that
+    /// cannot be booked are reported; with <paramref name="skipBlocked"/> the remaining ones are booked anyway.
+    /// </summary>
+    public Task<Result<SeriesOutcome>> CreateSeriesAsync(CreateAppointmentRequest r, RecurrencePattern pattern, bool confirmWarnings, bool skipBlocked, CancellationToken ct = default) =>
+        WriteAsync<SeriesOutcome>(Permission.AppointmentsManage, async db =>
+        {
+            var valid = pattern.Validate();
+            if (valid.IsFailure)
+            {
+                return valid.Error;
+            }
+
+            var (settings, zone) = await BusinessContext.LoadAsync(db, ct);
+            var customer = await db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == r.CustomerId, ct);
+            if (customer is null || customer.State != CustomerState.Active)
+            {
+                return Error.Validation("appointment.customer", "Müşteri bulunamadı veya aktif değil.");
+            }
+
+            var service = await db.Services.AsNoTracking().FirstOrDefaultAsync(s => s.Id == r.ServiceId, ct);
+            if (service is null || !service.IsActive)
+            {
+                return Error.Validation("appointment.service", "Hizmet bulunamadı veya pasif.");
+            }
+
+            var seriesIssues = new List<SchedulingIssue>();
+            long price = service.PriceMinor;
+            if (r.CustomerPackageId is { } packageId)
+            {
+                var package = await db.CustomerPackages.AsNoTracking().Include(p => p.Entries).FirstOrDefaultAsync(p => p.Id == packageId, ct);
+                if (package is null || package.CustomerId != r.CustomerId || package.ServiceId != r.ServiceId)
+                {
+                    return Error.Validation("appointment.package", "Seçilen paket bu müşteri ve hizmet için geçerli değil.");
+                }
+
+                var canBook = package.CanBook(UtcNow);
+                if (canBook.IsFailure)
+                {
+                    return canBook.Error;
+                }
+
+                var upcoming = await CountOpenPackageAppointmentsAsync(db, packageId, null, ct);
+                if (upcoming + pattern.Count > package.RemainingSessions)
+                {
+                    seriesIssues.Add(new SchedulingIssue("package.overbooked", $"Paketin kalan {package.RemainingSessions} seansı var; bu seriyle {upcoming + pattern.Count} açık randevu olacak.", IssueSeverity.RequiresConfirmation));
+                }
+
+                price = 0;
+            }
+
+            var problems = new List<(DateTime StartLocal, IReadOnlyList<SchedulingIssue> Issues)>();
+            var plan = new List<(DateTime Local, AppointmentSlot Slot)>();
+            foreach (var local in pattern.Occurrences(r.StartLocal))
+            {
+                var prepared = await PrepareSlotAsync(db, settings, zone, service, r.StaffMemberId, r.ResourceIds, local, r.DurationMinutesOverride, null, ct);
+                if (prepared.IsFailure)
+                {
+                    return prepared.Error;
+                }
+
+                var (slot, issues) = prepared.Value;
+                if (issues.Count > 0)
+                {
+                    problems.Add((local, issues));
+                }
+
+                if (!issues.Any(i => i.Severity == IssueSeverity.Blocking))
+                {
+                    plan.Add((local, slot));
+                }
+            }
+
+            if (seriesIssues.Count > 0)
+            {
+                problems.Insert(0, (r.StartLocal, seriesIssues));
+            }
+
+            var hasBlocking = problems.Any(p => p.Issues.Any(i => i.Severity == IssueSeverity.Blocking));
+            var hasWarnings = problems.Any(p => p.Issues.Any(i => i.Severity == IssueSeverity.RequiresConfirmation));
+            if ((hasBlocking && !skipBlocked) || (hasWarnings && !confirmWarnings))
+            {
+                return new SeriesOutcome(null, [], problems);
+            }
+
+            if (plan.Count == 0)
+            {
+                return Error.Validation("series.empty", "Serideki tarihlerin hiçbirine randevu verilemiyor.");
+            }
+
+            var seriesId = Ids.New();
+            foreach (var (_, slot) in plan)
+            {
+                var created = Appointment.Create(Branch.DefaultId, r.CustomerId, r.ServiceId, slot, price,
+                    settings.AutoConfirmAppointments ? AppointmentStatus.Confirmed : AppointmentStatus.Created,
+                    r.Source, r.Notes, r.BodyArea, r.CustomerPackageId, UserId, UtcNow, seriesId);
+                if (created.IsFailure)
+                {
+                    return created.Error;
+                }
+
+                db.Appointments.Add(created.Value);
+            }
+
+            await Audit.AppendAsync(db, "appointment.series_created", "AppointmentSeries", seriesId,
+                $"Tekrarlayan randevu: müşteri #{customer.Number}, {pattern.Describe()}, {plan.Count} randevu oluşturuldu" + (problems.Count > 0 ? $", {problems.Count} tarihte uyarı/çakışma" : string.Empty), ct);
+            return new SeriesOutcome(seriesId, plan.Select(p => p.Local).ToList(), problems);
+        }, ct);
+
+    /// <summary>Cancels this appointment and every later open appointment of its series.</summary>
+    public Task<Result<int>> CancelSeriesFromAsync(Guid appointmentId, string reason, CancellationToken ct = default) =>
+        WriteAsync<int>(Permission.AppointmentsManage, async db =>
+        {
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                return Error.Validation("appointment.reason", "İptal nedeni zorunludur.");
+            }
+
+            var appt = await db.Appointments.AsNoTracking().FirstOrDefaultAsync(a => a.Id == appointmentId, ct);
+            if (appt?.SeriesId is not { } seriesId)
+            {
+                return Error.Validation("series.none", "Bu randevu bir serinin parçası değil.");
+            }
+
+            var targets = await db.Appointments.Include(a => a.Bookings).Include(a => a.History)
+                .Where(a => a.SeriesId == seriesId && a.StartUtc >= appt.StartUtc)
+                .ToListAsync(ct);
+            var count = 0;
+            foreach (var a in targets.Where(a => AppointmentStatusRules.CanTransition(a.Status, AppointmentStatus.Cancelled)))
+            {
+                if (a.ChangeStatus(AppointmentStatus.Cancelled, UtcNow, UserId, reason).IsSuccess)
+                {
+                    count++;
+                }
+            }
+
+            await Audit.AppendAsync(db, "appointment.series_cancelled", "AppointmentSeries", seriesId, $"Serinin {count} randevusu iptal edildi", ct);
+            return count;
         }, ct);
 
     /// <summary>
@@ -272,6 +450,27 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
             package = await db.CustomerPackages.Include(p => p.Entries).FirstAsync(p => p.Id == pid, ct);
         }
 
+        var account = await ApplyAccountEffectsAsync(db, settings, appt, from, to, reason, package, ct);
+        if (account.IsFailure)
+        {
+            return account;
+        }
+
+        // Staff commission and automatic material consumption follow the same complete / re-open lifecycle.
+        if (to == AppointmentStatus.Completed)
+        {
+            await OperationsPosting.OnAppointmentCompletedAsync(db, appt, package, UserId, UtcNow, ct);
+        }
+        else if (to == AppointmentStatus.InProgress && from == AppointmentStatus.Completed)
+        {
+            await OperationsPosting.OnAppointmentReopenedAsync(db, appt.Id, UserId, UtcNow, reason ?? "Tamamlama geri alındı", ct);
+        }
+
+        return Result.Success();
+    }
+
+    private async Task<Result> ApplyAccountEffectsAsync(VernukoDbContext db, BusinessSettings settings, Appointment appt, AppointmentStatus from, AppointmentStatus to, string? reason, CustomerPackage? package, CancellationToken ct)
+    {
         var now = UtcNow;
         switch (to)
         {
@@ -331,7 +530,7 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
 
     private async Task<Result<(AppointmentSlot Slot, List<SchedulingIssue> Issues)>> PrepareSlotAsync(
         VernukoDbContext db, BusinessSettings settings, TimeZoneInfo zone, ServiceDefinition service, Guid staffId, IReadOnlyList<Guid> resourceIds,
-        DateTime startLocal, int? durationOverride, Guid? ignoreAppointmentId, CancellationToken ct)
+        DateTime startLocal, int? durationOverride, Guid? ignoreAppointmentId, CancellationToken ct, IReadOnlySet<Guid>? alsoIgnore = null)
     {
         var staff = await db.Staff.AsNoTracking().FirstOrDefaultAsync(s => s.Id == staffId, ct);
         if (staff is null || !staff.IsActive)
@@ -356,6 +555,11 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
         }
 
         var ctx = await AppointmentQueries.LoadDayContextAsync(db, settings, zone, DateOnly.FromDateTime(local), staffId, ids, ct);
+        if (alsoIgnore is { Count: > 0 })
+        {
+            ctx = ctx with { Bookings = ctx.Bookings.Where(b => !alsoIgnore.Contains(b.AppointmentId)).ToList() };
+        }
+
         var issues = AvailabilityCalculator.Validate(ctx, slot, ignoreAppointmentId).ToList();
 
         var linked = await db.StaffServices.AsNoTracking().Where(x => x.ServiceId == service.Id).Select(x => x.StaffMemberId).ToListAsync(ct);

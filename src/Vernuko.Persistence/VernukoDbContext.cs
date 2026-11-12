@@ -3,6 +3,7 @@ using Vernuko.Appointments;
 using Vernuko.BusinessProfiles;
 using Vernuko.Core;
 using Vernuko.Customers;
+using Vernuko.Inventory;
 using Vernuko.Packages;
 using Vernuko.Payments;
 using Vernuko.Security;
@@ -54,6 +55,24 @@ public sealed class VernukoDbContext : DbContext
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+
+    public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
+
+    public DbSet<CommissionEntry> CommissionEntries => Set<CommissionEntry>();
+
+    public DbSet<Product> Products => Set<Product>();
+
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+
+    public DbSet<ServiceMaterial> ServiceMaterials => Set<ServiceMaterial>();
+
+    public DbSet<WaitlistEntry> Waitlist => Set<WaitlistEntry>();
+
+    public DbSet<ConsentTemplate> ConsentTemplates => Set<ConsentTemplate>();
+
+    public DbSet<CustomerConsent> CustomerConsents => Set<CustomerConsent>();
+
+    public DbSet<CustomerFile> CustomerFiles => Set<CustomerFile>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {

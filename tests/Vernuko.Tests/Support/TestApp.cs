@@ -34,6 +34,8 @@ public sealed class TestEnvironment(string root) : IAppEnvironment
 
     public string DefaultBackupDirectory => Path.Combine(root, "backups");
 
+    public string AttachmentsDirectory => Path.Combine(root, "attachments");
+
     public string AppVersion => "0.1.0-test";
 
     public bool IsDemo => false;

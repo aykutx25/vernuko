@@ -41,6 +41,11 @@ public static class DependencyInjection
         services.AddSingleton<MessagingService>();
         services.AddSingleton<BackupService>();
         services.AddSingleton<DemoDataSeeder>();
+        services.AddSingleton<CommissionService>();
+        services.AddSingleton<InventoryService>();
+        services.AddSingleton<WaitlistService>();
+        services.AddSingleton<AttachmentKeyStore>();
+        services.AddSingleton<CustomerRecordsService>();
         return services;
     }
 }

@@ -56,8 +56,11 @@ public sealed class BackupService(
     AuditWriter audit,
     TimeProvider time,
     DatabaseInitializer initializer,
+    AttachmentKeyStore attachmentKeys,
     ILogger<BackupService> logger)
 {
+    private const string AttachmentEntryPrefix = "att_";
+
     private static readonly SemaphoreSlim Gate = new(1, 1);
 
     public async Task<BackupStatus> GetStatusAsync(CancellationToken ct = default)
@@ -321,6 +324,9 @@ public sealed class BackupService(
                 return new Error("backup.restore_io", "Veritabanı dosyası değiştirilemedi; mevcut verileriniz geri yüklendi. Uygulamayı yeniden başlatıp tekrar deneyin.");
             }
 
+            // 2b) Attachments: keep the current folder as a safety copy, then put the backed-up files in place.
+            RestoreAttachments(Path.GetDirectoryName(extractedDb)!);
+
             // 3) Bring an older backup up to the current schema (with its own pre-migration snapshot).
             await initializer.InitializeAsync(env.DatabasePath, env.SafetyDirectory, ct);
 
@@ -332,6 +338,7 @@ public sealed class BackupService(
                 if (kek is not null && await SettingsStore.GetAsync(db, SettingKeys.BackupKeyId, ct) == KeyDerivation.KeyId(kek))
                 {
                     await SettingsStore.SetAsync(db, SettingKeys.BackupProtectedKek, Convert.ToBase64String(protector.Protect(kek)), now, ct);
+                    await attachmentKeys.RecoverWithKekAsync(db, kek, now, ct);
                 }
 
                 await audit.AppendAsync(db, "backup.restored", "Backup", verified.BackupId,
@@ -351,6 +358,22 @@ public sealed class BackupService(
         {
             TryDeleteDirectory(work);
             Gate.Release();
+        }
+    }
+
+    private void RestoreAttachments(string extractDirectory)
+    {
+        var restored = Directory.EnumerateFiles(extractDirectory, AttachmentEntryPrefix + "*").ToList();
+        if (Directory.Exists(env.AttachmentsDirectory) && Directory.EnumerateFileSystemEntries(env.AttachmentsDirectory).Any())
+        {
+            var safety = Path.Combine(env.SafetyDirectory, $"prerestore-attachments-{time.GetUtcNow().UtcDateTime:yyyyMMdd-HHmmss}");
+            Directory.Move(env.AttachmentsDirectory, safety);
+        }
+
+        Directory.CreateDirectory(env.AttachmentsDirectory);
+        foreach (var file in restored)
+        {
+            File.Copy(file, Path.Combine(env.AttachmentsDirectory, Path.GetFileName(file)[AttachmentEntryPrefix.Length..]), overwrite: true);
         }
     }
 
@@ -389,8 +412,19 @@ public sealed class BackupService(
 
             var snapshot = Path.Combine(work, BackupArchive.DatabaseEntryName);
             await SqliteSetup.SnapshotAsync(env.DatabasePath, snapshot, ct);
+
+            // Encrypted attachments (photos, consent scans) travel with the database snapshot.
+            var entries = new List<(string EntryName, string SourcePath)> { (BackupArchive.DatabaseEntryName, snapshot) };
+            await using (var db = await factory.CreateDbContextAsync(ct))
+            {
+                var stored = await db.CustomerFiles.AsNoTracking().Where(f => f.DeletedAtUtc == null).Select(f => f.StoredName).ToListAsync(ct);
+                entries.AddRange(stored
+                    .Select(name => (AttachmentEntryPrefix + name, Path.Combine(env.AttachmentsDirectory, name)))
+                    .Where(x => File.Exists(x.Item2)));
+            }
+
             var zip = Path.Combine(work, "inner.zip");
-            await BackupArchive.WriteAsync(zip, new BackupManifestSeed(backupId, now, env.AppVersion, schema, businessName), [(BackupArchive.DatabaseEntryName, snapshot)], ct);
+            await BackupArchive.WriteAsync(zip, new BackupManifestSeed(backupId, now, env.AppVersion, schema, businessName), entries, ct);
 
             var fileName = BackupNaming.FileName(now, trigger, backupId);
             var encrypted = Path.Combine(work, fileName);

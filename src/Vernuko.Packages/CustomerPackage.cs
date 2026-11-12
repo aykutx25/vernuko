@@ -108,7 +108,13 @@ public sealed class CustomerPackage : Entity
 
     public string? Notes { get; private set; }
 
+    /// <summary>Staff member credited with the sale (for sales commission).</summary>
+    public Guid? SoldByStaffId { get; private set; }
+
     public IReadOnlyCollection<SessionLedgerEntry> Entries => _entries;
+
+    /// <summary>Value of one session, used as commission base for package-based appointments.</summary>
+    public long SessionValueMinor => TotalSessions == 0 ? 0 : PriceMinor / TotalSessions;
 
     public int RemainingSessions => TotalSessions + _entries.Sum(e => e.Delta);
 
@@ -125,7 +131,8 @@ public sealed class CustomerPackage : Entity
         int totalSessions,
         long priceMinor,
         int? validityDays,
-        DateTime nowUtc)
+        DateTime nowUtc,
+        Guid? soldByStaffId = null)
     {
         Guard.Utc(nowUtc);
         if (string.IsNullOrWhiteSpace(name))
@@ -144,7 +151,10 @@ public sealed class CustomerPackage : Entity
         }
 
         DateTime? expires = validityDays is { } days ? nowUtc.AddDays(days) : null;
-        return new CustomerPackage(customerId, serviceId, templateId, name.Trim(), string.IsNullOrWhiteSpace(bodyArea) ? null : bodyArea.Trim(), totalSessions, priceMinor, nowUtc, expires);
+        return new CustomerPackage(customerId, serviceId, templateId, name.Trim(), string.IsNullOrWhiteSpace(bodyArea) ? null : bodyArea.Trim(), totalSessions, priceMinor, nowUtc, expires)
+        {
+            SoldByStaffId = soldByStaffId,
+        };
     }
 
     public bool IsExpired(DateTime nowUtc) => ExpiresAtUtc is { } exp && nowUtc >= exp && Status != PackageStatus.Frozen;

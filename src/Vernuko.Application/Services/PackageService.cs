@@ -39,7 +39,12 @@ public sealed class PackageService(AppServiceDeps deps) : AppServiceBase(deps)
                 return Error.Validation("package.payment", "Peşinat, paket fiyatından büyük olamaz.");
             }
 
-            var sold = CustomerPackage.Sell(r.CustomerId, r.ServiceId, r.TemplateId, r.Name, r.BodyArea, r.Sessions, r.PriceMinor, r.ValidityDays, UtcNow);
+            if (r.SoldByStaffId is { } seller && !await db.Staff.AnyAsync(s => s.Id == seller, ct))
+            {
+                return Error.Validation("package.seller", "Satışı yapan personel bulunamadı.");
+            }
+
+            var sold = CustomerPackage.Sell(r.CustomerId, r.ServiceId, r.TemplateId, r.Name, r.BodyArea, r.Sessions, r.PriceMinor, r.ValidityDays, UtcNow, r.SoldByStaffId);
             if (sold.IsFailure)
             {
                 return sold.Error;
@@ -74,6 +79,11 @@ public sealed class PackageService(AppServiceDeps deps) : AppServiceBase(deps)
                 }
 
                 db.Transactions.Add(pay.Value);
+            }
+
+            if (r.SoldByStaffId is { } staffId)
+            {
+                await OperationsPosting.PostSaleCommissionAsync(db, Payments.CommissionBasis.PackageSold, package.Id, staffId, package.ServiceId, package.PriceMinor, 1, $"Paket satışı: {package.Name}", UtcNow, ct);
             }
 
             await Audit.AppendAsync(db, "package.sold", "CustomerPackage", package.Id, $"Müşteri #{customer.Number}: {package.Name}, {package.TotalSessions} seans", ct);
@@ -131,8 +141,26 @@ public sealed class PackageService(AppServiceDeps deps) : AppServiceBase(deps)
     public Task<Result<bool>> ExtendAsync(Guid packageId, int days, CancellationToken ct = default) =>
         Mutate(packageId, "package.extended", p => p.Extend(days), $"Geçerlilik {days} gün uzatıldı", ct);
 
+    /// <summary>Cancels a package; the seller's sales commission is reversed. Refunds are recorded separately in payments.</summary>
     public Task<Result<bool>> CancelAsync(Guid packageId, string reason, CancellationToken ct = default) =>
-        Mutate(packageId, "package.cancelled", p => p.Cancel(reason), "Paket iptal edildi (iade ayrıca ödeme ekranından kaydedilir)", ct);
+        WriteAsync<bool>(Permission.PackagesAdjustSessions, async db =>
+        {
+            var p = await db.CustomerPackages.Include(x => x.Entries).FirstOrDefaultAsync(x => x.Id == packageId, ct);
+            if (p is null)
+            {
+                return Error.NotFound("Paket");
+            }
+
+            var r = p.Cancel(reason);
+            if (r.IsFailure)
+            {
+                return r.Error;
+            }
+
+            await OperationsPosting.ReverseCommissionsAsync(db, p.Id, Payments.CommissionBasis.PackageSold, "Paket iptal edildi", UtcNow, ct);
+            await Audit.AppendAsync(db, "package.cancelled", "CustomerPackage", p.Id, "Paket iptal edildi (iade ayrıca ödeme ekranından kaydedilir)", ct);
+            return true;
+        }, ct);
 
     private Task<Result<bool>> Mutate(Guid packageId, string action, Func<CustomerPackage, Result> change, string summary, CancellationToken ct) =>
         WriteAsync<bool>(Permission.PackagesAdjustSessions, async db =>

@@ -17,7 +17,10 @@ public sealed class AppEnvironment : IAppEnvironment
         Directory.CreateDirectory(SafetyDirectory);
         Directory.CreateDirectory(TempDirectory);
         Directory.CreateDirectory(LogDirectory);
+        Directory.CreateDirectory(AttachmentsDirectory);
     }
+
+    public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
 
     public string DataDirectory { get; }
 

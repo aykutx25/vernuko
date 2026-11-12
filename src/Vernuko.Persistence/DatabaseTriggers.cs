@@ -57,6 +57,39 @@ public static class DatabaseTriggers
         }
     }
 
+    /// <summary>
+    /// Append-only guards for tables added after the initial migration. Each migration passes its own frozen table
+    /// list (never change the list of an already-shipped migration).
+    /// </summary>
+    public static IEnumerable<string> AppendOnlyStatements(params string[] tables)
+    {
+        foreach (var table in tables)
+        {
+            yield return $"""
+                CREATE TRIGGER "trg_{table}_NoUpdate" BEFORE UPDATE ON "{table}"
+                BEGIN
+                    SELECT RAISE(ABORT, '{AppendOnlyError}');
+                END;
+                """;
+            yield return $"""
+                CREATE TRIGGER "trg_{table}_NoDelete" BEFORE DELETE ON "{table}"
+                BEGIN
+                    SELECT RAISE(ABORT, '{AppendOnlyError}');
+                END;
+                """;
+        }
+    }
+
+    public static IEnumerable<string> DropAppendOnlyStatements(params string[] tables)
+    {
+        foreach (var table in tables)
+        {
+            yield return $"DROP TRIGGER IF EXISTS \"trg_{table}_NoUpdate\";";
+            yield return $"DROP TRIGGER IF EXISTS \"trg_{table}_NoDelete\";";
+        }
+    }
+
+    /// <summary>Statements of the initial migration (frozen).</summary>
     public static IEnumerable<string> DropStatements()
     {
         yield return "DROP TRIGGER IF EXISTS \"trg_AppointmentBookings_NoOverlap_Insert\";";

@@ -11,7 +11,7 @@ using Vernuko.Security;
 
 namespace Vernuko.Application.Services;
 
-public sealed class CustomerService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Common.IAppEnvironment env) : AppServiceBase(deps)
 {
     public const int DefaultSearchLimit = 50;
 
@@ -211,6 +211,7 @@ public sealed class CustomerService(AppServiceDeps deps) : AppServiceBase(deps)
                 a.UpdateNotes(null);
             }
 
+            await CustomerRecordsService.DeleteAllForCustomerAsync(db, env, c.Id, now, ct);
             c.Anonymize(now);
             await Audit.AppendAsync(db, "customer.anonymized", "Customer", c.Id, $"Müşteri #{c.Number} anonimleştirildi. Gerekçe kaydedildi.", ct);
             return true;

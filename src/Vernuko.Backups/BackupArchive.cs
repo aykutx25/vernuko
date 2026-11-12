@@ -30,7 +30,7 @@ public static class BackupArchive
             SchemaVersion = seed.SchemaVersion,
             BusinessName = seed.BusinessName,
             Files = entries,
-            AttachmentsIncluded = false,
+            AttachmentsIncluded = files.Any(f => f.EntryName != DatabaseEntryName),
         };
 
         await using var zipStream = new FileStream(zipPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);

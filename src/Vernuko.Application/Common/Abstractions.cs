@@ -23,6 +23,9 @@ public interface IAppEnvironment
 
     string DefaultBackupDirectory { get; }
 
+    /// <summary>Encrypted customer attachments (photos, signed consent scans).</summary>
+    string AttachmentsDirectory { get; }
+
     string AppVersion { get; }
 
     bool IsDemo { get; }

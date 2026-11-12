@@ -53,7 +53,8 @@ internal static class AppointmentQueries
                     a.Status,
                     a.Notes,
                     a.CustomerPackageId,
-                    a.PriceMinor);
+                    a.PriceMinor,
+                    a.SeriesId);
             })
             .ToList();
     }

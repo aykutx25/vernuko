@@ -166,6 +166,7 @@ internal sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appoin
         b.HasIndex(e => new { e.CustomerId, e.StartUtc });
         b.HasIndex(e => new { e.StaffMemberId, e.StartUtc });
         b.HasIndex(e => e.CustomerPackageId);
+        b.HasIndex(e => e.SeriesId);
         b.HasOne<Branch>().WithMany().HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<Customer>().WithMany().HasForeignKey(e => e.CustomerId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<ServiceDefinition>().WithMany().HasForeignKey(e => e.ServiceId).OnDelete(DeleteBehavior.Restrict);

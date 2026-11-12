@@ -101,9 +101,12 @@ public sealed record AppointmentListItem(
     AppointmentStatus Status,
     string? Notes,
     Guid? CustomerPackageId,
-    long PriceMinor)
+    long PriceMinor,
+    Guid? SeriesId = null)
 {
     public string StatusName => AppointmentStatusRules.DisplayName(Status);
+
+    public bool IsInSeries => SeriesId is not null;
 
     public int DurationMinutes => (int)(EndLocal - StartLocal).TotalMinutes;
 
@@ -126,7 +129,37 @@ public sealed record CreateAppointmentRequest(
     Guid? CustomerPackageId,
     AppointmentSource Source = AppointmentSource.FrontDesk);
 
-public sealed record RescheduleRequest(Guid AppointmentId, DateTime NewStartLocal, Guid? StaffMemberId, IReadOnlyList<Guid>? ResourceIds, int? DurationMinutes = null);
+/// <param name="ApplyToFollowing">For recurring series: move all later open appointments of the series by the same local-time shift (and staff/rooms).</param>
+public sealed record RescheduleRequest(Guid AppointmentId, DateTime NewStartLocal, Guid? StaffMemberId, IReadOnlyList<Guid>? ResourceIds, int? DurationMinutes = null, bool ApplyToFollowing = false);
+
+/// <summary>Result of creating a recurring series: which dates were booked, which were skipped and why.</summary>
+public sealed record SeriesOutcome(Guid? SeriesId, IReadOnlyList<DateTime> CreatedLocal, IReadOnlyList<(DateTime StartLocal, IReadOnlyList<SchedulingIssue> Issues)> Problems)
+{
+    public bool Saved => SeriesId is not null;
+
+    public bool NeedsConfirmation => !Saved && Problems.Count > 0;
+}
+
+public sealed record WaitlistItem(
+    Guid Id,
+    Guid CustomerId,
+    string CustomerName,
+    string? CustomerPhone,
+    Guid? ServiceId,
+    string? ServiceName,
+    Guid? StaffMemberId,
+    string? StaffName,
+    DateOnly FromDate,
+    DateOnly ToDate,
+    string? PreferredTime,
+    string? Notes,
+    WaitlistStatus Status,
+    DateTime CreatedAtUtc)
+{
+    public string StatusName => WaitlistEntry.StatusName(Status);
+
+    public string RangeText => FromDate == ToDate ? FromDate.ToString("dd.MM.yyyy", Core.TurkishText.Culture) : $"{FromDate.ToString("dd.MM", Core.TurkishText.Culture)} – {ToDate.ToString("dd.MM.yyyy", Core.TurkishText.Culture)}";
+}
 
 /// <summary>Outcome of a booking attempt: saved, or the issues that block it / need explicit confirmation.</summary>
 public sealed record BookingOutcome(Guid? AppointmentId, IReadOnlyList<SchedulingIssue> Issues)
@@ -150,7 +183,8 @@ public sealed record SellPackageRequest(
     int? ValidityDays,
     long InitialPaymentMinor,
     PaymentMethod? PaymentMethod,
-    string IdempotencyKey);
+    string IdempotencyKey,
+    Guid? SoldByStaffId = null);
 
 public sealed record CustomerPackageDto(
     Guid Id,

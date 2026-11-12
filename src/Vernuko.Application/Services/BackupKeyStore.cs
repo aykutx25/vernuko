@@ -9,7 +9,7 @@ namespace Vernuko.Application.Services;
 /// Stores the backup key-encryption key (derived from the recovery key) protected by the OS secret store.
 /// The recovery key itself is never stored.
 /// </summary>
-public sealed class BackupKeyStore(ISecretProtector protector)
+public sealed class BackupKeyStore(ISecretProtector protector, AttachmentKeyStore attachmentKeys)
 {
     public async Task<string> InitializeAsync(VernukoDbContext db, DateTime nowUtc, CancellationToken ct)
     {
@@ -20,6 +20,7 @@ public sealed class BackupKeyStore(ISecretProtector protector)
         await SettingsStore.SetAsync(db, SettingKeys.BackupProtectedKek, Convert.ToBase64String(protector.Protect(kek)), nowUtc, ct);
         await SettingsStore.SetAsync(db, SettingKeys.BackupKeyId, KeyDerivation.KeyId(kek), nowUtc, ct);
         await SettingsStore.SetAsync(db, SettingKeys.BackupRecoveryKeyConfirmed, "false", nowUtc, ct);
+        await attachmentKeys.RewrapAsync(db, kek, nowUtc, ct);
         CryptographicOperations.ZeroMemory(kek);
         return recovery.ToString();
     }

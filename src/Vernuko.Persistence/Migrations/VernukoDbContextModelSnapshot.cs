@@ -70,6 +70,9 @@ namespace Vernuko.Persistence.Migrations
                     b.Property<int>("RescheduleCount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("SeriesId")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("ServiceId")
                         .HasColumnType("TEXT");
 
@@ -102,6 +105,8 @@ namespace Vernuko.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerPackageId");
+
+                    b.HasIndex("SeriesId");
 
                     b.HasIndex("ServiceId");
 
@@ -397,6 +402,61 @@ namespace Vernuko.Persistence.Migrations
                     b.ToTable("StaffServices", (string)null);
                 });
 
+            modelBuilder.Entity("Vernuko.Appointments.WaitlistEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("BookedAppointmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("FromDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreferredTime")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ServiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("StaffMemberId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ToDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("Status", "FromDate", "ToDate");
+
+                    b.ToTable("Waitlist", (string)null);
+                });
+
             modelBuilder.Entity("Vernuko.BusinessProfiles.Branch", b =>
                 {
                     b.Property<Guid>("Id")
@@ -513,6 +573,42 @@ namespace Vernuko.Persistence.Migrations
                     b.ToTable("BusinessSettings", (string)null);
                 });
 
+            modelBuilder.Entity("Vernuko.Customers.ConsentTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(20000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TextVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConsentTemplates", (string)null);
+                });
+
             modelBuilder.Entity("Vernuko.Customers.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -613,6 +709,254 @@ namespace Vernuko.Persistence.Migrations
                     b.ToTable("Customers", (string)null);
                 });
 
+            modelBuilder.Entity("Vernuko.Customers.CustomerConsent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AcceptedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BodySha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("RecordedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RevokeReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ScanFileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TemplateVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.ToTable("CustomerConsents", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Customers.CustomerFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AppointmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StoredName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UploadedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("StoredName")
+                        .IsUnique();
+
+                    b.ToTable("CustomerFiles", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Inventory.Product", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CostMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MinimumStock")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SalePriceMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Sku")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("Products", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Inventory.ServiceMaterial", b =>
+                {
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ServiceId", "ProductId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ServiceMaterials", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Inventory.StockMovement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AppointmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("QuantityDelta")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ReversesMovementId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("UnitCostMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("ReversesMovementId")
+                        .IsUnique();
+
+                    b.HasIndex("ProductId", "AtUtc");
+
+                    b.ToTable("StockMovements", (string)null);
+                });
+
             modelBuilder.Entity("Vernuko.Packages.CustomerPackage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -650,6 +994,9 @@ namespace Vernuko.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("ServiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SoldByStaffId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
@@ -759,6 +1106,108 @@ namespace Vernuko.Persistence.Migrations
                     b.HasIndex("CustomerPackageId", "AtUtc");
 
                     b.ToTable("SessionLedger", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Payments.CommissionEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("AmountMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("BaseAmountMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Basis")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ReversesEntryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("RuleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("StaffMemberId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("ReversesEntryId")
+                        .IsUnique();
+
+                    b.HasIndex("SourceId");
+
+                    b.HasIndex("StaffMemberId", "OccurredAtUtc");
+
+                    b.ToTable("CommissionEntries", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Payments.CommissionRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Basis")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("FixedMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PercentBasisPoints")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RateKind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("StaffMemberId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Basis", "StaffMemberId", "ItemId");
+
+                    b.ToTable("CommissionRules", (string)null);
                 });
 
             modelBuilder.Entity("Vernuko.Payments.CustomerTransaction", b =>
@@ -1062,6 +1511,63 @@ namespace Vernuko.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("StaffMemberId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Appointments.WaitlistEntry", b =>
+                {
+                    b.HasOne("Vernuko.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Customers.CustomerConsent", b =>
+                {
+                    b.HasOne("Vernuko.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Vernuko.Customers.ConsentTemplate", null)
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Customers.CustomerFile", b =>
+                {
+                    b.HasOne("Vernuko.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Inventory.ServiceMaterial", b =>
+                {
+                    b.HasOne("Vernuko.Inventory.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Vernuko.Appointments.ServiceDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Inventory.StockMovement", b =>
+                {
+                    b.HasOne("Vernuko.Inventory.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
