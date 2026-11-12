@@ -53,10 +53,14 @@ Faz 2 ek testleri: en özel prim kuralı ve geri almada ters prim, satan ≠ uyg
 Ek testler: denetim zinciri kurcalama, iyimser eşzamanlılık, hesap kilidi + oturum kilidi, iptali geri almada çakışma, yeniden planlamada kendi slotu, seans etiketi ("3. Seans"), kurtarma anahtarı doğrulama ve zamanlama, aynı saniyede yedek adı çakışması (bulunup düzeltilen gerçek hata), DB seviyesinde append-only.
 
 ## Sonuçlar (bu sürüm)
-v0.2.0 — Linux (.NET 10.0.15 çalışma zamanı, Release, temiz derleme, 0 uyarı): **136 test — 135 geçti, 1 atlandı (yalnızca Windows), 0 başarısız**, ~7 sn; üç ardışık çalıştırmada aynı sonuç. Windows CI işi (`.github/workflows/ci.yml`) aynı testleri Windows'ta çalıştırır, smoke testi koşar ve deneme kurulum paketi üretir; bu oturumdan CI sonuçlarına erişilemediği için sonuç görülmedi.
+v0.2.2 — Linux (.NET 10.0.15, Release, 0 uyarı): **140 test — 139 geçti, 1 atlandı (yalnızca Windows), 0 başarısız**.
+
+**İlk gerçek Windows çalıştırması (2026-11-12, kullanıcının bilgisayarı, `dotnet run`):** demo girişi, yeni randevu paneli ve açılır kutular elle denendi; `--smoke-test` 11 sayfa ve 20 sekmeyi çizdi, **0 bağlama hatası**, parola kutusu kontrolü başarılı. Bu çalıştırmada üç hata bulundu ve düzeltildi (parola kutusu değeri iletmiyordu, açılır kutular iç veriyi gösteriyordu, kısayollar odak olmadan çalışmıyordu); her biri için regresyon testi/kontrolü eklendi.
+
+v0.2.0 — Linux: 136 test — 135 geçti, 1 atlandı; üç ardışık çalıştırmada aynı sonuç. Windows CI işi (`.github/workflows/ci.yml`) aynı testleri Windows'ta çalıştırır, smoke testi koşar ve deneme kurulum paketi üretir; bu oturumdan CI sonuçlarına erişilemediği için sonuç görülmedi.
 
 ## Test edilmeyen / sınırlar
-- Arayüz Windows'ta elle çalıştırılmadı; smoke test ve CI ile doğrulanacak. (Wine 9 ve Wine 11 .NET 10 uygulamalarını başlatamadı.)
+- Arayüz Windows'ta bir kez smoke test ve kısa elle denemeyle doğrulandı; başarı akışının (kurulum sihirbazı → randevu → tamamla → yedek → geri yükle) Windows'ta elle baştan sona denenmesi hâlâ gerekiyor. Smoke test görsel düzen sorunlarını (taşma, kesilme) yakalamaz; ekran görüntülerine bakılmalı.
 - Kurulum paketi Linux'tan üretildi ama Windows'ta kurulup kaldırılmadı ve gerçek bir güncelleme denenmedi (bkz. RELEASE.md).
 - Performans gerçek ön büro bilgisayarlarında ölçülmedi.
 - Gerçek DPAPI testi (`Dpapi_protects_and_unprotects_for_the_current_user`) yalnızca Windows'ta çalışır; Linux'ta atlanır. Diğer testler hesap anahtarını taklit eden bir koruyucu kullanır (başka bilgisayar senaryosu dahil).

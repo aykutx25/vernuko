@@ -2,14 +2,21 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.2.2] — 2026-11-12 — Windows'ta doğrulama ve düzeltmeler
+
+### Düzeltildi
+- **Açılır kutular seçili değeri "ServiceDto { Id = … }" gibi iç veri olarak gösteriyordu** (hizmet, personel ve diğer tüm seçim kutuları). Tasarım şablonu düzeltildi; aynı hatayı yakalayan statik test eklendi.
+- **Klavye kısayolları (Ctrl+N, Ctrl+L, Ctrl+S, Esc, F5, Alt+←/→, Alt+T) imleç bir alanın içinde değilken çalışmıyordu** (ör. girişten hemen sonra). Kısayollar artık pencere genelinde işler; açık bir diyalog varken yalnızca Esc kabul edilir.
+
+### Doğrulandı
+- Gerçek bir Windows bilgisayarda: giriş, yeni randevu paneli (Ctrl+N), açılır kutular elle denendi; smoke test 11 sayfa + 20 sekme, **0 bağlama hatası**, parola kutusu kontrolü başarılı.
+
 ## [0.2.1] — 2026-11-12 — İlk Windows çalıştırmasından düzeltmeler
 
 ### Düzeltildi
 - **Parola kutuları yazılan parolayı programa iletmiyordu** (giriş, ekran kilidi, kurulum sihirbazı, parola değiştirme). Her giriş boş parola olarak değerlendiriliyor ve hesap 5 denemeden sonra kilitleniyordu. Gerçek bir Windows bilgisayarda ilk çalıştırmada bulundu.
 - Boş kullanıcı adı/parola artık "Kullanıcı adı ve parolayı girin" uyarısı verir ve hesap kilidine sayılmaz.
 - Smoke test, ekranları çizmeden önce parola kutusu bağlamasını iki yönde de denetler.
-- **Açılır kutular seçili değeri "ServiceDto { Id = … }" gibi iç veri olarak gösteriyordu** (hizmet, personel ve diğer tüm seçim kutuları). Tasarım şablonu düzeltildi; aynı hatayı yakalayan statik test eklendi.
-- **Klavye kısayolları (Ctrl+N, Ctrl+L, Ctrl+S, Esc, F5, Alt+←/→, Alt+T) imleç bir alanın içinde değilken çalışmıyordu** (ör. girişten hemen sonra). Kısayollar artık pencere genelinde işler; açık bir diyalog varken yalnızca Esc kabul edilir.
 
 ## [0.2.0] — 2026-11-12 — Faz 2 (Güzellik & Lazer operasyonları) + kurulum paketi (geliştirme sürümü)
 

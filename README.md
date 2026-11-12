@@ -101,7 +101,7 @@ docs/                       mimari, kararlar ve araştırma
 | [CHANGELOG.md](CHANGELOG.md) | Sürüm notları |
 
 ## Bilinen sınırlar
-- **Arayüz ve kurulum paketi Windows'ta çalıştırılarak doğrulanmadı.** Geliştirme ortamı Linux'tu; Wine 9 ve Wine 11 .NET 10'u çalıştıramadığı için ekran görüntüsü alınamadı. Windows CI işi ve `--smoke-test` (her sayfanın her sekmesi) bunu doğrulamak için hazır.
+- **Arayüz Windows'ta smoke test ile doğrulandı** (11 sayfa, 20 sekme, 0 bağlama hatası; ilk çalıştırmada bulunan 3 hata düzeltildi). Başarı akışının elle baştan sona denenmesi ve kurulum paketinin Windows'ta kurulup kaldırılması henüz yapılmadı.
 - Yükleyici imzasız; Windows SmartScreen uyarı verir. Sertifika alınınca imzalanacak (bkz. [docs/RELEASE.md](docs/RELEASE.md)).
 - Yerel veritabanı dosyası şifreli değil (yedekler şifreli). BitLocker önerilir; veritabanı şifreleme P1.
 - Performans hedefleri gerçek cihazlarda ölçülmedi.
