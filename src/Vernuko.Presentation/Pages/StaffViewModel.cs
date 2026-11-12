@@ -34,7 +34,7 @@ public sealed partial class ServiceChoice(ServiceDto service, bool selected) : O
 }
 
 /// <summary>Staff list, personal working hours, services they deliver, leave and business closures.</summary>
-public sealed partial class StaffViewModel(CatalogService catalog, IDialogService dialogs, TimeProvider time) : PageViewModel
+public sealed partial class StaffViewModel(ICatalogService catalog, IDialogService dialogs, TimeProvider time) : PageViewModel
 {
     [ObservableProperty]
     private StaffDto? _selected;

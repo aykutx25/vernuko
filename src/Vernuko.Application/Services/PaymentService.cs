@@ -9,7 +9,7 @@ using Vernuko.Security;
 namespace Vernuko.Application.Services;
 
 /// <summary>Cash desk and customer accounts. Records only — not an invoicing or e-Fatura system.</summary>
-public sealed class PaymentService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class PaymentService(AppServiceDeps deps) : AppServiceBase(deps), IPaymentService
 {
     /// <summary>
     /// Records a payment/refund/discount/charge. Idempotent: the same <see cref="RecordTransactionRequest.IdempotencyKey"/>

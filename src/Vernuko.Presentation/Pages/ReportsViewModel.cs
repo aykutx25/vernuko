@@ -9,7 +9,7 @@ namespace Vernuko.Presentation.Pages;
 
 public sealed record ReportLine(string Name, int Count);
 
-public sealed partial class ReportsViewModel(ReportService reports, CommissionService commissions, TimeProvider time) : PageViewModel, IShellAware
+public sealed partial class ReportsViewModel(IReportService reports, ICommissionService commissions, TimeProvider time) : PageViewModel, IShellAware
 {
     [ObservableProperty]
     private CommissionReport? _commission;

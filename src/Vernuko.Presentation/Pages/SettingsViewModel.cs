@@ -14,13 +14,13 @@ namespace Vernuko.Presentation.Pages;
 public sealed record IntegrationRow(string Name, string Status, string Cost, string Note, bool IsActive);
 
 public sealed partial class SettingsViewModel(
-    SettingsService settings,
-    UserAdminService users,
-    AuthService auth,
-    BackupService backups,
-    LicenseService license,
+    ISettingsService settings,
+    IUserAdminService users,
+    IAuthService auth,
+    IBackupService backups,
+    ILicenseService license,
     LicenseOnlineService licenseOnline,
-    AuditService audit,
+    IAuditService audit,
     IDeviceIdentity device,
     IDialogService dialogs,
     IPlatformServices platform,

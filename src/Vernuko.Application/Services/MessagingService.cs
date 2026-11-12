@@ -12,7 +12,7 @@ public sealed record ManualMessage(Uri WhatsAppLink, string Text);
 /// Phase 1 messaging = manual WhatsApp click-to-chat only (free; the user sends it). Automatic SMS/WhatsApp
 /// adapters are Phase 5 and are not implemented — nothing here sends a message on its own.
 /// </summary>
-public sealed class MessagingService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class MessagingService(AppServiceDeps deps) : AppServiceBase(deps), IMessagingService
 {
     public Task<Result<ManualMessage>> PrepareWhatsAppAsync(Guid appointmentId, MessagePurpose purpose, CancellationToken ct = default) =>
         WriteAlwaysAsync<ManualMessage>(Permission.MessagingSend, async db =>

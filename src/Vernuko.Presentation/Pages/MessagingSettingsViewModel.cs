@@ -13,7 +13,7 @@ namespace Vernuko.Presentation.Pages;
 /// Ayarlar › Mesajlaşma: automatic appointment reminders through the business's own SMS (İleti Merkezi) or
 /// WhatsApp Cloud API account. Everything is off and the monthly limit is 0 until the business changes it.
 /// </summary>
-public sealed partial class MessagingSettingsViewModel(AutoMessagingService messaging) : ViewModelBase
+public sealed partial class MessagingSettingsViewModel(IAutoMessagingService messaging) : ViewModelBase
 {
     [ObservableProperty]
     private bool _remindersEnabled;

@@ -97,10 +97,10 @@ public sealed partial class EditableResource : ObservableObject
 public sealed partial class SetupWizardViewModel : ViewModelBase
 {
     private readonly SetupService _setup;
-    private readonly AuthService _auth;
+    private readonly IAuthService _auth;
     private readonly IDialogService _dialogs;
     private readonly IPlatformServices _platform;
-    private readonly BackupService _backups;
+    private readonly IBackupService _backups;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StepIndex), nameof(StepTitle), nameof(CanGoBack), nameof(CanSkip), nameof(IsLastInputStep), nameof(Progress))]
@@ -161,7 +161,7 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isCompleted;
 
-    public SetupWizardViewModel(SetupService setup, AuthService auth, IDialogService dialogs, IPlatformServices platform, IAppEnvironment env, BackupService backups)
+    public SetupWizardViewModel(SetupService setup, IAuthService auth, IDialogService dialogs, IPlatformServices platform, IAppEnvironment env, IBackupService backups)
     {
         _backups = backups;
         _setup = setup;

@@ -14,7 +14,7 @@ public sealed partial class RootViewModel : ViewModelBase
     private readonly IServiceProvider _services;
     private readonly SetupService _setup;
     private readonly UserSession _session;
-    private readonly BackupService _backups;
+    private readonly IBackupService _backups;
 
     [ObservableProperty]
     private ViewModelBase? _screen;
@@ -22,7 +22,7 @@ public sealed partial class RootViewModel : ViewModelBase
     [ObservableProperty]
     private LockViewModel? _lockScreen;
 
-    public RootViewModel(IServiceProvider services, SetupService setup, UserSession session, BackupService backups)
+    public RootViewModel(IServiceProvider services, SetupService setup, UserSession session, IBackupService backups)
     {
         _services = services;
         _setup = setup;
@@ -75,7 +75,7 @@ public sealed partial class RootViewModel : ViewModelBase
     {
         try
         {
-            var messaging = _services.GetRequiredService<AutoMessagingService>();
+            var messaging = _services.GetRequiredService<IAutoMessagingService>();
             await messaging.PlanRemindersAsync();
             await messaging.DispatchDueAsync();
         }

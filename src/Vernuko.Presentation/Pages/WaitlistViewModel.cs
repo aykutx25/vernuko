@@ -9,7 +9,7 @@ using Vernuko.Presentation.Common;
 namespace Vernuko.Presentation.Pages;
 
 /// <summary>Bekleme listesi: customers who want an earlier/free slot.</summary>
-public sealed partial class WaitlistViewModel(WaitlistService waitlist, CustomerService customers, CatalogService catalog, IDialogService dialogs, TimeProvider time) : PageViewModel, IShellAware
+public sealed partial class WaitlistViewModel(IWaitlistService waitlist, ICustomerService customers, ICatalogService catalog, IDialogService dialogs, TimeProvider time) : PageViewModel, IShellAware
 {
     private readonly Debouncer _debounce = new(TimeSpan.FromMilliseconds(250));
 

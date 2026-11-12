@@ -37,9 +37,9 @@ public static class EndToEndScenario
 
     private static async Task RunCoreAsync(ShellViewModel shell, IServiceProvider services, string backupFolder, Func<string, Task> snapshot, List<ScenarioStep> steps)
     {
-        var customersService = services.GetRequiredService<CustomerService>();
-        var packages = services.GetRequiredService<PackageService>();
-        var backups = services.GetRequiredService<BackupService>();
+        var customersService = services.GetRequiredService<ICustomerService>();
+        var packages = services.GetRequiredService<IPackageService>();
+        var backups = services.GetRequiredService<IBackupService>();
         var time = services.GetRequiredService<TimeProvider>();
 
         void Ok(string name, string detail) => steps.Add(new ScenarioStep(name, true, detail));

@@ -35,10 +35,10 @@ public sealed partial class ShellViewModel : ViewModelBase
 {
     private readonly IServiceProvider _services;
     private readonly UserSession _session;
-    private readonly SettingsService _settings;
-    private readonly LicenseService _license;
-    private readonly BackupService _backups;
-    private readonly AuthService _auth;
+    private readonly ISettingsService _settings;
+    private readonly ILicenseService _license;
+    private readonly IBackupService _backups;
+    private readonly IAuthService _auth;
     private readonly TimeProvider _time;
     private readonly IAppEnvironment _env;
     private readonly Dictionary<Type, PageViewModel> _pages = [];
@@ -79,7 +79,7 @@ public sealed partial class ShellViewModel : ViewModelBase
     [ObservableProperty]
     private BusinessInfo? _business;
 
-    public ShellViewModel(IServiceProvider services, UserSession session, SettingsService settings, LicenseService license, BackupService backups, AuthService auth, TimeProvider time, IAppEnvironment env)
+    public ShellViewModel(IServiceProvider services, UserSession session, ISettingsService settings, ILicenseService license, IBackupService backups, IAuthService auth, TimeProvider time, IAppEnvironment env)
     {
         _env = env;
         _services = services;

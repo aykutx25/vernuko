@@ -6,7 +6,7 @@ using Vernuko.Presentation.Common;
 
 namespace Vernuko.Presentation;
 
-public sealed partial class LoginViewModel(AuthService auth, SettingsService settings, IAppEnvironment env) : ViewModelBase
+public sealed partial class LoginViewModel(IAuthService auth, ISettingsService settings, IAppEnvironment env) : ViewModelBase
 {
     [ObservableProperty]
     private string _username = string.Empty;
@@ -44,7 +44,7 @@ public sealed partial class LoginViewModel(AuthService auth, SettingsService set
     });
 }
 
-public sealed partial class LockViewModel(AuthService auth, UserSession session) : ViewModelBase
+public sealed partial class LockViewModel(IAuthService auth, UserSession session) : ViewModelBase
 {
     [ObservableProperty]
     private string _password = string.Empty;

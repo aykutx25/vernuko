@@ -9,7 +9,7 @@ using Vernuko.Reporting;
 
 namespace Vernuko.Presentation.Pages;
 
-public sealed partial class HomeViewModel(AppointmentService appointments, BackupService backups, UserSession session, TimeProvider time) : PageViewModel, IShellAware
+public sealed partial class HomeViewModel(IAppointmentService appointments, IBackupService backups, UserSession session, TimeProvider time) : PageViewModel, IShellAware
 {
     [ObservableProperty]
     private DailySummary _today = DailySummary.From([]);

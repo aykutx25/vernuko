@@ -9,7 +9,7 @@ using Vernuko.Security;
 
 namespace Vernuko.Application.Services;
 
-public sealed class ReportService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class ReportService(AppServiceDeps deps) : AppServiceBase(deps), IReportService
 {
     public Task<Result<DailySummary>> GetDailySummaryAsync(DateOnly day, CancellationToken ct = default) =>
         ReadAsync<DailySummary>(Permission.AppointmentsView, async db =>
@@ -57,7 +57,7 @@ public sealed record AuditEntryDto(long Sequence, DateTime OccurredAtUtc, string
 
 public sealed record AuditVerification(bool IsIntact, long CheckedEntries, long? FirstBrokenSequence);
 
-public sealed class AuditService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class AuditService(AppServiceDeps deps) : AppServiceBase(deps), IAuditService
 {
     public Task<Result<IReadOnlyList<AuditEntryDto>>> GetRecentAsync(int take, CancellationToken ct = default) =>
         ReadAsync<IReadOnlyList<AuditEntryDto>>(Permission.AuditLogView, async db =>

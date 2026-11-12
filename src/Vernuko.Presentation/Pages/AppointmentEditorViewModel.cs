@@ -37,11 +37,11 @@ public sealed record SlotChoice(TimeOnly Time, IReadOnlyList<Guid>? ResourceIds 
 /// </summary>
 public sealed partial class AppointmentEditorViewModel : ViewModelBase
 {
-    private readonly AppointmentService _appointments;
-    private readonly CustomerService _customers;
-    private readonly CatalogService _catalog;
-    private readonly PackageService _packages;
-    private readonly SettingsService _settings;
+    private readonly IAppointmentService _appointments;
+    private readonly ICustomerService _customers;
+    private readonly ICatalogService _catalog;
+    private readonly IPackageService _packages;
+    private readonly ISettingsService _settings;
     private readonly IDialogService _dialogs;
     private readonly Debouncer _searchDebounce = new(TimeSpan.FromMilliseconds(250));
     private Guid? _rescheduleId;
@@ -120,7 +120,7 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
     [ObservableProperty]
     private bool _showRecurrence;
 
-    public AppointmentEditorViewModel(AppointmentService appointments, CustomerService customers, CatalogService catalog, PackageService packages, SettingsService settings, IDialogService dialogs)
+    public AppointmentEditorViewModel(IAppointmentService appointments, ICustomerService customers, ICatalogService catalog, IPackageService packages, ISettingsService settings, IDialogService dialogs)
     {
         _appointments = appointments;
         _customers = customers;

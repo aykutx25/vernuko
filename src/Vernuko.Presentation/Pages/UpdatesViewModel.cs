@@ -10,7 +10,7 @@ namespace Vernuko.Presentation.Pages;
 /// Ayarlar › Güncellemeler. Before an update is applied an encrypted backup is taken automatically; the new version
 /// migrates the database with its own safety copy. Nothing is downloaded without the user's click.
 /// </summary>
-public sealed partial class UpdatesViewModel(IUpdateService updates, BackupService backups, IDialogService dialogs) : ViewModelBase
+public sealed partial class UpdatesViewModel(IUpdateService updates, IBackupService backups, IDialogService dialogs) : ViewModelBase
 {
     [ObservableProperty]
     private string _statusText = string.Empty;

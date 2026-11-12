@@ -11,7 +11,7 @@ using Vernuko.Security;
 namespace Vernuko.Application.Services;
 
 /// <summary>Products, stock levels (always derived from the append-only movement ledger), service materials and product sales.</summary>
-public sealed class InventoryService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class InventoryService(AppServiceDeps deps) : AppServiceBase(deps), IInventoryService
 {
     public Task<Result<IReadOnlyList<ProductDto>>> GetProductsAsync(bool includeInactive = false, CancellationToken ct = default) =>
         ReadAsync<IReadOnlyList<ProductDto>>(Permission.InventoryView, async db => Result.Success(await LoadProductsAsync(db, includeInactive, ct)), ct);

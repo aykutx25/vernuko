@@ -11,7 +11,7 @@ using Vernuko.Security;
 
 namespace Vernuko.Application.Services;
 
-public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Common.IAppEnvironment env) : AppServiceBase(deps)
+public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Common.IAppEnvironment env) : AppServiceBase(deps), ICustomerService
 {
     public const int DefaultSearchLimit = 50;
 

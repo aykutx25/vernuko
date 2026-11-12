@@ -24,7 +24,7 @@ public sealed class LicensingOptions
 /// Evaluates the license locally (no network needed). Expiry switches the app to read-only mode;
 /// it never deletes or locks customer data.
 /// </summary>
-public sealed class LicenseService(IDbContextFactory<VernukoDbContext> factory, TimeProvider time, IDeviceIdentity device, LicensingOptions options, UserSession session, AuditWriter audit) : ILicenseGate
+public sealed class LicenseService(IDbContextFactory<VernukoDbContext> factory, TimeProvider time, IDeviceIdentity device, LicensingOptions options, UserSession session, AuditWriter audit) : ILicenseGate, ILicenseService
 {
     private readonly LicenseVerifier _verifier = new(options.PublicKeys);
 

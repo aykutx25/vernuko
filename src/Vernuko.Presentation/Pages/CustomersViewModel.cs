@@ -13,9 +13,9 @@ namespace Vernuko.Presentation.Pages;
 
 public sealed partial class CustomersViewModel : PageViewModel, IShellAware
 {
-    private readonly CustomerService _customers;
-    private readonly PackageService _packages;
-    private readonly PaymentService _payments;
+    private readonly ICustomerService _customers;
+    private readonly IPackageService _packages;
+    private readonly IPaymentService _payments;
     private readonly IServiceProvider _services;
     private readonly IDialogService _dialogs;
     private readonly IPlatformServices _platform;
@@ -88,7 +88,7 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
     [ObservableProperty]
     private string _balanceText = string.Empty;
 
-    public CustomersViewModel(CustomerService customers, PackageService packages, PaymentService payments, IServiceProvider services, IDialogService dialogs, IPlatformServices platform, CustomerRecordsViewModel records)
+    public CustomersViewModel(ICustomerService customers, IPackageService packages, IPaymentService payments, IServiceProvider services, IDialogService dialogs, IPlatformServices platform, CustomerRecordsViewModel records)
     {
         Records = records;
         _customers = customers;

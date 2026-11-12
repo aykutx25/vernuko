@@ -98,10 +98,10 @@ public partial class App : System.Windows.Application
                 logger.LogError("Demo seeding failed: {Code}", seeded.Error.Code);
             }
 
-            _services.GetRequiredService<AuthService>().Logout();
+            _services.GetRequiredService<IAuthService>().Logout();
         }
 
-        await _services.GetRequiredService<LicenseService>().RefreshAsync();
+        await _services.GetRequiredService<ILicenseService>().RefreshAsync();
 
         if (smoke)
         {

@@ -11,7 +11,7 @@ using Vernuko.Security;
 
 namespace Vernuko.Application.Services;
 
-public sealed class PackageService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class PackageService(AppServiceDeps deps) : AppServiceBase(deps), IPackageService
 {
     /// <summary>Sells a package: creates the package, the receivable (charge) and an optional initial payment atomically.</summary>
     public Task<Result<Guid>> SellAsync(SellPackageRequest r, CancellationToken ct = default) =>

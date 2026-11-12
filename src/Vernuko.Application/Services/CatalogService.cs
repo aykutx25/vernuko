@@ -9,7 +9,7 @@ using Vernuko.Security;
 namespace Vernuko.Application.Services;
 
 /// <summary>Services, staff, rooms/devices, leave/closures and package templates.</summary>
-public sealed class CatalogService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class CatalogService(AppServiceDeps deps) : AppServiceBase(deps), ICatalogService
 {
     public Task<Result<IReadOnlyList<ServiceDto>>> GetServicesAsync(bool includeInactive = false, CancellationToken ct = default) =>
         ReadAsync<IReadOnlyList<ServiceDto>>(Permission.AppointmentsView, async db =>

@@ -13,7 +13,7 @@ namespace Vernuko.Application.Services;
 /// may be special-category data (health/aesthetics): viewing requires a dedicated permission and is audited.
 /// The legal basis and consent wording must be prepared by the business with its legal adviser.
 /// </summary>
-public sealed class CustomerRecordsService(AppServiceDeps deps, AttachmentKeyStore keys, IAppEnvironment env) : AppServiceBase(deps)
+public sealed class CustomerRecordsService(AppServiceDeps deps, AttachmentKeyStore keys, IAppEnvironment env) : AppServiceBase(deps), ICustomerRecordsService
 {
     // ----- Consent templates -----
     public Task<Result<IReadOnlyList<ConsentTemplateDto>>> GetTemplatesAsync(bool includeInactive = false, CancellationToken ct = default) =>

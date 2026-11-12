@@ -10,7 +10,7 @@ using Vernuko.Presentation.Common;
 namespace Vernuko.Presentation.Pages;
 
 /// <summary>Ayarlar › Prim kuralları. The most specific rule wins (personel + hizmet &gt; personel &gt; hizmet &gt; genel).</summary>
-public sealed partial class CommissionRulesViewModel(CommissionService commissions, CatalogService catalog, InventoryService inventory) : ViewModelBase
+public sealed partial class CommissionRulesViewModel(ICommissionService commissions, ICatalogService catalog, IInventoryService inventory) : ViewModelBase
 {
     private IReadOnlyList<ServiceDto> _services = [];
     private IReadOnlyList<ProductDto> _products = [];
@@ -155,7 +155,7 @@ public sealed partial class CommissionRulesViewModel(CommissionService commissio
 }
 
 /// <summary>Ayarlar › Onam formları. Text is versioned: every recorded consent refers to the exact wording.</summary>
-public sealed partial class ConsentTemplatesViewModel(CustomerRecordsService records) : ViewModelBase
+public sealed partial class ConsentTemplatesViewModel(ICustomerRecordsService records) : ViewModelBase
 {
     [ObservableProperty]
     private ConsentTemplateDto? _selected;

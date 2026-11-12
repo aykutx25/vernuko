@@ -12,7 +12,7 @@ using Vernuko.Security;
 namespace Vernuko.Presentation.Pages;
 
 /// <summary>Services, rooms/devices and package definitions.</summary>
-public sealed partial class CatalogViewModel(CatalogService catalog, SettingsService settings) : PageViewModel, IShellAware
+public sealed partial class CatalogViewModel(ICatalogService catalog, ISettingsService settings) : PageViewModel, IShellAware
 {
     [ObservableProperty]
     private ServiceDto? _selectedService;

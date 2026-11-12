@@ -7,7 +7,7 @@ using Vernuko.Security;
 namespace Vernuko.Application.Services;
 
 /// <summary>Staff commission rules and reports (prim). Rules are settings; reports are financial.</summary>
-public sealed class CommissionService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class CommissionService(AppServiceDeps deps) : AppServiceBase(deps), ICommissionService
 {
     public Task<Result<IReadOnlyList<CommissionRuleDto>>> GetRulesAsync(CancellationToken ct = default) =>
         ReadAsync<IReadOnlyList<CommissionRuleDto>>(Permission.SettingsManage, async db =>

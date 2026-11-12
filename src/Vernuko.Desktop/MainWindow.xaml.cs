@@ -51,7 +51,7 @@ public partial class MainWindow : Window
 
         if (_session.IsAuthenticated && !_session.IsLocked && _idle.ShouldLock())
         {
-            App.Services.GetRequiredService<AuthService>().Lock();
+            App.Services.GetRequiredService<IAuthService>().Lock();
         }
 
         // Every 5 minutes: automatic reminders (off unless the business enabled them and set a limit).

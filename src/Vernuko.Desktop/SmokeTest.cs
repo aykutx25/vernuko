@@ -111,7 +111,7 @@ internal static class SmokeTest
             await root.StartAsync();
             await RenderAsync(root, 1366, 768, Path.Combine(outputDirectory, "login.png"));
 
-            var auth = services.GetRequiredService<AuthService>();
+            var auth = services.GetRequiredService<IAuthService>();
             var login = await auth.LoginAsync(DemoDataSeeder.DemoUsername, DemoDataSeeder.DemoPassword);
             if (login.IsFailure)
             {

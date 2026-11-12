@@ -13,7 +13,7 @@ using Vernuko.Security;
 namespace Vernuko.Application.Services;
 
 /// <summary>The shared appointment engine used by every business profile.</summary>
-public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(deps), IAppointmentService
 {
     public Task<Result<DayAgenda>> GetDayAsync(DateOnly day, AppointmentFilter filter, CancellationToken ct = default) =>
         ReadAsync<DayAgenda>(Permission.AppointmentsView, async db =>

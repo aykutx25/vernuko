@@ -50,6 +50,26 @@ public static class DependencyInjection
         services.AddSingleton<WaitlistService>();
         services.AddSingleton<AttachmentKeyStore>();
         services.AddSingleton<CustomerRecordsService>();
+
+        // Screens depend on these contracts: the real services here, remote proxies on a connected computer.
+        services.TryAddSingleton<IAuthService>(sp => sp.GetRequiredService<AuthService>());
+        services.TryAddSingleton<IUserAdminService>(sp => sp.GetRequiredService<UserAdminService>());
+        services.TryAddSingleton<ICustomerService>(sp => sp.GetRequiredService<CustomerService>());
+        services.TryAddSingleton<ICatalogService>(sp => sp.GetRequiredService<CatalogService>());
+        services.TryAddSingleton<IAppointmentService>(sp => sp.GetRequiredService<AppointmentService>());
+        services.TryAddSingleton<IPackageService>(sp => sp.GetRequiredService<PackageService>());
+        services.TryAddSingleton<IPaymentService>(sp => sp.GetRequiredService<PaymentService>());
+        services.TryAddSingleton<IReportService>(sp => sp.GetRequiredService<ReportService>());
+        services.TryAddSingleton<IAuditService>(sp => sp.GetRequiredService<AuditService>());
+        services.TryAddSingleton<ISettingsService>(sp => sp.GetRequiredService<SettingsService>());
+        services.TryAddSingleton<IMessagingService>(sp => sp.GetRequiredService<MessagingService>());
+        services.TryAddSingleton<ICommissionService>(sp => sp.GetRequiredService<CommissionService>());
+        services.TryAddSingleton<IInventoryService>(sp => sp.GetRequiredService<InventoryService>());
+        services.TryAddSingleton<IWaitlistService>(sp => sp.GetRequiredService<WaitlistService>());
+        services.TryAddSingleton<ICustomerRecordsService>(sp => sp.GetRequiredService<CustomerRecordsService>());
+        services.TryAddSingleton<IAutoMessagingService>(sp => sp.GetRequiredService<AutoMessagingService>());
+        services.TryAddSingleton<IBackupService>(sp => sp.GetRequiredService<BackupService>());
+        services.TryAddSingleton<ILicenseService>(sp => sp.GetRequiredService<LicenseService>());
         return services;
     }
 }

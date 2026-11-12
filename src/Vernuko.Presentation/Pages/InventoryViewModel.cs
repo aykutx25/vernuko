@@ -22,7 +22,7 @@ public sealed partial class MaterialRow : ObservableObject
 }
 
 /// <summary>Stok: products, stock in/out, automatic service materials and product sales.</summary>
-public sealed partial class InventoryViewModel(InventoryService inventory, CatalogService catalog, CustomerService customers, IDialogService dialogs) : PageViewModel, IShellAware
+public sealed partial class InventoryViewModel(IInventoryService inventory, ICatalogService catalog, ICustomerService customers, IDialogService dialogs) : PageViewModel, IShellAware
 {
     private readonly Debouncer _debounce = new(TimeSpan.FromMilliseconds(250));
     private string _saleKey = Guid.NewGuid().ToString("N");

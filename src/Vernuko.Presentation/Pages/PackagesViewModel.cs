@@ -11,7 +11,7 @@ using Vernuko.Security;
 
 namespace Vernuko.Presentation.Pages;
 
-public sealed partial class PackagesViewModel(PackageService packages, IServiceProvider services, IDialogService dialogs) : PageViewModel, IShellAware
+public sealed partial class PackagesViewModel(IPackageService packages, IServiceProvider services, IDialogService dialogs) : PageViewModel, IShellAware
 {
     private readonly Debouncer _debounce = new(TimeSpan.FromMilliseconds(250));
 

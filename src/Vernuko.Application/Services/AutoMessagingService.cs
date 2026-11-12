@@ -102,7 +102,7 @@ public sealed class AutoMessagingService(
     ISecretProtector protector,
     IMessageTransportFactory transports,
     ILicenseGate license,
-    ILogger<AutoMessagingService> logger) : AppServiceBase(deps)
+    ILogger<AutoMessagingService> logger) : AppServiceBase(deps), IAutoMessagingService
 {
     private static readonly SemaphoreSlim Gate = new(1, 1);
 

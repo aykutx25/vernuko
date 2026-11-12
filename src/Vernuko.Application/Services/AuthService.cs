@@ -6,7 +6,7 @@ using Vernuko.Security;
 
 namespace Vernuko.Application.Services;
 
-public sealed class AuthService(IDbContextFactory<VernukoDbContext> factory, PasswordHasher hasher, TimeProvider time, UserSession session, AuditWriter audit)
+public sealed class AuthService(IDbContextFactory<VernukoDbContext> factory, PasswordHasher hasher, TimeProvider time, UserSession session, AuditWriter audit) : IAuthService
 {
     public async Task<Result> LoginAsync(string username, string password, CancellationToken ct = default)
     {
@@ -122,7 +122,7 @@ public sealed class AuthService(IDbContextFactory<VernukoDbContext> factory, Pas
     }
 }
 
-public sealed class UserAdminService(AppServiceDeps deps, PasswordHasher hasher) : AppServiceBase(deps)
+public sealed class UserAdminService(AppServiceDeps deps, PasswordHasher hasher) : AppServiceBase(deps), IUserAdminService
 {
     public Task<Result<IReadOnlyList<UserSummary>>> ListAsync(CancellationToken ct = default) =>
         ReadAsync<IReadOnlyList<UserSummary>>(Permission.UsersManage, async db =>

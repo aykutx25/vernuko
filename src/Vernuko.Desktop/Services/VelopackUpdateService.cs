@@ -21,7 +21,7 @@ internal sealed class VelopackUpdateService : IUpdateService
     private UpdateInfo? _found;
     private bool _downloaded;
 
-    public VelopackUpdateService(ILogger<VelopackUpdateService> logger, LicenseService license, IDeviceIdentity device)
+    public VelopackUpdateService(ILogger<VelopackUpdateService> logger, ILicenseService license, IDeviceIdentity device)
     {
         _logger = logger;
         var url = typeof(VelopackUpdateService).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
@@ -120,7 +120,7 @@ internal sealed class VelopackUpdateService : IUpdateService
 }
 
 /// <summary>Adds the activation headers the license server's update feed requires.</summary>
-internal sealed class LicensedDownloader(LicenseService license, IDeviceIdentity device) : IFileDownloader
+internal sealed class LicensedDownloader(ILicenseService license, IDeviceIdentity device) : IFileDownloader
 {
     private readonly HttpClientFileDownloader _inner = new();
 

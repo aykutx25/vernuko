@@ -118,10 +118,10 @@ public sealed class MonthCell(DateOnly date, bool inMonth, bool isToday, int cou
 /// <summary>The main working screen of the front desk.</summary>
 public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
 {
-    private readonly AppointmentService _appointments;
-    private readonly WaitlistService _waitlist;
-    private readonly CatalogService _catalog;
-    private readonly MessagingService _messaging;
+    private readonly IAppointmentService _appointments;
+    private readonly IWaitlistService _waitlist;
+    private readonly ICatalogService _catalog;
+    private readonly IMessagingService _messaging;
     private readonly IServiceProvider _services;
     private readonly IDialogService _dialogs;
     private readonly IPlatformServices _platform;
@@ -160,7 +160,7 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
     [ObservableProperty]
     private bool _isClosedDay;
 
-    public AppointmentsViewModel(AppointmentService appointments, WaitlistService waitlist, CatalogService catalog, MessagingService messaging, IServiceProvider services, IDialogService dialogs, IPlatformServices platform, TimeProvider time)
+    public AppointmentsViewModel(IAppointmentService appointments, IWaitlistService waitlist, ICatalogService catalog, IMessagingService messaging, IServiceProvider services, IDialogService dialogs, IPlatformServices platform, TimeProvider time)
     {
         _appointments = appointments;
         _waitlist = waitlist;

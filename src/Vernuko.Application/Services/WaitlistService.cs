@@ -8,7 +8,7 @@ using Vernuko.Security;
 namespace Vernuko.Application.Services;
 
 /// <summary>Bekleme listesi: customers waiting for a slot; matching entries are suggested when an appointment is cancelled.</summary>
-public sealed class WaitlistService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class WaitlistService(AppServiceDeps deps) : AppServiceBase(deps), IWaitlistService
 {
     public Task<Result<IReadOnlyList<WaitlistItem>>> ListAsync(bool includeClosed = false, CancellationToken ct = default) =>
         ReadAsync<IReadOnlyList<WaitlistItem>>(Permission.AppointmentsView, async db =>

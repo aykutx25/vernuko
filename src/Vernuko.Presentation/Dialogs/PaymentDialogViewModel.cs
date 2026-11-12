@@ -9,7 +9,7 @@ using Vernuko.Presentation.Common;
 namespace Vernuko.Presentation.Dialogs;
 
 /// <summary>"Ödeme Al" overlay. One idempotency key per dialog instance: double clicks never double-record.</summary>
-public sealed partial class PaymentDialogViewModel(PaymentService payments) : ViewModelBase
+public sealed partial class PaymentDialogViewModel(IPaymentService payments) : ViewModelBase
 {
     private readonly string _idempotencyKey = Guid.NewGuid().ToString("N");
     private Guid _customerId;
@@ -83,7 +83,7 @@ public sealed partial class PaymentDialogViewModel(PaymentService payments) : Vi
 }
 
 /// <summary>"Paket Satışı" overlay.</summary>
-public sealed partial class SellPackageDialogViewModel(PackageService packages, CatalogService catalog, CustomerService customers) : ViewModelBase
+public sealed partial class SellPackageDialogViewModel(IPackageService packages, ICatalogService catalog, ICustomerService customers) : ViewModelBase
 {
     private readonly string _idempotencyKey = Guid.NewGuid().ToString("N");
     private bool _saved;

@@ -85,7 +85,7 @@ public static class ResultExtensions
     /// to do (pick from the list, or add the customer first). Returns the customer or a Turkish error message.
     /// </summary>
     public static async Task<(Vernuko.Application.CustomerListItem? Customer, string? Error)> ResolveTypedCustomerAsync(
-        Vernuko.Application.Services.CustomerService customers, string typed)
+        Vernuko.Application.Services.ICustomerService customers, string typed)
     {
         if (string.IsNullOrWhiteSpace(typed))
         {

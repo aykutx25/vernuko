@@ -14,7 +14,7 @@ namespace Vernuko.Presentation.Pages;
 /// Müşteri kartı › Onam ve dosyalar. Files are encrypted at rest; a preview is decrypted only into memory and every
 /// view is audited. Exporting a decrypted copy is an explicit "save as" by the user.
 /// </summary>
-public sealed partial class CustomerRecordsViewModel(CustomerRecordsService records, IDialogService dialogs, IPlatformServices platform, UserSession session) : ViewModelBase
+public sealed partial class CustomerRecordsViewModel(ICustomerRecordsService records, IDialogService dialogs, IPlatformServices platform, UserSession session) : ViewModelBase
 {
     private const long MaxFileBytes = 15 * 1024 * 1024;
 

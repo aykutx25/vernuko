@@ -24,7 +24,7 @@ public sealed record BusinessInfo(
     Terminology Terms,
     IReadOnlySet<ProfileFeature> Features);
 
-public sealed class SettingsService(AppServiceDeps deps) : AppServiceBase(deps)
+public sealed class SettingsService(AppServiceDeps deps) : AppServiceBase(deps), ISettingsService
 {
     /// <summary>Basic business info for the shell (name, profile, wording). Available to every signed-in user.</summary>
     public async Task<BusinessInfo?> GetBusinessInfoAsync(CancellationToken ct = default)

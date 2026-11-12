@@ -14,7 +14,7 @@ namespace Vernuko.Presentation.Pages;
 public sealed record MethodTotal(string Method, string Amount);
 
 /// <summary>Daily cash desk, corrections and open balances. Not an invoicing system.</summary>
-public sealed partial class PaymentsViewModel(PaymentService payments, CustomerService customers, IServiceProvider services, IDialogService dialogs, TimeProvider time) : PageViewModel, IShellAware
+public sealed partial class PaymentsViewModel(IPaymentService payments, ICustomerService customers, IServiceProvider services, IDialogService dialogs, TimeProvider time) : PageViewModel, IShellAware
 {
     [ObservableProperty]
     private DateTime _date = time.GetLocalNow().Date;

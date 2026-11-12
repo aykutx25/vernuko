@@ -65,7 +65,7 @@ public sealed class BackupService(
     TimeProvider time,
     DatabaseInitializer initializer,
     AttachmentKeyStore attachmentKeys,
-    ILogger<BackupService> logger)
+    ILogger<BackupService> logger) : IBackupService
 {
     private const string AttachmentEntryPrefix = "att_";
 
