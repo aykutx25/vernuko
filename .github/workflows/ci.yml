@@ -1,8 +1,10 @@
 name: CI
 
-# Manual only: hosted runners are not available on this account right now and every push produced a failed run.
-# The same checks run locally with kontrol.cmd (Windows). Start this from the Actions tab when runners are available.
+# Public repository: GitHub-hosted runners are free. The same checks also run locally with kontrol.cmd (Windows).
 on:
+  push:
+    branches: [ "**" ]
+  pull_request:
   workflow_dispatch:
 
 permissions:
