@@ -148,17 +148,32 @@ public class RemoteTests
     }
 
     [Fact]
+    public async Task Signing_in_again_from_the_same_computer_ends_its_earlier_session()
+    {
+        await using var rig = await RemoteRig.StartAsync();
+        var endpoint = await rig.PairAsync();
+        var first = rig.Client(endpoint);
+        Assert.True((await first.GetRequiredService<IAuthService>().LoginAsync(TestApp.AdminUser, TestApp.AdminPassword)).IsSuccess);
+        Assert.Equal(1, rig.Server.Sessions.Count);
+
+        // The app was closed without signing out and started again on that computer.
+        var again = rig.Client(endpoint);
+        Assert.True((await again.GetRequiredService<IAuthService>().LoginAsync(TestApp.AdminUser, TestApp.AdminPassword)).IsSuccess);
+        Assert.Equal(1, rig.Server.Sessions.Count);
+        Assert.Equal("remote.session", (await first.GetRequiredService<ICustomerService>().SearchAsync(null)).Error.Code);
+    }
+
+    [Fact]
     public async Task Permissions_are_checked_on_the_main_computer_per_session()
     {
         await using var rig = await RemoteRig.StartAsync();
         Assert.True((await rig.Host.Get<UserAdminService>().CreateAsync("sekreter", "Sekreter", "Randevu-Masasi-1", SystemRole.Secretary)).IsSuccess);
-        var endpoint = await rig.PairAsync();
-        var secretary = rig.Client(endpoint);
-        var owner = rig.Client(endpoint);
+        var secretary = rig.Client(await rig.PairAsync());
+        var owner = rig.Client(await rig.PairAsync());
         Assert.True((await secretary.GetRequiredService<IAuthService>().LoginAsync("sekreter", "Randevu-Masasi-1")).IsSuccess);
         Assert.True((await owner.GetRequiredService<IAuthService>().LoginAsync(TestApp.AdminUser, TestApp.AdminPassword)).IsSuccess);
 
-        // Same computer, two people: the secretary's session cannot manage users, the owner's can.
+        // Two connected computers, two people: the secretary's session cannot manage users, the owner's can.
         Assert.False(secretary.GetRequiredService<UserSession>().Has(Permission.UsersManage));
         var denied = await secretary.GetRequiredService<IUserAdminService>().ListAsync();
         Assert.True(denied.IsFailure);
