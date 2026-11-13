@@ -3,7 +3,8 @@ using Vernuko.Core;
 namespace Vernuko.BusinessProfiles;
 
 /// <param name="ResourceKeywords">Suggested rooms/devices whose name contains one of these words are linked to the service at setup.</param>
-public sealed record ServiceTemplate(string Name, string Category, int DurationMinutes, int PrepMinutes = 0, int CleanupMinutes = 0, ResourceKind? RequiredResource = null, IReadOnlyList<string>? ResourceKeywords = null);
+/// <param name="ProcessingStartMinutes">Waiting part (e.g. hair dye): staff free from this minute for ProcessingMinutes; the chair stays occupied.</param>
+public sealed record ServiceTemplate(string Name, string Category, int DurationMinutes, int PrepMinutes = 0, int CleanupMinutes = 0, ResourceKind? RequiredResource = null, IReadOnlyList<string>? ResourceKeywords = null, int ProcessingStartMinutes = 0, int ProcessingMinutes = 0);
 
 public sealed record ResourceTemplate(string Name, ResourceKind Kind);
 

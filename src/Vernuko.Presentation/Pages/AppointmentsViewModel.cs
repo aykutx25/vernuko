@@ -59,6 +59,11 @@ public sealed partial class AppointmentRow(AppointmentListItem item, bool isCurr
 
     public string? BodyArea => Item.BodyArea;
 
+    /// <summary>"Bekleme 10:30–11:10 (personel boşta)" — the staff member can take another customer then.</summary>
+    public string? ProcessingText => Item.ProcessingText;
+
+    public string? MeetingUrl => Item.MeetingUrl;
+
     public AppointmentStatus Status => Item.Status;
 
     public string StatusName => Item.StatusName;
@@ -264,6 +269,26 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
         SelectedService = ServiceOptions.FirstOrDefault();
         _suspendReload = false;
         _ = ReloadAsync();
+    }
+
+    /// <summary>Opens the online meeting (Zoom, Meet, Teams…) in the browser.</summary>
+    [RelayCommand]
+    private void OpenMeeting(AppointmentRow row)
+    {
+        if (row.MeetingUrl is { } url && Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
+        {
+            _platform.OpenUri(uri);
+        }
+    }
+
+    [RelayCommand]
+    private void CopyMeeting(AppointmentRow row)
+    {
+        if (row.MeetingUrl is { } url)
+        {
+            _platform.CopyToClipboard(url);
+            InfoMessage = "Görüşme bağlantısı kopyalandı.";
+        }
     }
 
     [RelayCommand]

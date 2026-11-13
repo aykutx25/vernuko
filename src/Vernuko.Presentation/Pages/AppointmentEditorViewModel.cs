@@ -96,6 +96,13 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
     private bool _showBodyArea;
 
     [ObservableProperty]
+    private string? _meetingUrl;
+
+    /// <summary>Danışmanlık, psikoloji, eğitim: online görüşme bağlantısı.</summary>
+    [ObservableProperty]
+    private bool _showMeetingUrl;
+
+    [ObservableProperty]
     private string _title = "Yeni Randevu";
 
     [ObservableProperty]
@@ -470,7 +477,7 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
             return;
         }
 
-        var request = new CreateAppointmentRequest(SelectedCustomer!.Id, SelectedService!.Id, SelectedStaff!.Id, resources, start, duration, Notes, BodyArea, SelectedPackage?.Id);
+        var request = new CreateAppointmentRequest(SelectedCustomer!.Id, SelectedService!.Id, SelectedStaff!.Id, resources, start, duration, Notes, BodyArea, SelectedPackage?.Id, MeetingUrl: MeetingUrl);
         var first = await _appointments.CreateSeriesAsync(request, pattern, confirmWarnings: false, skipBlocked: false);
         if (!Check(first))
         {
@@ -510,7 +517,7 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
     {
         var result = _rescheduleId is { } id
             ? await _appointments.RescheduleAsync(new RescheduleRequest(id, start, SelectedStaff!.Id, resources, duration, IsSeriesMember && ApplyToFollowing), confirm)
-            : await _appointments.CreateAsync(new CreateAppointmentRequest(SelectedCustomer!.Id, SelectedService!.Id, SelectedStaff!.Id, resources, start, duration, Notes, BodyArea, SelectedPackage?.Id), confirm);
+            : await _appointments.CreateAsync(new CreateAppointmentRequest(SelectedCustomer!.Id, SelectedService!.Id, SelectedStaff!.Id, resources, start, duration, Notes, BodyArea, SelectedPackage?.Id, MeetingUrl: MeetingUrl), confirm);
         return Check(result) ? result.Value : null;
     }
 
@@ -518,6 +525,7 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
     {
         var info = await _settings.GetBusinessInfoAsync();
         ShowBodyArea = info?.Features.Contains(ProfileFeature.BodyAreas) == true;
+        ShowMeetingUrl = info?.Features.Contains(ProfileFeature.OnlineMeetingLinks) == true;
         Services.Clear();
         foreach (var s in (await _catalog.GetServicesAsync()).OrEmpty())
         {

@@ -51,6 +51,17 @@
                             </UniformGrid>
                             <TextBlock Text="GEREKEN KAYNAK" Style="{StaticResource FieldLabel}" />
                             <ComboBox ItemsSource="{Binding RequirementOptions}" SelectedItem="{Binding ServiceRequires}" DisplayMemberPath="Label" />
+                            <StackPanel Visibility="{Binding ShowProcessing, Converter={StaticResource VisibleWhen}}">
+                                <TextBlock Text="BEKLEME SÜRESİ (personel boşta, koltuk/oda dolu)" Style="{StaticResource FieldLabel}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox Text="{Binding ServiceProcessingStart, UpdateSourceTrigger=PropertyChanged}" Width="60" AutomationProperties.Name="Bekleme başlangıcı" />
+                                    <TextBlock Text=". dakikadan sonra" VerticalAlignment="Center" Margin="6,0,10,0" />
+                                    <TextBox Text="{Binding ServiceProcessingMinutes, UpdateSourceTrigger=PropertyChanged}" Width="60" AutomationProperties.Name="Bekleme süresi" />
+                                    <TextBlock Text="dakika bekleme" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,2,0,0"
+                                           Text="Ör. 90 dakikalık boya: 30. dakikadan sonra 40 dakika bekleme. Bu sürede uzman başka müşteriye randevu verebilir; koltuk dolu kalır. Bekleme yoksa 0 bırakın." />
+                            </StackPanel>
                             <TextBlock Text="YALNIZCA ŞU ODA / CİHAZLARDA" Style="{StaticResource FieldLabel}" />
                             <ItemsControl ItemsSource="{Binding ServiceResourceChoices}" Focusable="False">
                                 <ItemsControl.ItemsPanel>

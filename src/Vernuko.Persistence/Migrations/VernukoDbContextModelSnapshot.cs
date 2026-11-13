@@ -57,6 +57,10 @@ namespace Vernuko.Persistence.Migrations
                     b.Property<DateTime>("EndUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("MeetingUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
@@ -65,6 +69,12 @@ namespace Vernuko.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("PriceMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProcessingMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProcessingStartMinutes")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("RescheduleCount")
@@ -149,7 +159,7 @@ namespace Vernuko.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AppointmentId", "ResourceId")
+                    b.HasIndex("AppointmentId", "ResourceId", "BlockStartUtc")
                         .IsUnique();
 
                     b.HasIndex("ResourceId", "BlockStartUtc", "BlockEndUtc");
@@ -315,6 +325,12 @@ namespace Vernuko.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("PriceMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProcessingMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProcessingStartMinutes")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("RequiredResourceKind")

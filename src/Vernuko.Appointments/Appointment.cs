@@ -98,13 +98,45 @@ public sealed record AppointmentSlot(
     int PrepMinutes,
     int CleanupMinutes,
     Guid StaffMemberId,
-    IReadOnlyList<Guid> ResourceIds)
+    IReadOnlyList<Guid> ResourceIds,
+    int ProcessingStartMinutes = 0,
+    int ProcessingMinutes = 0)
 {
     public DateTime EndUtc => StartUtc.AddMinutes(DurationMinutes);
 
     public UtcRange ServiceRange => new(StartUtc, EndUtc);
 
     public UtcRange BlockRange => new(StartUtc.AddMinutes(-PrepMinutes), EndUtc.AddMinutes(CleanupMinutes));
+
+    /// <summary>Applies only when the (possibly shortened) appointment still contains the whole waiting part.</summary>
+    public bool HasProcessing => ProcessingMinutes > 0 && ProcessingStartMinutes > 0 && ProcessingStartMinutes + ProcessingMinutes <= DurationMinutes;
+
+    /// <summary>The waiting part during which the staff member is free (null when none).</summary>
+    public UtcRange? StaffFreeRange => HasProcessing
+        ? new UtcRange(StartUtc.AddMinutes(ProcessingStartMinutes), StartUtc.AddMinutes(ProcessingStartMinutes + ProcessingMinutes))
+        : null;
+
+    /// <summary>
+    /// What each booking row holds: rooms/devices the whole block; the staff member the whole block, or — with a
+    /// waiting part — the part before and the part after it (two rows of the same appointment).
+    /// </summary>
+    public IEnumerable<(Guid Id, BookingResourceType Type, UtcRange Block)> Blocks()
+    {
+        if (StaffFreeRange is { } free)
+        {
+            yield return (StaffMemberId, BookingResourceType.Staff, new UtcRange(BlockRange.Start, free.Start));
+            yield return (StaffMemberId, BookingResourceType.Staff, new UtcRange(free.End, BlockRange.End));
+        }
+        else
+        {
+            yield return (StaffMemberId, BookingResourceType.Staff, BlockRange);
+        }
+
+        foreach (var id in ResourceIds.Distinct())
+        {
+            yield return (id, BookingResourceType.Resource, BlockRange);
+        }
+    }
 
     public IEnumerable<(Guid Id, BookingResourceType Type)> AllResources()
     {
@@ -152,6 +184,14 @@ public sealed class Appointment : Entity
     public int PrepMinutes { get; private set; }
 
     public int CleanupMinutes { get; private set; }
+
+    /// <summary>Snapshot of the service's waiting part at booking time (staff free; chair/room still busy).</summary>
+    public int ProcessingStartMinutes { get; private set; }
+
+    public int ProcessingMinutes { get; private set; }
+
+    /// <summary>Online meeting link (danışmanlık, terapi, ders); https only.</summary>
+    public string? MeetingUrl { get; private set; }
 
     public AppointmentStatus Status { get; private set; }
 
@@ -236,7 +276,7 @@ public sealed class Appointment : Entity
 
     public AppointmentSlot CurrentSlot() =>
         new(StartUtc, (int)(EndUtc - StartUtc).TotalMinutes, PrepMinutes, CleanupMinutes, StaffMemberId,
-            _bookings.Where(b => b.ResourceType == BookingResourceType.Resource).Select(b => b.ResourceId).ToList());
+            _bookings.Where(b => b.ResourceType == BookingResourceType.Resource).Select(b => b.ResourceId).Distinct().ToList(), ProcessingStartMinutes, ProcessingMinutes);
 
     /// <summary>
     /// Validates and applies a status transition. The caller must re-run conflict detection when the new status
@@ -334,6 +374,27 @@ public sealed class Appointment : Entity
 
     public void UpdateNotes(string? notes) => Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
 
+    public const int MaxMeetingUrlLength = 500;
+
+    /// <summary>Zoom, Google Meet, Teams… link; only absolute https addresses (no javascript:, file: etc.).</summary>
+    public Result SetMeetingUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            MeetingUrl = null;
+            return Result.Success();
+        }
+
+        var text = url.Trim();
+        if (text.Length > MaxMeetingUrlLength || !Uri.TryCreate(text, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps || string.IsNullOrEmpty(uri.Host))
+        {
+            return Error.Validation("appointment.meeting_url", "Görüşme bağlantısı https:// ile başlayan geçerli bir adres olmalı.");
+        }
+
+        MeetingUrl = uri.AbsoluteUri;
+        return Result.Success();
+    }
+
     /// <summary>
     /// Releases the calendar resources while several appointments of a series are moved together, so intermediate
     /// states do not trip the database overlap guard. <see cref="Reschedule"/> re-activates them.
@@ -380,15 +441,17 @@ public sealed class Appointment : Entity
         PrepMinutes = slot.PrepMinutes;
         CleanupMinutes = slot.CleanupMinutes;
         StaffMemberId = slot.StaffMemberId;
+        ProcessingStartMinutes = slot.HasProcessing ? slot.ProcessingStartMinutes : 0;
+        ProcessingMinutes = slot.HasProcessing ? slot.ProcessingMinutes : 0;
     }
 
     private void RebuildBookings(AppointmentSlot slot)
     {
         _bookings.Clear();
         var holds = AppointmentStatusRules.HoldsResources(Status);
-        foreach (var (id, type) in slot.AllResources())
+        foreach (var (id, type, block) in slot.Blocks())
         {
-            _bookings.Add(new AppointmentBooking(Id, id, type, slot.BlockRange, holds));
+            _bookings.Add(new AppointmentBooking(Id, id, type, block, holds));
         }
     }
 }

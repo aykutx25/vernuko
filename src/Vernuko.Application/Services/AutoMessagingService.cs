@@ -299,6 +299,12 @@ public sealed class AutoMessagingService(
                 var staff = await db.Staff.AsNoTracking().Where(s => s.Id == a.StaffMemberId).Select(s => s.DisplayName).FirstOrDefaultAsync(ct);
                 var text = MessageTemplates.Render(MessageTemplates.Defaults[MessagePurpose.AppointmentReminder],
                     new MessageContext(customer.FirstName, business.BusinessName, startLocal, service, staff, business.Phone), business.Profile.HideServiceNameInMessages);
+                if (a.MeetingUrl is { } meeting && settings.ReminderChannel == MessageChannel.Sms)
+                {
+                    // Online appointment: the link is what the customer needs (WhatsApp templates have fixed fields).
+                    text += " Görüşme: " + meeting;
+                }
+
                 var message = OutboxMessage.Create(settings.ReminderChannel, MessagePurpose.AppointmentReminder, customer.Id, a.Id, phone.Value, text, false, key, TimeZones.ToUtc(sendLocal, zone), now);
                 if (message.IsSuccess)
                 {

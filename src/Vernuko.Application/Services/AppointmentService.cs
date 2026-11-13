@@ -89,7 +89,8 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
                     ctx = ctx with { Bookings = ctx.Bookings.Where(b => b.AppointmentId != ignore).ToList() };
                 }
 
-                var template = new AppointmentSlotTemplate(q.DurationMinutesOverride ?? service.DurationMinutes, service.PrepMinutes, service.CleanupMinutes, q.StaffMemberId, resourceIds);
+                var template = new AppointmentSlotTemplate(q.DurationMinutesOverride ?? service.DurationMinutes, service.PrepMinutes, service.CleanupMinutes, q.StaffMemberId, resourceIds,
+                    service.ProcessingStartMinutes, service.ProcessingMinutes);
                 foreach (var s in AvailabilityCalculator.FindSlots(ctx, template, settings.SlotMinutes, UtcNow))
                 {
                     found.TryAdd(s.LocalStart, new SlotSuggestion(s.LocalStart, s.StartUtc, resourceIds));
@@ -191,6 +192,12 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
             if (created.IsFailure)
             {
                 return created.Error;
+            }
+
+            var meeting = created.Value.SetMeetingUrl(r.MeetingUrl);
+            if (meeting.IsFailure)
+            {
+                return meeting.Error;
             }
 
             db.Appointments.Add(created.Value);
@@ -379,6 +386,12 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
                     return created.Error;
                 }
 
+                var meeting = created.Value.SetMeetingUrl(r.MeetingUrl);
+                if (meeting.IsFailure)
+                {
+                    return meeting.Error;
+                }
+
                 db.Appointments.Add(created.Value);
             }
 
@@ -483,6 +496,26 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
 
             appt.UpdateNotes(notes);
             await Audit.AppendAsync(db, "appointment.notes", "Appointment", appt.Id, "Randevu notu güncellendi", ct);
+            return true;
+        }, ct);
+
+    /// <summary>Adds, changes or removes (null) the online meeting link of an appointment.</summary>
+    public Task<Result<bool>> SetMeetingUrlAsync(Guid id, string? url, CancellationToken ct = default) =>
+        WriteAsync<bool>(Permission.AppointmentsManage, async db =>
+        {
+            var appt = await db.Appointments.FirstOrDefaultAsync(a => a.Id == id, ct);
+            if (appt is null)
+            {
+                return Error.NotFound("Randevu");
+            }
+
+            var r = appt.SetMeetingUrl(url);
+            if (r.IsFailure)
+            {
+                return r.Error;
+            }
+
+            await Audit.AppendAsync(db, "appointment.meeting_url", "Appointment", appt.Id, appt.MeetingUrl is null ? "Görüşme bağlantısı kaldırıldı" : "Görüşme bağlantısı kaydedildi", ct);
             return true;
         }, ct);
 
@@ -592,7 +625,7 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
         var duration = durationOverride ?? service.DurationMinutes;
         var local = new DateTime(startLocal.Year, startLocal.Month, startLocal.Day, startLocal.Hour, startLocal.Minute, 0, DateTimeKind.Unspecified);
         var startUtc = TimeZones.ToUtc(local, zone);
-        var slot = new AppointmentSlot(startUtc, duration, service.PrepMinutes, service.CleanupMinutes, staffId, ids);
+        var slot = new AppointmentSlot(startUtc, duration, service.PrepMinutes, service.CleanupMinutes, staffId, ids, service.ProcessingStartMinutes, service.ProcessingMinutes);
         if (duration is < 5 or > 24 * 60)
         {
             return Error.Validation("appointment.duration", "Randevu süresi 5 dakika ile 24 saat arasında olmalıdır.");

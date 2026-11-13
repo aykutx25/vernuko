@@ -34,9 +34,46 @@ public sealed class ServiceDefinition : Entity
 
     public ResourceKind? RequiredResourceKind { get; private set; }
 
+    /// <summary>
+    /// "Bekleme süresi" (e.g. hair dye processing): from this many minutes after the start the staff member is
+    /// free for ProcessingMinutes and may serve someone else; the chair/room stays occupied. 0 = none.
+    /// </summary>
+    public int ProcessingStartMinutes { get; private set; }
+
+    public int ProcessingMinutes { get; private set; }
+
     public bool IsActive { get; private set; }
 
     public string? Color { get; private set; }
+
+    /// <summary>The waiting part must lie inside the service and leave at least 5 minutes of work before and after.</summary>
+    public static Result ValidateProcessing(int durationMinutes, int startMinutes, int minutes)
+    {
+        if (minutes == 0 && startMinutes == 0)
+        {
+            return Result.Success();
+        }
+
+        if (minutes < 5 || startMinutes < 5 || startMinutes + minutes > durationMinutes - 5)
+        {
+            return Error.Validation("service.processing", "Bekleme süresi en az 5 dakika olmalı ve hizmetin başında ve sonunda en az 5 dakikalık iş kalmalı (ör. 90 dk boya: 30. dakikadan sonra 40 dk bekleme).");
+        }
+
+        return Result.Success();
+    }
+
+    public Result SetProcessing(int startMinutes, int minutes)
+    {
+        var v = ValidateProcessing(DurationMinutes, startMinutes, minutes);
+        if (v.IsFailure)
+        {
+            return v;
+        }
+
+        ProcessingStartMinutes = minutes == 0 ? 0 : startMinutes;
+        ProcessingMinutes = minutes;
+        return Result.Success();
+    }
 
     public static Result ValidateValues(string? name, int durationMinutes, long priceMinor, int prepMinutes, int cleanupMinutes)
     {

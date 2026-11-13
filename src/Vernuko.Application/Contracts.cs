@@ -10,7 +10,7 @@ namespace Vernuko.Application;
 // ---------- Setup ----------
 public sealed record SetupStaff(string DisplayName, string? Title);
 
-public sealed record SetupServiceItem(string Name, string? Category, int DurationMinutes, long PriceMinor, int PrepMinutes, int CleanupMinutes, ResourceKind? RequiredResourceKind, IReadOnlyList<string>? ResourceKeywords = null);
+public sealed record SetupServiceItem(string Name, string? Category, int DurationMinutes, long PriceMinor, int PrepMinutes, int CleanupMinutes, ResourceKind? RequiredResourceKind, IReadOnlyList<string>? ResourceKeywords = null, int ProcessingStartMinutes = 0, int ProcessingMinutes = 0);
 
 public sealed record SetupResource(string Name, ResourceKind Kind);
 
@@ -73,7 +73,7 @@ public sealed record CustomerDetailsDto(
 }
 
 // ---------- Catalog ----------
-public sealed record ServiceDto(Guid Id, string Name, string? Category, int DurationMinutes, int PrepMinutes, int CleanupMinutes, long PriceMinor, ResourceKind? RequiredResourceKind, bool IsActive, IReadOnlyList<Guid>? AllowedResourceIds = null)
+public sealed record ServiceDto(Guid Id, string Name, string? Category, int DurationMinutes, int PrepMinutes, int CleanupMinutes, long PriceMinor, ResourceKind? RequiredResourceKind, bool IsActive, IReadOnlyList<Guid>? AllowedResourceIds = null, int ProcessingStartMinutes = 0, int ProcessingMinutes = 0)
 {
     public string DisplayPrice => new Money(PriceMinor).ToDisplayString();
 }
@@ -110,9 +110,17 @@ public sealed record AppointmentListItem(
     string? Notes,
     Guid? CustomerPackageId,
     long PriceMinor,
-    Guid? SeriesId = null)
+    Guid? SeriesId = null,
+    string? MeetingUrl = null,
+    DateTime? StaffFreeFromLocal = null,
+    DateTime? StaffFreeUntilLocal = null)
 {
     public string StatusName => AppointmentStatusRules.DisplayName(Status);
+
+    /// <summary>"Bekleme 10:30–11:10 (personel boşta)" for services with a waiting part.</summary>
+    public string? ProcessingText => StaffFreeFromLocal is { } from && StaffFreeUntilLocal is { } until
+        ? $"Bekleme {from:HH:mm}–{until:HH:mm} (personel boşta)"
+        : null;
 
     public bool IsInSeries => SeriesId is not null;
 
@@ -135,7 +143,8 @@ public sealed record CreateAppointmentRequest(
     string? Notes,
     string? BodyArea,
     Guid? CustomerPackageId,
-    AppointmentSource Source = AppointmentSource.FrontDesk);
+    AppointmentSource Source = AppointmentSource.FrontDesk,
+    string? MeetingUrl = null);
 
 /// <param name="ApplyToFollowing">For recurring series: move all later open appointments of the series by the same local-time shift (and staff/rooms).</param>
 public sealed record RescheduleRequest(Guid AppointmentId, DateTime NewStartLocal, Guid? StaffMemberId, IReadOnlyList<Guid>? ResourceIds, int? DurationMinutes = null, bool ApplyToFollowing = false);

@@ -54,7 +54,10 @@ internal static class AppointmentQueries
                     a.Notes,
                     a.CustomerPackageId,
                     a.PriceMinor,
-                    a.SeriesId);
+                    a.SeriesId,
+                    a.MeetingUrl,
+                    a.ProcessingMinutes > 0 ? TimeZones.ToLocal(a.StartUtc.AddMinutes(a.ProcessingStartMinutes), zone) : null,
+                    a.ProcessingMinutes > 0 ? TimeZones.ToLocal(a.StartUtc.AddMinutes(a.ProcessingStartMinutes + a.ProcessingMinutes), zone) : null);
             })
             .ToList();
     }

@@ -49,6 +49,12 @@ public sealed class CatalogService(AppServiceDeps deps) : AppServiceBase(deps), 
                 }
             }
 
+            var processing = s.SetProcessing(dto.ProcessingStartMinutes, dto.ProcessingMinutes);
+            if (processing.IsFailure)
+            {
+                return processing.Error;
+            }
+
             s.SetActive(dto.IsActive);
             if (dto.AllowedResourceIds is { } allowed)
             {
@@ -266,5 +272,5 @@ public sealed class CatalogService(AppServiceDeps deps) : AppServiceBase(deps), 
     }
 
     private static ServiceDto ToDto(ServiceDefinition s) =>
-        new(s.Id, s.Name, s.Category, s.DurationMinutes, s.PrepMinutes, s.CleanupMinutes, s.PriceMinor, s.RequiredResourceKind, s.IsActive);
+        new(s.Id, s.Name, s.Category, s.DurationMinutes, s.PrepMinutes, s.CleanupMinutes, s.PriceMinor, s.RequiredResourceKind, s.IsActive, null, s.ProcessingStartMinutes, s.ProcessingMinutes);
 }

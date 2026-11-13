@@ -105,6 +105,12 @@ public sealed class SetupService(IDbContextFactory<VernukoDbContext> factory, Pa
         foreach (var s in r.Services)
         {
             var service = new ServiceDefinition(s.Name, s.Category, s.DurationMinutes, s.PriceMinor, s.PrepMinutes, s.CleanupMinutes, s.RequiredResourceKind);
+            var processing = service.SetProcessing(s.ProcessingStartMinutes, s.ProcessingMinutes);
+            if (processing.IsFailure)
+            {
+                return processing.Error;
+            }
+
             services.Add(service);
             db.Services.Add(service);
         }

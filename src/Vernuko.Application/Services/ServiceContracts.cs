@@ -110,6 +110,8 @@ public partial interface IAppointmentService
     Task<Result<AppointmentStatus>> ChangeStatusAsync(Guid id, AppointmentStatus to, string? reason, CancellationToken ct = default);
 
     Task<Result<bool>> UpdateNotesAsync(Guid id, string? notes, CancellationToken ct = default);
+
+    Task<Result<bool>> SetMeetingUrlAsync(Guid id, string? url, CancellationToken ct = default);
 }
 
 /// <summary>Remotable contract of <see cref="PackageService"/> (generated from its public async methods).</summary>

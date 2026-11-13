@@ -11,11 +11,13 @@ public static class ConflictDetector
 {
     public static IReadOnlyList<BookingConflict> Find(AppointmentSlot requested, IEnumerable<ExistingBooking> existing, Guid? ignoreAppointmentId = null)
     {
-        var block = requested.BlockRange;
-        var wanted = requested.AllResources().ToDictionary(r => r.Id, r => r.Type);
+        // Each requested row against existing rows of the same staff member/room/device (a waiting part leaves the
+        // staff member's middle free, so another appointment may sit exactly there).
+        var blocks = requested.Blocks().ToList();
         return existing
-            .Where(e => e.AppointmentId != ignoreAppointmentId && wanted.ContainsKey(e.ResourceId) && e.Block.Overlaps(block))
-            .Select(e => new BookingConflict(e.ResourceId, wanted[e.ResourceId], e.AppointmentId, e.Block))
+            .Where(e => e.AppointmentId != ignoreAppointmentId)
+            .SelectMany(e => blocks.Where(b => b.Id == e.ResourceId && e.Block.Overlaps(b.Block)).Take(1)
+                .Select(b => new BookingConflict(e.ResourceId, b.Type, e.AppointmentId, e.Block)))
             .ToList();
     }
 }

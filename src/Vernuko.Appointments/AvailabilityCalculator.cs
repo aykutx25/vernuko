@@ -148,7 +148,7 @@ public static class AvailabilityCalculator
 }
 
 /// <summary>Service duration/buffers + chosen staff and resources, without a start time yet.</summary>
-public sealed record AppointmentSlotTemplate(int DurationMinutes, int PrepMinutes, int CleanupMinutes, Guid StaffMemberId, IReadOnlyList<Guid> ResourceIds)
+public sealed record AppointmentSlotTemplate(int DurationMinutes, int PrepMinutes, int CleanupMinutes, Guid StaffMemberId, IReadOnlyList<Guid> ResourceIds, int ProcessingStartMinutes = 0, int ProcessingMinutes = 0)
 {
-    public AppointmentSlot At(DateTime startUtc) => new(startUtc, DurationMinutes, PrepMinutes, CleanupMinutes, StaffMemberId, ResourceIds);
+    public AppointmentSlot At(DateTime startUtc) => new(startUtc, DurationMinutes, PrepMinutes, CleanupMinutes, StaffMemberId, ResourceIds, ProcessingStartMinutes, ProcessingMinutes);
 }

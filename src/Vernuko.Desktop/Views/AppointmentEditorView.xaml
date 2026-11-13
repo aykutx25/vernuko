@@ -148,6 +148,11 @@
                         <TextBlock Text="Seans, randevu tamamlandığında düşülür. İptal edilen randevu hak tüketmez." Style="{StaticResource Muted}" Margin="0,4,0,0" />
                     </StackPanel>
 
+                    <StackPanel Visibility="{Binding ShowMeetingUrl, Converter={StaticResource VisibleWhen}}">
+                        <TextBlock Text="ÇEVRİM İÇİ GÖRÜŞME BAĞLANTISI (isteğe bağlı)" Style="{StaticResource FieldLabel}" />
+                        <TextBox Text="{Binding MeetingUrl, UpdateSourceTrigger=PropertyChanged}" Tag="https://meet.google.com/… veya https://zoom.us/j/…" AutomationProperties.Name="Görüşme bağlantısı" />
+                    </StackPanel>
+
                     <StackPanel Visibility="{Binding ShowBodyArea, Converter={StaticResource VisibleWhen}}">
                         <TextBlock Text="BÖLGE" Style="{StaticResource FieldLabel}" />
                         <TextBox Text="{Binding BodyArea, UpdateSourceTrigger=PropertyChanged}" Tag="Ör. Bacak, Koltuk altı" />

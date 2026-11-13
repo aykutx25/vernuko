@@ -163,6 +163,7 @@ internal sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appoin
         b.ToTable("Appointments");
         b.ConfigureEntity();
         b.Property(e => e.Notes).HasMaxLength(Appointment.MaxNotesLength);
+        b.Property(e => e.MeetingUrl).HasMaxLength(Appointment.MaxMeetingUrlLength);
         b.Property(e => e.BodyArea).HasMaxLength(80);
         b.Property(e => e.CancellationReason).HasMaxLength(300);
         b.HasIndex(e => new { e.BranchId, e.StartUtc });
@@ -191,7 +192,8 @@ internal sealed class AppointmentBookingConfiguration : IEntityTypeConfiguration
         b.HasKey(e => e.Id);
         b.Property(e => e.Id).ValueGeneratedNever();
         b.HasIndex(e => new { e.ResourceId, e.BlockStartUtc, e.BlockEndUtc });
-        b.HasIndex(e => new { e.AppointmentId, e.ResourceId }).IsUnique();
+        // One row per resource and start: a waiting part splits the staff member into two rows of the same appointment.
+        b.HasIndex(e => new { e.AppointmentId, e.ResourceId, e.BlockStartUtc }).IsUnique();
         b.Ignore(e => e.Block);
     }
 }

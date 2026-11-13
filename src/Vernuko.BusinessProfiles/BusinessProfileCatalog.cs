@@ -53,9 +53,9 @@ public static class BusinessProfileCatalog
             [
                 new("Saç Kesimi", "Saç", 30),
                 new("Sakal Tıraşı", "Berber", 20),
-                new("Saç Boyama", "Boya", 90),
+                new("Saç Boyama", "Boya", 90, ProcessingStartMinutes: 30, ProcessingMinutes: 40),
                 new("Fön", "Saç", 30),
-                new("Keratin Bakımı", "Bakım", 120),
+                new("Keratin Bakımı", "Bakım", 120, ProcessingStartMinutes: 40, ProcessingMinutes: 30),
             ],
             [new("Koltuk 1", ResourceKind.Chair), new("Koltuk 2", ResourceKind.Chair)],
             [],

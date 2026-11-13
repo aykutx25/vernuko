@@ -41,6 +41,13 @@
                         <StackPanel Margin="10,0,0,0">
                             <TextBlock Text="{Binding ServiceLine}" TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="{Binding BodyArea}" FontSize="12.5" Foreground="{StaticResource TextMutedBrush}" Visibility="{Binding BodyArea, Converter={StaticResource VisibleWhen}}" />
+                            <TextBlock Text="{Binding ProcessingText}" FontSize="12.5" Foreground="{StaticResource TextMutedBrush}" Visibility="{Binding ProcessingText, Converter={StaticResource VisibleWhen}}" />
+                            <WrapPanel Visibility="{Binding MeetingUrl, Converter={StaticResource VisibleWhen}}">
+                                <Button Style="{StaticResource LinkButton}" Content="Görüşmeye katıl" Margin="0,2,12,0"
+                                        Command="{Binding DataContext.OpenMeetingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                <Button Style="{StaticResource LinkButton}" Content="Bağlantıyı kopyala" Margin="0,2,0,0"
+                                        Command="{Binding DataContext.CopyMeetingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                            </WrapPanel>
                             <TextBlock Text="↻ Tekrarlayan seri" FontSize="12" Foreground="{StaticResource TextMutedBrush}" Visibility="{Binding IsInSeries, Converter={StaticResource VisibleWhen}}" />
                         </StackPanel>
                     </StackPanel>

@@ -75,6 +75,10 @@ public sealed partial class EditableService : ObservableObject
 
     /// <summary>Rooms/devices whose name contains one of these words are linked to the service at setup.</summary>
     public IReadOnlyList<string>? ResourceKeywords { get; init; }
+
+    public int ProcessingStartMinutes { get; init; }
+
+    public int ProcessingMinutes { get; init; }
 }
 
 public sealed partial class EditableResource : ObservableObject
@@ -479,7 +483,9 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
             0,
             int.TryParse(s.CleanupMinutes, out var c) ? c : 0,
             s.RequiredResource,
-            s.ResourceKeywords)).ToList();
+            s.ResourceKeywords,
+            s.ProcessingStartMinutes,
+            s.ProcessingMinutes)).ToList();
         var resources = Resources.Where(r => !string.IsNullOrWhiteSpace(r.Name)).Select(r => new SetupResource(r.Name.Trim(), r.Kind)).ToList();
         return new SetupRequest(
             SelectedProfile?.Profile.Id ?? BusinessProfileId.General,
@@ -595,6 +601,8 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
                 Category = s.Category,
                 RequiredResource = s.RequiredResource,
                 ResourceKeywords = s.ResourceKeywords,
+                ProcessingStartMinutes = s.ProcessingStartMinutes,
+                ProcessingMinutes = s.ProcessingMinutes,
             });
         }
 

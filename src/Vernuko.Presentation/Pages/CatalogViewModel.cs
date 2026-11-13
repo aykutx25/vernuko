@@ -48,6 +48,15 @@ public sealed partial class CatalogViewModel(ICatalogService catalog, ISettingsS
     [ObservableProperty]
     private bool _serviceActive = true;
 
+    [ObservableProperty]
+    private string _serviceProcessingStart = "0";
+
+    [ObservableProperty]
+    private string _serviceProcessingMinutes = "0";
+
+    [ObservableProperty]
+    private bool _showProcessing;
+
     // Resource form
     [ObservableProperty]
     private string _resourceName = string.Empty;
@@ -105,6 +114,7 @@ public sealed partial class CatalogViewModel(ICatalogService catalog, ISettingsS
     {
         var info = await settings.GetBusinessInfoAsync();
         ShowPackages = info?.Features.Contains(ProfileFeature.SessionPackages) == true;
+        ShowProcessing = info?.Features.Contains(ProfileFeature.ProcessingTimes) == true;
         await ReloadAsync();
         NewService();
         NewResource();
@@ -126,6 +136,9 @@ public sealed partial class CatalogViewModel(ICatalogService catalog, ISettingsS
         ServicePrice = (value.PriceMinor / 100m).ToString("0.##", TurkishText.Culture);
         ServiceRequires = RequirementOptions.FirstOrDefault(o => o.Value == value.RequiredResourceKind);
         ServiceActive = value.IsActive;
+        ServiceProcessingStart = value.ProcessingStartMinutes.ToString(CultureInfo.InvariantCulture);
+        ServiceProcessingMinutes = value.ProcessingMinutes.ToString(CultureInfo.InvariantCulture);
+        ShowProcessing |= value.ProcessingMinutes > 0;
         foreach (var c in ServiceResourceChoices)
         {
             c.IsSelected = value.AllowedResourceIds?.Contains(c.Resource.Id) == true;
@@ -171,6 +184,8 @@ public sealed partial class CatalogViewModel(ICatalogService catalog, ISettingsS
         ServicePrice = "0";
         ServiceRequires = RequirementOptions[0];
         ServiceActive = true;
+        ServiceProcessingStart = "0";
+        ServiceProcessingMinutes = "0";
         foreach (var c in ServiceResourceChoices)
         {
             c.IsSelected = false;
@@ -193,7 +208,13 @@ public sealed partial class CatalogViewModel(ICatalogService catalog, ISettingsS
         }
 
         var allowed = ServiceResourceChoices.Where(c => c.IsSelected).Select(c => c.Resource.Id).ToList();
-        var r = await catalog.SaveServiceAsync(new ServiceDto(SelectedService?.Id ?? Guid.Empty, ServiceName, ServiceCategory, duration, prep, cleanup, price.Value.Minor, ServiceRequires?.Value, ServiceActive, allowed));
+        if (!int.TryParse(ServiceProcessingStart, out var processingStart) || !int.TryParse(ServiceProcessingMinutes, out var processingMinutes))
+        {
+            ErrorMessage = "Bekleme süreleri dakika olarak tam sayı girilmelidir (yoksa 0).";
+            return;
+        }
+
+        var r = await catalog.SaveServiceAsync(new ServiceDto(SelectedService?.Id ?? Guid.Empty, ServiceName, ServiceCategory, duration, prep, cleanup, price.Value.Minor, ServiceRequires?.Value, ServiceActive, allowed, processingStart, processingMinutes));
         if (Check(r))
         {
             await ReloadAsync();
