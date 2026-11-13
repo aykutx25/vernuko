@@ -38,7 +38,10 @@ public class PrivateNotesTests
             Assert.DoesNotContain("GİZLİ-İÇERİK", Encoding.UTF8.GetString(row.Ciphertext), StringComparison.Ordinal);
         }
 
-        Assert.DoesNotContain("GİZLİ-İÇERİK", Encoding.UTF8.GetString(await File.ReadAllBytesAsync(app.Env.DatabasePath)), StringComparison.Ordinal);
+        foreach (var file in new[] { app.Env.DatabasePath, app.Env.DatabasePath + "-wal" }.Where(File.Exists))
+        {
+            Assert.DoesNotContain("GİZLİ-İÇERİK", Encoding.UTF8.GetString(await ReadSharedAsync(file)), StringComparison.Ordinal);
+        }
 
         // Another specialist: sees only that a note exists; cannot delete it.
         auth.Logout();
@@ -82,5 +85,14 @@ public class PrivateNotesTests
         Assert.True((await app.Get<CustomerService>().AnonymizeAsync(customer, "KVKK talebi")).IsSuccess);
         Assert.Empty((await notes.GetAsync(customer)).Value.Mine);
         Assert.True((await notes.AddAsync(customer, "yeni")).IsFailure);
+    }
+
+    /// <summary>Reads a file SQLite still has open (Windows refuses <see cref="File.ReadAllBytesAsync(string, CancellationToken)"/> then).</summary>
+    private static async Task<byte[]> ReadSharedAsync(string path)
+    {
+        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer);
+        return buffer.ToArray();
     }
 }
