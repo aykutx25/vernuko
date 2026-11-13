@@ -132,3 +132,16 @@ internal sealed class CustomerFileConfiguration : IEntityTypeConfiguration<Custo
         b.Ignore(e => e.IsImage);
     }
 }
+
+internal sealed class PrivateNoteConfiguration : IEntityTypeConfiguration<PrivateNote>
+{
+    public void Configure(EntityTypeBuilder<PrivateNote> b)
+    {
+        b.ToTable("PrivateNotes");
+        b.ConfigureEntity();
+        b.Property(e => e.Ciphertext).IsRequired();
+        b.HasIndex(e => new { e.CustomerId, e.AuthorUserId });
+        b.HasOne<Customer>().WithMany().HasForeignKey(e => e.CustomerId).OnDelete(DeleteBehavior.Restrict);
+        b.Ignore(e => e.IsDeleted);
+    }
+}

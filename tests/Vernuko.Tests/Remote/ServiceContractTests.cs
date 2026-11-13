@@ -10,7 +10,7 @@ public class ServiceContractTests
         typeof(AuthService), typeof(UserAdminService), typeof(CustomerService), typeof(CatalogService), typeof(AppointmentService),
         typeof(PackageService), typeof(PaymentService), typeof(ReportService), typeof(AuditService), typeof(SettingsService),
         typeof(MessagingService), typeof(CommissionService), typeof(InventoryService), typeof(WaitlistService),
-        typeof(CustomerRecordsService), typeof(AutoMessagingService), typeof(BackupService), typeof(LicenseService),
+        typeof(CustomerRecordsService), typeof(PrivateNotesService), typeof(AutoMessagingService), typeof(BackupService), typeof(LicenseService),
     ];
 
     /// <summary>

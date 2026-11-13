@@ -5,7 +5,7 @@ using System.Text;
 var asm = typeof(Vernuko.Application.Services.CustomerService).Assembly;
 string[] names = ["AuthService", "UserAdminService", "CustomerService", "CatalogService", "AppointmentService", "PackageService", "PaymentService",
     "ReportService", "AuditService", "SettingsService", "MessagingService", "CommissionService", "InventoryService", "WaitlistService",
-    "CustomerRecordsService", "AutoMessagingService", "BackupService", "LicenseService"];
+    "CustomerRecordsService", "PrivateNotesService", "AutoMessagingService", "BackupService", "LicenseService"];
 var ns = new SortedSet<string>(StringComparer.Ordinal);
 var nctx = new NullabilityInfoContext();
 var body = new StringBuilder();

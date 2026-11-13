@@ -78,6 +78,8 @@ public sealed class VernukoDbContext : DbContext
 
     public DbSet<CustomerFile> CustomerFiles => Set<CustomerFile>();
 
+    public DbSet<PrivateNote> PrivateNotes => Set<PrivateNote>();
+
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         Stamp();

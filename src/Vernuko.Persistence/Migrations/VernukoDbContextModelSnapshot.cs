@@ -884,6 +884,41 @@ namespace Vernuko.Persistence.Migrations
                     b.ToTable("CustomerFiles", (string)null);
                 });
 
+            modelBuilder.Entity("Vernuko.Customers.PrivateNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Ciphertext")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId", "AuthorUserId");
+
+                    b.ToTable("PrivateNotes", (string)null);
+                });
+
             modelBuilder.Entity("Vernuko.Inventory.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1689,6 +1724,15 @@ namespace Vernuko.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Vernuko.Customers.CustomerFile", b =>
+                {
+                    b.HasOne("Vernuko.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Customers.PrivateNote", b =>
                 {
                     b.HasOne("Vernuko.Customers.Customer", null)
                         .WithMany()

@@ -213,6 +213,10 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
 
             await CustomerRecordsService.DeleteAllForCustomerAsync(db, env, c.Id, now, ct);
             c.Anonymize(now);
+            foreach (var note in await db.PrivateNotes.Where(n => n.CustomerId == c.Id && n.DeletedAtUtc == null).ToListAsync(ct))
+            {
+                note.Delete(now); // specialists' notes are personal (often health) data too
+            }
             await Audit.AppendAsync(db, "customer.anonymized", "Customer", c.Id, $"Müşteri #{c.Number} anonimleştirildi. Gerekçe kaydedildi.", ct);
             return true;
         }, ct);

@@ -244,6 +244,16 @@ public partial interface ICustomerRecordsService
     Task<Result<bool>> DeleteFileAsync(Guid fileId, CancellationToken ct = default);
 }
 
+/// <summary>Remotable contract of <see cref="PrivateNotesService"/> (generated from its public async methods).</summary>
+public partial interface IPrivateNotesService
+{
+    Task<Result<PrivateNotesView>> GetAsync(Guid customerId, CancellationToken ct = default);
+
+    Task<Result<Guid>> AddAsync(Guid customerId, string text, CancellationToken ct = default);
+
+    Task<Result<bool>> DeleteAsync(Guid noteId, CancellationToken ct = default);
+}
+
 /// <summary>Remotable contract of <see cref="AutoMessagingService"/> (generated from its public async methods).</summary>
 public partial interface IAutoMessagingService
 {

@@ -187,6 +187,9 @@
                             <TabItem Header="Onam ve dosyalar">
                                 <ContentControl Content="{Binding Records}" Focusable="False" />
                             </TabItem>
+                            <TabItem Header="Gizli notlar" Visibility="{Binding ShowPrivateNotes, Converter={StaticResource VisibleWhen}}">
+                                <ContentControl Content="{Binding PrivateNotes}" Focusable="False" />
+                            </TabItem>
                             <TabItem Header="Kişisel veriler">
                                 <StackPanel Margin="0,4,0,0" MaxWidth="640" HorizontalAlignment="Left">
                                     <TextBlock Style="{StaticResource Subtle}" Text="KVKK kapsamındaki talepler için müşterinin tüm kayıtlarını dışa aktarabilir, kaydı arşivleyebilir veya kişisel verilerini kalıcı olarak anonimleştirebilirsiniz." />

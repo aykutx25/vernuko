@@ -88,9 +88,10 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
     [ObservableProperty]
     private string _balanceText = string.Empty;
 
-    public CustomersViewModel(ICustomerService customers, IPackageService packages, IPaymentService payments, IServiceProvider services, IDialogService dialogs, IPlatformServices platform, CustomerRecordsViewModel records)
+    public CustomersViewModel(ICustomerService customers, IPackageService packages, IPaymentService payments, IServiceProvider services, IDialogService dialogs, IPlatformServices platform, CustomerRecordsViewModel records, PrivateNotesViewModel privateNotes)
     {
         Records = records;
+        PrivateNotes = privateNotes;
         _customers = customers;
         _packages = packages;
         _payments = payments;
@@ -113,6 +114,11 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
 
     /// <summary>Consents and encrypted files of the selected customer.</summary>
     public CustomerRecordsViewModel Records { get; }
+
+    /// <summary>Gizli uzman notları (psikoloji, danışmanlık, hukuk profilleri; yalnızca yazarı görür).</summary>
+    public PrivateNotesViewModel PrivateNotes { get; }
+
+    public bool ShowPrivateNotes => PrivateNotes.CanUse && Shell?.Business?.Features.Contains(BusinessProfiles.ProfileFeature.PrivateNotes) == true;
 
     public bool HasSelection => Details is not null;
 
@@ -445,5 +451,9 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
         }
 
         await Records.LoadAsync(id);
+        if (ShowPrivateNotes)
+        {
+            await PrivateNotes.LoadAsync(id);
+        }
     }
 }

@@ -45,6 +45,7 @@
             <DataTemplate DataType="{x:Type pages:CommissionRulesViewModel}"><v:CommissionRulesView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:ConsentTemplatesViewModel}"><v:ConsentTemplatesView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:CustomerRecordsViewModel}"><v:CustomerRecordsView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pages:PrivateNotesViewModel}"><v:PrivateNotesView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:UpdatesViewModel}"><v:UpdatesView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:MessagingSettingsViewModel}"><v:MessagingSettingsView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:MultiComputerViewModel}"><v:MultiComputerView /></DataTemplate>
