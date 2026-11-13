@@ -101,11 +101,15 @@ public sealed partial class CommissionRulesViewModel(ICommissionService commissi
     [RelayCommand]
     private Task SaveAsync() => RunAsync(async () =>
     {
-        if (!decimal.TryParse(Value, System.Globalization.NumberStyles.Number, TurkishText.Culture, out var v) || v < 0)
+        // Same rules as amounts ("12,5", "12.5", "1.250"): with tr-TR parsing "12.5" became 125 (a %125 rule).
+        var parsed = Money.Parse(Value);
+        if (parsed.IsFailure)
         {
-            ErrorMessage = "Değer geçersiz.";
+            ErrorMessage = "Değer geçersiz. Örnek: 12,5 veya 150,00";
             return;
         }
+
+        var v = parsed.Value.Minor / 100m;
 
         var kind = RateKind?.Value ?? CommissionRateKind.Percent;
         var dto = new CommissionRuleDto(

@@ -68,47 +68,50 @@
                     </DataGrid>
                 </DockPanel>
             </Border>
-            <StackPanel Grid.Column="1">
-                <Border Style="{StaticResource Card}">
-                    <StackPanel>
-                        <TextBlock Text="Günlük kasa (net)" Style="{StaticResource SectionTitle}" />
-                        <ItemsControl ItemsSource="{Binding Totals}" Focusable="False">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <DockPanel Margin="0,4">
-                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Amount}" FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding Method}" />
-                                    </DockPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,8,0,0" Padding="0,8,0,0">
-                            <DockPanel>
-                                <TextBlock DockPanel.Dock="Right" Text="{Binding TotalText}" FontWeight="SemiBold" FontSize="16" />
-                                <TextBlock Text="Toplam" FontWeight="SemiBold" />
-                            </DockPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource Card}" Margin="0,14,0,0" Visibility="{Binding ShowGiftCards, Converter={StaticResource VisibleWhen}}">
-                    <ContentControl Content="{Binding GiftCards}" Focusable="False" />
-                </Border>
-                <Border Style="{StaticResource Card}" Margin="0,14,0,0" Visibility="{Binding CanSeeDebtors, Converter={StaticResource VisibleWhen}}">
-                    <StackPanel>
-                        <TextBlock Text="Açık bakiyesi olan müşteriler" Style="{StaticResource SectionTitle}" />
-                        <ItemsControl ItemsSource="{Binding Debtors}" Focusable="False">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <DockPanel Margin="0,4">
-                                        <TextBlock DockPanel.Dock="Right" Text="{Binding BalanceMinor, Converter={StaticResource Money}}" FontWeight="SemiBold" Foreground="{StaticResource WarningBrush}" />
-                                        <TextBlock Text="{Binding CustomerName}" TextTrimming="CharacterEllipsis" />
-                                    </DockPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
+            <!-- Cash, gift cards and open balances: scrolls instead of cutting off "Hediye kartı sat" and the list. -->
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Günlük kasa (net)" Style="{StaticResource SectionTitle}" />
+                            <ItemsControl ItemsSource="{Binding Totals}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="0,4">
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding Amount}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Method}" />
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,8,0,0" Padding="0,8,0,0">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding TotalText}" FontWeight="SemiBold" FontSize="16" />
+                                    <TextBlock Text="Toplam" FontWeight="SemiBold" />
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Margin="0,14,0,0" Visibility="{Binding ShowGiftCards, Converter={StaticResource VisibleWhen}}">
+                        <ContentControl Content="{Binding GiftCards}" Focusable="False" />
+                    </Border>
+                    <Border Style="{StaticResource Card}" Margin="0,14,0,0" Visibility="{Binding CanSeeDebtors, Converter={StaticResource VisibleWhen}}">
+                        <StackPanel>
+                            <TextBlock Text="Açık bakiyesi olan müşteriler" Style="{StaticResource SectionTitle}" />
+                            <ItemsControl ItemsSource="{Binding Debtors}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="0,4">
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding BalanceMinor, Converter={StaticResource Money}}" FontWeight="SemiBold" Foreground="{StaticResource WarningBrush}" />
+                                            <TextBlock Text="{Binding CustomerName}" TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>

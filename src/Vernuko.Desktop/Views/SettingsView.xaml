@@ -83,19 +83,21 @@
                         </DataGrid>
                     </Border>
                     <Border Grid.Column="1" Style="{StaticResource Card}">
-                        <StackPanel>
-                            <TextBlock Text="Yeni kullanıcı" Style="{StaticResource SectionTitle}" />
-                            <TextBlock Text="AD SOYAD" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding NewUserDisplayName, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock Text="KULLANICI ADI" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding NewUsername, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock Text="GEÇİCİ PAROLA" Style="{StaticResource FieldLabel}" />
-                            <PasswordBox b:PasswordBoxAssistant.BoundPassword="{Binding NewUserPassword, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock Text="ROL" Style="{StaticResource FieldLabel}" />
-                            <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding NewUserRole}" DisplayMemberPath="Label" />
-                            <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" Text="Sekreter randevu ve müşteri işlemlerini yapabilir; finansal raporları, kullanıcıları ve geri yüklemeyi göremez." />
-                            <Button Style="{StaticResource PrimaryButton}" Content="Kullanıcı ekle" Command="{Binding AddUserCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" />
-                        </StackPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-8,0" Padding="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="Yeni kullanıcı" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="AD SOYAD" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding NewUserDisplayName, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="KULLANICI ADI" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding NewUsername, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="GEÇİCİ PAROLA" Style="{StaticResource FieldLabel}" />
+                                <PasswordBox b:PasswordBoxAssistant.BoundPassword="{Binding NewUserPassword, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="ROL" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding NewUserRole}" DisplayMemberPath="Label" />
+                                <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" Text="Sekreter randevu ve müşteri işlemlerini yapabilir; finansal raporları, kullanıcıları ve geri yüklemeyi göremez." />
+                                <Button Style="{StaticResource PrimaryButton}" Content="Kullanıcı ekle" Command="{Binding AddUserCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </ScrollViewer>
                     </Border>
                 </Grid>
             </TabItem>

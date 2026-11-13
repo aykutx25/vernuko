@@ -85,6 +85,9 @@ public sealed partial class WaitlistViewModel(IWaitlistService waitlist, ICustom
             return;
         }
 
+        // Typing another name drops the earlier pick: otherwise Kaydet booked/sold for the previously picked customer.
+        Customer = null;
+
         _ = _debounce.RunAsync(async _ =>
         {
             CustomerResults.Clear();

@@ -34,50 +34,52 @@
                         </DataGrid>
                     </Border>
                     <Border Grid.Column="1" Style="{StaticResource Card}">
-                        <StackPanel>
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewServiceCommand}" />
-                                <TextBlock Text="Hizmet bilgileri" Style="{StaticResource SectionTitle}" />
-                            </DockPanel>
-                            <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding ServiceName, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock Text="KATEGORİ" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding ServiceCategory, UpdateSourceTrigger=PropertyChanged}" />
-                            <UniformGrid Columns="2">
-                                <StackPanel Margin="0,0,6,0"><TextBlock Text="SÜRE (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServiceDuration, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
-                                <StackPanel><TextBlock Text="FİYAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServicePrice, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
-                                <StackPanel Margin="0,0,6,0"><TextBlock Text="HAZIRLIK (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServicePrep, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
-                                <StackPanel><TextBlock Text="TEMİZLİK (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServiceCleanup, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
-                            </UniformGrid>
-                            <TextBlock Text="GEREKEN KAYNAK" Style="{StaticResource FieldLabel}" />
-                            <ComboBox ItemsSource="{Binding RequirementOptions}" SelectedItem="{Binding ServiceRequires}" DisplayMemberPath="Label" />
-                            <StackPanel Visibility="{Binding ShowProcessing, Converter={StaticResource VisibleWhen}}">
-                                <TextBlock Text="BEKLEME SÜRESİ (personel boşta, koltuk/oda dolu)" Style="{StaticResource FieldLabel}" />
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBox Text="{Binding ServiceProcessingStart, UpdateSourceTrigger=PropertyChanged}" Width="60" AutomationProperties.Name="Bekleme başlangıcı" />
-                                    <TextBlock Text=". dakikadan sonra" VerticalAlignment="Center" Margin="6,0,10,0" />
-                                    <TextBox Text="{Binding ServiceProcessingMinutes, UpdateSourceTrigger=PropertyChanged}" Width="60" AutomationProperties.Name="Bekleme süresi" />
-                                    <TextBlock Text="dakika bekleme" VerticalAlignment="Center" Margin="6,0,0,0" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-8,0" Padding="0,0,8,0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewServiceCommand}" />
+                                    <TextBlock Text="Hizmet bilgileri" Style="{StaticResource SectionTitle}" />
+                                </DockPanel>
+                                <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding ServiceName, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="KATEGORİ" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding ServiceCategory, UpdateSourceTrigger=PropertyChanged}" />
+                                <UniformGrid Columns="2">
+                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="SÜRE (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServiceDuration, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel><TextBlock Text="FİYAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServicePrice, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="HAZIRLIK (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServicePrep, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel><TextBlock Text="TEMİZLİK (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServiceCleanup, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                </UniformGrid>
+                                <TextBlock Text="GEREKEN KAYNAK" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding RequirementOptions}" SelectedItem="{Binding ServiceRequires}" DisplayMemberPath="Label" />
+                                <StackPanel Visibility="{Binding ShowProcessing, Converter={StaticResource VisibleWhen}}">
+                                    <TextBlock Text="BEKLEME SÜRESİ (personel boşta, koltuk/oda dolu)" Style="{StaticResource FieldLabel}" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBox Text="{Binding ServiceProcessingStart, UpdateSourceTrigger=PropertyChanged}" Width="60" AutomationProperties.Name="Bekleme başlangıcı" />
+                                        <TextBlock Text=". dakikadan sonra" VerticalAlignment="Center" Margin="6,0,10,0" />
+                                        <TextBox Text="{Binding ServiceProcessingMinutes, UpdateSourceTrigger=PropertyChanged}" Width="60" AutomationProperties.Name="Bekleme süresi" />
+                                        <TextBlock Text="dakika bekleme" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,2,0,0"
+                                               Text="Ör. 90 dakikalık boya: 30. dakikadan sonra 40 dakika bekleme. Bu sürede uzman başka müşteriye randevu verebilir; koltuk dolu kalır. Bekleme yoksa 0 bırakın." />
                                 </StackPanel>
+                                <TextBlock Text="YALNIZCA ŞU ODA / CİHAZLARDA" Style="{StaticResource FieldLabel}" />
+                                <ItemsControl ItemsSource="{Binding ServiceResourceChoices}" Focusable="False">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox Content="{Binding Label}" IsChecked="{Binding IsSelected}" Margin="0,2,14,2" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                                 <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,2,0,0"
-                                           Text="Ör. 90 dakikalık boya: 30. dakikadan sonra 40 dakika bekleme. Bu sürede uzman başka müşteriye randevu verebilir; koltuk dolu kalır. Bekleme yoksa 0 bırakın." />
+                                           Text="Hiçbiri işaretli değilse her oda/cihaz kullanılabilir. İşaretlenen türde (oda, cihaz) yalnızca işaretliler seçilebilir; ör. lazer → Lazer Odası 1-2 + Lazer Cihazı." />
+                                <CheckBox Content="Aktif" IsChecked="{Binding ServiceActive}" Margin="0,12,0,0" />
+                                <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveServiceCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" MinWidth="120" />
                             </StackPanel>
-                            <TextBlock Text="YALNIZCA ŞU ODA / CİHAZLARDA" Style="{StaticResource FieldLabel}" />
-                            <ItemsControl ItemsSource="{Binding ServiceResourceChoices}" Focusable="False">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <CheckBox Content="{Binding Label}" IsChecked="{Binding IsSelected}" Margin="0,2,14,2" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,2,0,0"
-                                       Text="Hiçbiri işaretli değilse her oda/cihaz kullanılabilir. İşaretlenen türde (oda, cihaz) yalnızca işaretliler seçilebilir; ör. lazer → Lazer Odası 1-2 + Lazer Cihazı." />
-                            <CheckBox Content="Aktif" IsChecked="{Binding ServiceActive}" Margin="0,12,0,0" />
-                            <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveServiceCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" MinWidth="120" />
-                        </StackPanel>
+                        </ScrollViewer>
                     </Border>
                 </Grid>
             </TabItem>
@@ -97,19 +99,21 @@
                         </DataGrid>
                     </Border>
                     <Border Grid.Column="1" Style="{StaticResource Card}">
-                        <StackPanel>
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewResourceCommand}" />
-                                <TextBlock Text="Oda / cihaz" Style="{StaticResource SectionTitle}" />
-                            </DockPanel>
-                            <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding ResourceName, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock Text="TÜR" Style="{StaticResource FieldLabel}" />
-                            <ComboBox ItemsSource="{Binding KindOptions}" SelectedItem="{Binding ResourceKind}" DisplayMemberPath="Label" />
-                            <CheckBox Content="Aktif" IsChecked="{Binding ResourceActive}" Margin="0,12,0,0" />
-                            <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" Text="Aynı oda veya cihaz, çakışan saatlerde iki farklı randevuya atanamaz." />
-                            <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveResourceCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" MinWidth="120" />
-                        </StackPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-8,0" Padding="0,0,8,0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewResourceCommand}" />
+                                    <TextBlock Text="Oda / cihaz" Style="{StaticResource SectionTitle}" />
+                                </DockPanel>
+                                <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding ResourceName, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="TÜR" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding KindOptions}" SelectedItem="{Binding ResourceKind}" DisplayMemberPath="Label" />
+                                <CheckBox Content="Aktif" IsChecked="{Binding ResourceActive}" Margin="0,12,0,0" />
+                                <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" Text="Aynı oda veya cihaz, çakışan saatlerde iki farklı randevuya atanamaz." />
+                                <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveResourceCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" MinWidth="120" />
+                            </StackPanel>
+                        </ScrollViewer>
                     </Border>
                 </Grid>
             </TabItem>
@@ -131,23 +135,25 @@
                         </DataGrid>
                     </Border>
                     <Border Grid.Column="1" Style="{StaticResource Card}">
-                        <StackPanel>
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewTemplateCommand}" />
-                                <TextBlock Text="Paket tanımı" Style="{StaticResource SectionTitle}" />
-                            </DockPanel>
-                            <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
-                            <TextBox Text="{Binding TemplateName, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock Text="HİZMET" Style="{StaticResource FieldLabel}" />
-                            <ComboBox ItemsSource="{Binding Services}" SelectedItem="{Binding TemplateService}" DisplayMemberPath="Name" />
-                            <UniformGrid Columns="3">
-                                <StackPanel Margin="0,0,6,0"><TextBlock Text="SEANS" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TemplateSessions, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
-                                <StackPanel Margin="0,0,6,0"><TextBlock Text="FİYAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TemplatePrice, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
-                                <StackPanel><TextBlock Text="GÜN" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TemplateValidity, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
-                            </UniformGrid>
-                            <CheckBox Content="Aktif" IsChecked="{Binding TemplateActive}" Margin="0,12,0,0" />
-                            <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveTemplateCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" MinWidth="120" />
-                        </StackPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-8,0" Padding="0,0,8,0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewTemplateCommand}" />
+                                    <TextBlock Text="Paket tanımı" Style="{StaticResource SectionTitle}" />
+                                </DockPanel>
+                                <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding TemplateName, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="HİZMET" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding Services}" SelectedItem="{Binding TemplateService}" DisplayMemberPath="Name" />
+                                <UniformGrid Columns="3">
+                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="SEANS" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TemplateSessions, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="FİYAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TemplatePrice, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel><TextBlock Text="GÜN" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding TemplateValidity, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                </UniformGrid>
+                                <CheckBox Content="Aktif" IsChecked="{Binding TemplateActive}" Margin="0,12,0,0" />
+                                <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveTemplateCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" MinWidth="120" />
+                            </StackPanel>
+                        </ScrollViewer>
                     </Border>
                 </Grid>
             </TabItem>

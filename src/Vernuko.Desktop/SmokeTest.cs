@@ -28,10 +28,13 @@ internal static class SmokeTest
     /// <summary>Screens rendered smaller than requested (the check would then not show what it claims to).</summary>
     private static readonly List<string> SizeErrors = [];
 
-    /// <summary>The main window's MinWidth/MinHeight: the tightest layout a user can get.</summary>
-    private const int MinimumWidth = 1180;
+    /// <summary>
+    /// The main window's MinWidth/MinHeight: the tightest layout a user can get. Chosen to fit a 1366×768 screen at 125 %
+    /// scaling (about 1093×582 usable), the most common small laptop setting.
+    /// </summary>
+    private const int MinimumWidth = 1080;
 
-    private const int MinimumHeight = 680;
+    private const int MinimumHeight = 560;
 
     public static void RecordUnhandled(Exception ex) => UnhandledErrors.Add(ex.GetType().Name + ": " + ex.Message);
 
@@ -146,6 +149,7 @@ internal static class SmokeTest
 
             await shell.NavigateAsync("appointments", new OpenNewAppointment(null));
             await RenderAsync(root, 1366, 768, Path.Combine(outputDirectory, "appointments-editor.png"));
+            await RenderAsync(root, MinimumWidth, MinimumHeight, Path.Combine(outputDirectory, "appointments-editor-min.png"));
             if (shell.CurrentPage is AppointmentsViewModel appointments)
             {
                 appointments.View = CalendarView.Week;

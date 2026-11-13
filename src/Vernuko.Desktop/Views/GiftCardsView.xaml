@@ -30,7 +30,7 @@
                         <DataTemplate>
                             <DockPanel>
                                 <TextBlock DockPanel.Dock="Right" Text="{Binding AmountMinor, Converter={StaticResource Money}}" />
-                                <TextBlock Style="{StaticResource Muted}"><Run Text="{Binding AtUtc, Mode=OneWay, StringFormat='dd.MM.yyyy'}" /><Run Text=" " /><Run Text="{Binding KindName, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Style="{StaticResource Muted}"><Run Text="{Binding AtUtc, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=utc-date}" /><Run Text=" " /><Run Text="{Binding KindName, Mode=OneWay}" /></TextBlock>
                             </DockPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

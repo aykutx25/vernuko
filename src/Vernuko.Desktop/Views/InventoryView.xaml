@@ -135,7 +135,7 @@
                                             <ColumnDefinition Width="90" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <ComboBox ItemsSource="{Binding DataContext.Products, RelativeSource={RelativeSource AncestorType=UserControl}}" SelectedItem="{Binding Product}" DisplayMemberPath="Name" Margin="0,0,8,0" />
+                                        <ComboBox ItemsSource="{Binding DataContext.MaterialProducts, RelativeSource={RelativeSource AncestorType=UserControl}}" SelectedItem="{Binding Product}" DisplayMemberPath="Name" Margin="0,0,8,0" />
                                         <TextBox Grid.Column="1" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" AutomationProperties.Name="Miktar" />
                                         <Button Grid.Column="2" Style="{StaticResource LinkButton}" Content="Kaldır" Command="{Binding DataContext.RemoveMaterialCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
                                     </Grid>

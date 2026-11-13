@@ -60,8 +60,12 @@ public sealed partial class CustomerRecordsViewModel(ICustomerRecordsService rec
 
     public bool HasNoTemplates => CanRecordConsent && Templates.Count == 0;
 
+    /// <summary>Latest customer wins: a slow answer for the previous customer must not land on this card.</summary>
+    private int _loadVersion;
+
     public async Task LoadAsync(Guid? customerId)
     {
+        var version = ++_loadVersion;
         _customerId = customerId;
         Method ??= Methods[0];
         NewFileKind ??= FileKinds[0];
@@ -73,27 +77,35 @@ public sealed partial class CustomerRecordsViewModel(ICustomerRecordsService rec
             return;
         }
 
-        foreach (var c in (await records.GetConsentsAsync(id)).OrEmpty())
+        var consents = (await records.GetConsentsAsync(id)).OrEmpty().ToList();
+        var files = CanViewFiles ? (await records.GetFilesAsync(id)).OrEmpty().ToList() : [];
+        // Templates are reloaded every time: ones added in Ayarlar meanwhile must appear without signing out.
+        var templates = CanRecordConsent ? (await records.GetTemplatesAsync()).OrEmpty().ToList() : [];
+        if (version != _loadVersion)
+        {
+            return;
+        }
+
+        foreach (var c in consents)
         {
             Consents.Add(c);
         }
 
-        if (CanViewFiles)
+        foreach (var f in files)
         {
-            foreach (var f in (await records.GetFilesAsync(id)).OrEmpty())
-            {
-                Files.Add(f);
-            }
+            Files.Add(f);
         }
 
-        if (CanRecordConsent && Templates.Count == 0)
+        if (CanRecordConsent)
         {
-            foreach (var t in (await records.GetTemplatesAsync()).OrEmpty())
+            var selected = SelectedTemplate?.Id;
+            Templates.Clear();
+            foreach (var t in templates)
             {
                 Templates.Add(t);
             }
 
-            SelectedTemplate ??= Templates.FirstOrDefault();
+            SelectedTemplate = Templates.FirstOrDefault(t => t.Id == selected) ?? Templates.FirstOrDefault();
         }
 
         OnPropertyChanged(string.Empty);
@@ -177,8 +189,10 @@ public sealed partial class CustomerRecordsViewModel(ICustomerRecordsService rec
             return;
         }
 
+        var customer = _customerId;
         var bytes = await records.ReadFileAsync(file.Id);
-        if (Check(bytes))
+        // The card may show another customer by now: never put this photo on it.
+        if (customer == _customerId && SelectedFile == file && Check(bytes))
         {
             PreviewImage = bytes.Value;
         }

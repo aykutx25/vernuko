@@ -83,6 +83,9 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
 
     public ObservableCollection<ProductDto> Products { get; } = [];
 
+    /// <summary>Every product, for the service materials (the list above may show only critical stock).</summary>
+    public ObservableCollection<ProductDto> MaterialProducts { get; } = [];
+
     public ObservableCollection<StockMovementDto> Movements { get; } = [];
 
     public ObservableCollection<CustomerListItem> CustomerResults { get; } = [];
@@ -151,6 +154,9 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
         {
             return;
         }
+
+        // Typing another name drops the earlier pick: otherwise Kaydet booked/sold for the previously picked customer.
+        SaleCustomer = null;
 
         _ = _debounce.RunAsync(async _ =>
         {
@@ -317,7 +323,7 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
     });
 
     [RelayCommand]
-    private void AddMaterial() => Materials.Add(new MaterialRow { Product = Products.FirstOrDefault() });
+    private void AddMaterial() => Materials.Add(new MaterialRow { Product = MaterialProducts.FirstOrDefault() });
 
     [RelayCommand]
     private void RemoveMaterial(MaterialRow row) => Materials.Remove(row);
@@ -351,10 +357,17 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
 
     private async Task LoadAsync()
     {
+        var all = (await inventory.GetProductsAsync(includeInactive: true)).OrEmpty().ToList();
         Products.Clear();
-        foreach (var p in (await inventory.GetProductsAsync(includeInactive: true)).OrEmpty().Where(p => !LowOnly || p.IsLow))
+        foreach (var p in all.Where(p => !LowOnly || p.IsLow))
         {
             Products.Add(p);
+        }
+
+        MaterialProducts.Clear();
+        foreach (var p in all)
+        {
+            MaterialProducts.Add(p);
         }
 
         OnPropertyChanged(nameof(LowCount));
@@ -381,17 +394,27 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
         }
     }
 
+    /// <summary>Latest service wins: switching services quickly merged two services' rows (then saved onto the second).</summary>
+    private int _materialsVersion;
+
     private async Task LoadMaterialsAsync()
     {
+        var version = ++_materialsVersion;
         Materials.Clear();
         if (MaterialService is null)
         {
             return;
         }
 
-        foreach (var m in (await inventory.GetServiceMaterialsAsync(MaterialService.Id)).OrEmpty())
+        var rows = (await inventory.GetServiceMaterialsAsync(MaterialService.Id)).OrEmpty().ToList();
+        if (version != _materialsVersion)
         {
-            Materials.Add(new MaterialRow { Product = Products.FirstOrDefault(p => p.Id == m.ProductId), Quantity = m.Quantity.ToString(CultureInfo.InvariantCulture) });
+            return;
+        }
+
+        foreach (var m in rows)
+        {
+            Materials.Add(new MaterialRow { Product = MaterialProducts.FirstOrDefault(p => p.Id == m.ProductId), Quantity = m.Quantity.ToString(CultureInfo.InvariantCulture) });
         }
     }
 }

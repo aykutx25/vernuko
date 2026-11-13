@@ -187,6 +187,9 @@ public sealed partial class RootViewModel : ViewModelBase
         }
     }
 
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void DismissError() => ErrorMessage = null;
+
     public async Task<bool> BackupOnExitAsync()
     {
         if (_computer.Role == ComputerRole.Client)

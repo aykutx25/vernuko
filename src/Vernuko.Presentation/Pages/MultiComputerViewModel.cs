@@ -33,12 +33,13 @@ public sealed partial class MultiComputerViewModel(IMultiComputer computer, User
 
     public Task LoadAsync() => RunAsync(async () =>
     {
-        Refresh();
         Computers.Clear();
         foreach (var c in await computer.ListComputersAsync())
         {
             Computers.Add(c);
         }
+
+        Refresh(); // after the list: "{n} bağlı bilgisayar" showed 0 on the first visit
     });
 
     [RelayCommand]

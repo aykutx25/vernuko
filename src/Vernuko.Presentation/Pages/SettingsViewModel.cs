@@ -302,7 +302,7 @@ public sealed partial class SettingsViewModel(
             InfoMessage = "İşletme ayarları kaydedildi.";
             if (Shell is not null)
             {
-                Shell.BusinessName = BusinessName;
+                await Shell.ReloadBusinessAsync(); // the auto-lock time etc. apply now, not after the next login
             }
         }
     });

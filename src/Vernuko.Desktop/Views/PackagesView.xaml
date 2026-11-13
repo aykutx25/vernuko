@@ -64,24 +64,27 @@
                             </WrapPanel>
                             <TextBlock Text="Seans geçmişi" FontWeight="SemiBold" Margin="0,12,0,6" />
                         </StackPanel>
-                        <ItemsControl ItemsSource="{Binding Ledger}" Focusable="False">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,6">
-                                        <StackPanel>
-                                            <DockPanel>
-                                                <TextBlock DockPanel.Dock="Right" Text="{Binding Delta, StringFormat={}{0:+0;-0;0}}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding AtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" />
-                                            </DockPanel>
-                                            <TextBlock Style="{StaticResource Muted}">
-                                                <Run Text="{Binding KindName, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding UserName, Mode=OneWay}" />
-                                            </TextBlock>
-                                            <TextBlock Text="{Binding Reason}" Style="{StaticResource Muted}" Visibility="{Binding Reason, Converter={StaticResource VisibleWhen}}" />
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <!-- The whole session history, not only the first few entries that fit. -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding Ledger}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,6">
+                                            <StackPanel>
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Delta, StringFormat={}{0:+0;-0;0}}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding AtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" />
+                                                </DockPanel>
+                                                <TextBlock Style="{StaticResource Muted}">
+                                                    <Run Text="{Binding KindName, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding UserName, Mode=OneWay}" />
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding Reason}" Style="{StaticResource Muted}" Visibility="{Binding Reason, Converter={StaticResource VisibleWhen}}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </DockPanel>
                 </Grid>
             </Border>

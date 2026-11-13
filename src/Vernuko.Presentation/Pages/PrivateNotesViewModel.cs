@@ -23,8 +23,18 @@ public sealed partial class PrivateNotesViewModel(IPrivateNotesService notes, ID
 
     public bool CanUse => session.Has(Permission.PrivateNotesViewOwn);
 
+    /// <summary>Latest customer wins (a quick click on another customer must not show the first one's notes).</summary>
+    private int _loadVersion;
+
     public Task LoadAsync(Guid? customerId) => RunAsync(async () =>
     {
+        var version = ++_loadVersion;
+        if (_customerId != customerId)
+        {
+            // An unsaved note belongs to the customer it was typed for: it must never be saved onto the next one.
+            NewText = string.Empty;
+        }
+
         _customerId = customerId;
         Notes.Clear();
         OthersText = null;
@@ -34,7 +44,7 @@ public sealed partial class PrivateNotesViewModel(IPrivateNotesService notes, ID
         }
 
         var r = await notes.GetAsync(id);
-        if (!Check(r))
+        if (version != _loadVersion || !Check(r))
         {
             return;
         }

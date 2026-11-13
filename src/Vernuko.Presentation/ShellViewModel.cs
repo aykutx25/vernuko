@@ -76,6 +76,13 @@ public sealed partial class ShellViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isDemo;
 
+    /// <summary>"Hatırlatma: SMS" / "Hatırlatma: kapalı"; empty (hidden) for users who cannot see the setting.</summary>
+    [ObservableProperty]
+    private string _messagingStatusText = string.Empty;
+
+    [ObservableProperty]
+    private string _connectionText = "Yerel veritabanı — internetsiz çalışır";
+
     [ObservableProperty]
     private BusinessInfo? _business;
 
@@ -120,6 +127,25 @@ public sealed partial class ShellViewModel : ViewModelBase
 
     public async Task RefreshStatusAsync()
     {
+        var computer = _services.GetService(typeof(IMultiComputer)) as IMultiComputer;
+        ConnectionText = computer?.Role switch
+        {
+            ComputerRole.Client => "Ana bilgisayara bağlı" + (computer.Addresses.Count > 0 ? $" ({computer.Addresses[0]})" : string.Empty),
+            ComputerRole.Host => "Ana bilgisayar — veriler bu bilgisayarda",
+            _ => "Yerel veritabanı — internetsiz çalışır",
+        };
+        if (_session.Has(Permission.SettingsManage) && _services.GetService(typeof(IAutoMessagingService)) is IAutoMessagingService messaging
+            && await messaging.GetSettingsAsync() is { IsSuccess: true } m)
+        {
+            MessagingStatusText = m.Value.RemindersEnabled
+                ? $"Hatırlatma: {(m.Value.ReminderChannel == Messaging.MessageChannel.Sms ? "SMS" : "WhatsApp")}"
+                : "Hatırlatma: kapalı";
+        }
+        else
+        {
+            MessagingStatusText = string.Empty;
+        }
+
         var license = await _license.RefreshAsync();
         LicenseText = license.Message;
         LicenseReadOnly = license.Mode == AccessMode.ReadOnly;
@@ -204,6 +230,16 @@ public sealed partial class ShellViewModel : ViewModelBase
     public void CloseOverlay() => Overlay = null;
 
     public bool Has(Permission permission) => _session.Has(permission);
+
+    /// <summary>After the business settings were saved: name, auto-lock time etc. apply at once, not at the next login.</summary>
+    public async Task ReloadBusinessAsync()
+    {
+        Business = await _settings.GetBusinessInfoAsync();
+        BusinessName = Business?.BusinessName ?? BusinessName;
+    }
+
+    /// <summary>Whether the signed-in user has the page (quick-action tiles for missing pages are hidden).</summary>
+    public bool HasPage(string key) => NavItems.Any(n => n.Key == key);
 
     /// <summary>
     /// Window-wide keyboard shortcuts. The view maps keys to <see cref="Shortcut"/> and calls this from the window,

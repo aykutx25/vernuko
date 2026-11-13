@@ -134,6 +134,9 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
     private bool _loaded;
     private bool _suspendReload;
 
+    /// <summary>Latest refresh wins: a quick "next day" click must not show the previous day's rows under the new date.</summary>
+    private int _refreshVersion;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DateTitle))]
     private DateTime _selectedDate = DateTime.Today;
@@ -202,13 +205,25 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
 
     public bool CanManage => Shell?.Has(Permission.AppointmentsManage) ?? true;
 
+    // Quick-action tiles only for pages this user has (a tile for a missing page did nothing).
+    public bool CanGoCustomers => Shell?.HasPage("customers") ?? true;
+
+    public bool CanGoPackages => Shell?.HasPage("packages") ?? true;
+
+    public bool CanGoPayments => Shell?.HasPage("payments") ?? true;
+
+    public bool CanGoReports => Shell?.HasPage("reports") ?? true;
+
     public override async Task OnNavigatedToAsync(object? parameter)
     {
-        if (!_loaded)
-        {
-            await LoadFiltersAsync();
-            _loaded = true;
-        }
+        // Every visit: staff, rooms and services added on other pages appear in the filters (selection kept).
+        await LoadFiltersAsync();
+        _loaded = true;
+        OnPropertyChanged(nameof(CanManage));
+        OnPropertyChanged(nameof(CanGoCustomers));
+        OnPropertyChanged(nameof(CanGoPackages));
+        OnPropertyChanged(nameof(CanGoPayments));
+        OnPropertyChanged(nameof(CanGoReports));
 
         await RefreshAsync();
         if (parameter is OpenNewAppointment open)
@@ -294,6 +309,7 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
     [RelayCommand]
     public Task RefreshAsync() => RunAsync(async () =>
     {
+        var version = ++_refreshVersion;
         var filter = new AppointmentFilter(SelectedStaff?.Value, SelectedResource?.Value, SelectedService?.Value);
         var day = DateOnly.FromDateTime(SelectedDate);
         var nowLocal = _time.GetLocalNow().DateTime;
@@ -302,6 +318,11 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
             case CalendarView.Day:
             {
                 var agenda = await _appointments.GetDayAsync(day, filter);
+                if (version != _refreshVersion)
+                {
+                    return;
+                }
+
                 if (!Check(agenda))
                 {
                     return;
@@ -328,6 +349,11 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
             {
                 var monday = day.AddDays(-(((int)day.DayOfWeek + 6) % 7));
                 var items = await _appointments.GetRangeAsync(monday, monday.AddDays(6), filter);
+                if (version != _refreshVersion)
+                {
+                    return;
+                }
+
                 if (!Check(items))
                 {
                     return;
@@ -350,6 +376,11 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
                 var first = new DateOnly(day.Year, day.Month, 1);
                 var gridStart = first.AddDays(-(((int)first.DayOfWeek + 6) % 7));
                 var items = await _appointments.GetRangeAsync(gridStart, gridStart.AddDays(41), filter);
+                if (version != _refreshVersion)
+                {
+                    return;
+                }
+
                 if (!Check(items))
                 {
                     return;
@@ -370,6 +401,11 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
         }
 
         var upcoming = await _appointments.GetUpcomingAsync(5);
+        if (version != _refreshVersion)
+        {
+            return;
+        }
+
         if (upcoming.IsSuccess)
         {
             Upcoming.Clear();
@@ -385,6 +421,11 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
 
     public async Task OpenEditorAsync(Guid? customerId)
     {
+        if (!await ConfirmReplaceEditorAsync())
+        {
+            return;
+        }
+
         var editor = _services.GetRequiredService<AppointmentEditorViewModel>();
         editor.Closed += async (_, saved) =>
         {
@@ -399,9 +440,19 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
         await editor.InitializeForCreateAsync(DateOnly.FromDateTime(SelectedDate), customerId);
     }
 
+    /// <summary>A half-filled form is not replaced silently (header button, Ctrl+N, "Randevu ver" on a customer card).</summary>
+    private async Task<bool> ConfirmReplaceEditorAsync() =>
+        Editor is not { HasUserInput: true }
+        || await _dialogs.ConfirmAsync("Açık randevu formu", "Açık formdaki bilgiler kaydedilmedi. Form kapatılıp yenisi açılsın mı?", "Yeni form aç", "Açık forma dön");
+
     [RelayCommand]
     private async Task RescheduleAsync(AppointmentRow row)
     {
+        if (!await ConfirmReplaceEditorAsync())
+        {
+            return;
+        }
+
         var editor = _services.GetRequiredService<AppointmentEditorViewModel>();
         editor.Closed += async (_, saved) =>
         {
@@ -545,6 +596,7 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
 
     private async Task LoadFiltersAsync()
     {
+        var (staff, resource, service) = (SelectedStaff?.Value, SelectedResource?.Value, SelectedService?.Value);
         _suspendReload = true;
         try
         {
@@ -569,9 +621,9 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
                 ServiceOptions.Add(new Option<Guid?>(s.Name, s.Id));
             }
 
-            SelectedStaff = StaffOptions[0];
-            SelectedResource = ResourceOptions[0];
-            SelectedService = ServiceOptions[0];
+            SelectedStaff = StaffOptions.FirstOrDefault(o => o.Value == staff) ?? StaffOptions[0];
+            SelectedResource = ResourceOptions.FirstOrDefault(o => o.Value == resource) ?? ResourceOptions[0];
+            SelectedService = ServiceOptions.FirstOrDefault(o => o.Value == service) ?? ServiceOptions[0];
         }
         finally
         {

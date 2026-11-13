@@ -31,8 +31,17 @@ public sealed partial class HomeViewModel(IAppointmentService appointments, IBac
 
     public string TodayText => Formatting.LongDate(time.GetLocalNow().Date);
 
+    public bool CanManage => Shell?.Has(Security.Permission.AppointmentsManage) ?? true;
+
+    public bool CanGoCustomers => Shell?.HasPage("customers") ?? true;
+
+    public bool CanGoSettings => Shell?.HasPage("settings") ?? true;
+
     public override Task OnNavigatedToAsync(object? parameter) => RunAsync(async () =>
     {
+        OnPropertyChanged(nameof(CanManage));
+        OnPropertyChanged(nameof(CanGoCustomers));
+        OnPropertyChanged(nameof(CanGoSettings));
         var hour = time.GetLocalNow().Hour;
         Greeting = $"{(hour < 12 ? "Günaydın" : hour < 18 ? "İyi günler" : "İyi akşamlar")}, {session.DisplayName}";
         var day = await appointments.GetDayAsync(DateOnly.FromDateTime(time.GetLocalNow().Date), new AppointmentFilter());

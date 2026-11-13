@@ -151,12 +151,31 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
 
     partial void OnIncludeArchivedChanged(bool value) => _ = SearchAsync();
 
-    partial void OnSelectedChanged(CustomerListItem? value)
+    private bool _revertingSelection;
+
+    partial void OnSelectedChanged(CustomerListItem? oldValue, CustomerListItem? newValue)
     {
-        if (value is not null)
+        if (newValue is null || _revertingSelection)
         {
-            _ = LoadDetailsAsync(value.Id);
+            return;
         }
+
+        _ = SwitchCustomerAsync(oldValue, newValue);
+    }
+
+    /// <summary>An open edit form is not thrown away silently when another customer is clicked.</summary>
+    private async Task SwitchCustomerAsync(CustomerListItem? previous, CustomerListItem next)
+    {
+        if (IsEditing && !IsNew && Details is { } editing && editing.Id != next.Id
+            && !await _dialogs.ConfirmAsync("Kaydedilmemiş değişiklik", $"{editing.FullName} için yaptığınız değişiklikler kaydedilmedi. Kaydetmeden başka müşteriye geçilsin mi?", "Kaydetmeden geç", "Düzenlemeye dön"))
+        {
+            _revertingSelection = true;
+            Selected = previous;
+            _revertingSelection = false;
+            return;
+        }
+
+        await LoadDetailsAsync(next.Id);
     }
 
     partial void OnDetailsChanged(CustomerDetailsDto? value)
@@ -412,10 +431,23 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
         Shell.ShowOverlay(dialog);
     }
 
+    /// <summary>Latest customer wins: clicking A then B quickly (slow on a connected computer) showed A's data on B's card.</summary>
+    private int _detailsVersion;
+
     public async Task LoadDetailsAsync(Guid id)
     {
+        var version = ++_detailsVersion;
         var d = await _customers.GetAsync(id);
-        if (!Check(d))
+        if (version != _detailsVersion || !Check(d))
+        {
+            return;
+        }
+
+        // Everything is fetched first and shown only if this is still the customer the user wants.
+        var packages = (await _packages.GetCustomerPackagesAsync(id)).OrEmpty().ToList();
+        var history = (await _customers.GetHistoryAsync(id)).OrEmpty().ToList();
+        var transactions = CanSeePayments ? (await _payments.GetCustomerTransactionsAsync(id)).OrEmpty().ToList() : [];
+        if (version != _detailsVersion)
         {
             return;
         }
@@ -430,28 +462,25 @@ public sealed partial class CustomersViewModel : PageViewModel, IShellAware
         };
 
         CustomerPackages.Clear();
-        foreach (var p in (await _packages.GetCustomerPackagesAsync(id)).OrEmpty())
+        foreach (var p in packages)
         {
             CustomerPackages.Add(p);
         }
 
         History.Clear();
-        foreach (var h in (await _customers.GetHistoryAsync(id)).OrEmpty())
+        foreach (var h in history)
         {
             History.Add(h);
         }
 
         Transactions.Clear();
-        if (CanSeePayments)
+        foreach (var t in transactions)
         {
-            foreach (var t in (await _payments.GetCustomerTransactionsAsync(id)).OrEmpty())
-            {
-                Transactions.Add(t);
-            }
+            Transactions.Add(t);
         }
 
         await Records.LoadAsync(id);
-        if (ShowPrivateNotes)
+        if (ShowPrivateNotes && version == _detailsVersion)
         {
             await PrivateNotes.LoadAsync(id);
         }

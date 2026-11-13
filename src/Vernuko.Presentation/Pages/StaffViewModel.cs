@@ -196,12 +196,12 @@ public sealed partial class StaffViewModel(ICatalogService catalog, IDialogServi
             Staff.Add(s);
         }
 
-        if (ServiceChoices.Count == 0)
+        // Every time (services added in Hizmetler meanwhile must be assignable), ticks of the edited form kept.
+        var ticked = ServiceChoices.Where(c => c.IsSelected).Select(c => c.Service.Id).ToHashSet();
+        ServiceChoices.Clear();
+        foreach (var s in (await catalog.GetServicesAsync()).OrEmpty())
         {
-            foreach (var s in (await catalog.GetServicesAsync()).OrEmpty())
-            {
-                ServiceChoices.Add(new ServiceChoice(s, false));
-            }
+            ServiceChoices.Add(new ServiceChoice(s, ticked.Contains(s.Id)));
         }
 
         await LoadExceptionsAsync();

@@ -31,7 +31,7 @@ public partial class AppointmentsView : UserControl
             menu.Items.Add(new Separator());
         }
 
-        if (row.CanReschedule)
+        if (row.CanReschedule && vm.CanManage)
         {
             menu.Items.Add(new MenuItem { Header = "Yeni saate taşı…", Command = vm.RescheduleCommand, CommandParameter = row });
         }

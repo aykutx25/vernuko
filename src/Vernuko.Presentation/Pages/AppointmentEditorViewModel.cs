@@ -239,6 +239,9 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
             return;
         }
 
+        // Typing another name drops the earlier pick: otherwise Kaydet booked/sold for the previously picked customer.
+        SelectedCustomer = null;
+
         _ = _searchDebounce.RunAsync(async ct =>
         {
             var r = await _customers.SearchAsync(value, take: 8, ct: ct);
@@ -306,6 +309,19 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
             _ = LoadSlotsAsync();
         }
     }
+
+    /// <summary>The suggested free times depend on the length: 30 → 90 minutes must not keep offering 30-minute gaps.</summary>
+    partial void OnDurationMinutesChanged(string value)
+    {
+        if (!_initializing && int.TryParse(value, out var minutes) && minutes > 0)
+        {
+            _ = LoadSlotsAsync();
+        }
+    }
+
+    /// <summary>Something the user typed or picked that would be lost if this form were replaced.</summary>
+    public bool HasUserInput => SelectedCustomer is not null || !string.IsNullOrWhiteSpace(Notes) || !string.IsNullOrWhiteSpace(BodyArea)
+        || !string.IsNullOrWhiteSpace(MeetingUrl) || (!IsReschedule && !string.IsNullOrWhiteSpace(CustomerSearch));
 
     /// <summary>
     /// The service may only use some rooms/devices (laser → laser rooms + laser device): drop disallowed ones of

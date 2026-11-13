@@ -46,8 +46,8 @@
                                         <StackPanel>
                                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                                             <TextBlock Style="{StaticResource Muted}">
-                                                <Run Text="Eşleşme: " /><Run Text="{Binding PairedAtUtc, Mode=OneWay, StringFormat='dd.MM.yyyy'}" />
-                                                <Run Text=" · Son görülme: " /><Run Text="{Binding LastSeenUtc, Mode=OneWay, StringFormat='dd.MM.yyyy HH:mm', TargetNullValue='—'}" />
+                                                <Run Text="Eşleşme: " /><Run Text="{Binding PairedAtUtc, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=utc-date}" />
+                                                <Run Text=" · Son görülme: " /><Run Text="{Binding LastSeenUtc, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime, TargetNullValue='—'}" />
                                             </TextBlock>
                                         </StackPanel>
                                     </DockPanel>

@@ -209,6 +209,8 @@ public sealed partial class SellPackageDialogViewModel(IPackageService packages,
             return;
         }
 
+        // Typing another name drops the earlier pick: otherwise Kaydet booked/sold for the previously picked customer.
+        Customer = null;
         _ = SearchAsync(value);
     }
 

@@ -61,10 +61,10 @@
                 <Border Grid.Column="1" Style="{StaticResource Card}">
                     <StackPanel>
                         <TextBlock Text="Hızlı başlangıç" Style="{StaticResource SectionTitle}" />
-                        <Button Style="{StaticResource PrimaryButton}" Content="Yeni randevu (Ctrl+N)" Command="{Binding NewAppointmentCommand}" Margin="0,0,0,8" />
+                        <Button Style="{StaticResource PrimaryButton}" Content="Yeni randevu (Ctrl+N)" Command="{Binding NewAppointmentCommand}" Margin="0,0,0,8" Visibility="{Binding CanManage, Converter={StaticResource VisibleWhen}}" />
                         <Button Content="Randevu takvimi" Command="{Binding GoCommand}" CommandParameter="appointments" Margin="0,0,0,8" />
-                        <Button Content="Müşteriler" Command="{Binding GoCommand}" CommandParameter="customers" Margin="0,0,0,8" />
-                        <Button Content="Ayarlar" Command="{Binding GoCommand}" CommandParameter="settings" />
+                        <Button Content="Müşteriler" Command="{Binding GoCommand}" CommandParameter="customers" Margin="0,0,0,8" Visibility="{Binding CanGoCustomers, Converter={StaticResource VisibleWhen}}" />
+                        <Button Content="Ayarlar" Command="{Binding GoCommand}" CommandParameter="settings" Visibility="{Binding CanGoSettings, Converter={StaticResource VisibleWhen}}" />
                         <TextBlock Text="{Binding BackupText}" Style="{StaticResource Muted}" Margin="0,12,0,0" />
                     </StackPanel>
                 </Border>
