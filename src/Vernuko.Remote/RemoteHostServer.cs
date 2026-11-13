@@ -35,8 +35,18 @@ public sealed class RemoteHostServer : IAsyncDisposable
     public const string DeviceIdHeader = "X-Vernuko-Device";
     public const string DeviceKeyHeader = "X-Vernuko-Device-Key";
 
+    /// <summary>Both computers must run the same Vernuko: calls are matched by position and new fields would be dropped.</summary>
+    public const string VersionHeader = "X-Vernuko-Version";
+
+    public static readonly string ProtocolVersion =
+        (System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(typeof(RemoteHostServer).Assembly)?.InformationalVersion ?? "0")
+        .Split('+')[0];
+
     private readonly WebApplication _app;
     private readonly object _codeLock = new();
+
+    /// <summary>Check code → check device limit → add device → use up the code, as one step (two requests at once got two devices).</summary>
+    private readonly SemaphoreSlim _pairGate = new(1, 1);
     private PairingCode? _code;
     private int _failedPairings;
 
@@ -82,7 +92,7 @@ public sealed class RemoteHostServer : IAsyncDisposable
         builder.Services.AddSingleton(loggerFactory);
         builder.WebHost.ConfigureKestrel(k =>
         {
-            k.Limits.MaxRequestBodySize = 32 * 1024 * 1024; // customer photos/files
+            k.Limits.MaxRequestBodySize = 40 * 1024 * 1024; // customer files up to 25 MiB travel as base64 (×4/3) inside JSON
             var address = bind ?? (certificate is null ? IPAddress.Loopback : IPAddress.Any);
             if (certificate is null && !IPAddress.IsLoopback(address))
             {
@@ -110,6 +120,19 @@ public sealed class RemoteHostServer : IAsyncDisposable
         var server = new RemoteHostServer(app, fingerprint, sessions, devices, time);
         app.UseRateLimiter();
 
+        app.Use(async (http, next) =>
+        {
+            if (!http.Request.Path.StartsWithSegments("/remote/hello") && http.Request.Headers[VersionHeader].ToString() is var theirs && theirs != ProtocolVersion)
+            {
+                await Fail(409, "remote.version",
+                    $"Bu bilgisayardaki Vernuko sürümü ({(theirs.Length == 0 ? "eski" : theirs)}) ana bilgisayardakiyle ({ProtocolVersion}) aynı değil. İki bilgisayarı da aynı sürüme güncelleyin (Ayarlar › Güncellemeler).")
+                    .ExecuteAsync(http);
+                return;
+            }
+
+            await next(http);
+        });
+
         app.MapGet("/remote/hello", () => Results.Json(new HelloResponse("vernuko", version ?? "0"), RpcJson.Options));
 
         app.MapPost("/remote/pair", async (HttpContext http) =>
@@ -120,26 +143,34 @@ public sealed class RemoteHostServer : IAsyncDisposable
                 return Fail(400, "remote.bad_request", "İstek okunamadı.");
             }
 
-            var code = server.CurrentCode();
-            if (code is null)
+            await server._pairGate.WaitAsync(http.RequestAborted);
+            try
             {
-                return Fail(403, "remote.no_code", "Ana bilgisayarda geçerli bir bağlantı kodu yok. Ana bilgisayarda Ayarlar › Çoklu bilgisayar › \"Bağlantı kodu göster\" ile yeni kod alın.");
-            }
+                var code = server.CurrentCode();
+                if (code is null)
+                {
+                    return Fail(403, "remote.no_code", "Ana bilgisayarda geçerli bir bağlantı kodu yok. Ana bilgisayarda Ayarlar › Çoklu bilgisayar › \"Bağlantı kodu göster\" ile yeni kod alın.");
+                }
 
-            if (!RemotePairing.Equal(RemotePairing.Proof(code.Code, "client", fingerprint, r.Nonce), r.Proof))
+                if (!RemotePairing.Equal(RemotePairing.Proof(code.Code, "client", fingerprint, r.Nonce), r.Proof))
+                {
+                    server.PairingFailed();
+                    return Fail(403, "remote.bad_code", "Bağlantı kodu hatalı (veya araya başka bir cihaz girmiş olabilir). Kodu ana bilgisayarın ekranından tekrar okuyun.");
+                }
+
+                if ((await devices.ListAsync()).Count >= await AllowedDevicesAsync(license))
+                {
+                    return Fail(409, "remote.device_limit", "Lisansınız bu kadar bilgisayara izin veriyor. Kullanılmayan bir bilgisayarı ana bilgisayardaki listeden kaldırın veya lisansınızı yükseltin.");
+                }
+
+                var (id, key) = await devices.AddAsync(string.IsNullOrWhiteSpace(r.DeviceName) ? "Bilgisayar" : r.DeviceName.Trim());
+                server.ConsumeCode();
+                return Results.Json(new PairResponse(id, key, RemotePairing.Proof(code.Code, "host", fingerprint, r.Nonce, id)), RpcJson.Options);
+            }
+            finally
             {
-                server.PairingFailed();
-                return Fail(403, "remote.bad_code", "Bağlantı kodu hatalı (veya araya başka bir cihaz girmiş olabilir). Kodu ana bilgisayarın ekranından tekrar okuyun.");
+                server._pairGate.Release();
             }
-
-            if ((await devices.ListAsync()).Count >= await AllowedDevicesAsync(license))
-            {
-                return Fail(409, "remote.device_limit", "Lisansınız bu kadar bilgisayara izin veriyor. Kullanılmayan bir bilgisayarı ana bilgisayardaki listeden kaldırın veya lisansınızı yükseltin.");
-            }
-
-            var (id, key) = await devices.AddAsync(string.IsNullOrWhiteSpace(r.DeviceName) ? "Bilgisayar" : r.DeviceName.Trim());
-            server.ConsumeCode();
-            return Results.Json(new PairResponse(id, key, RemotePairing.Proof(code.Code, "host", fingerprint, r.Nonce, id)), RpcJson.Options);
         }).RequireRateLimiting("pair");
 
         app.MapPost("/remote/login", async (HttpContext http) =>

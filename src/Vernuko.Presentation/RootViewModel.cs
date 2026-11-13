@@ -189,6 +189,11 @@ public sealed partial class RootViewModel : ViewModelBase
 
     public async Task<bool> BackupOnExitAsync()
     {
+        if (_computer.Role == ComputerRole.Client)
+        {
+            return false; // backups run on the main computer; closing a connected PC must not trigger one there
+        }
+
         var status = await _backups.GetStatusAsync();
         if (!status.KeyConfigured || !status.OnExit || !_session.IsAuthenticated)
         {

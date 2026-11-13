@@ -46,7 +46,15 @@ public static class RemoteHostCertificate
         var path = Path.Combine(env.DataDirectory, "remote-host.pfx.protected");
         if (File.Exists(path))
         {
-            return X509CertificateLoader.LoadPkcs12(protector.Unprotect(File.ReadAllBytes(path)), null, X509KeyStorageFlags.Exportable);
+            try
+            {
+                return X509CertificateLoader.LoadPkcs12(protector.Unprotect(File.ReadAllBytes(path)), null, X509KeyStorageFlags.Exportable);
+            }
+            catch (CryptographicException)
+            {
+                // Damaged, or protected for another Windows account: a new certificate is better than a main computer
+                // that never starts again. Connected computers then report a changed certificate and pair again.
+            }
         }
 
         using var rsa = RSA.Create(2048);
@@ -55,7 +63,7 @@ public static class RemoteHostCertificate
         request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension([new Oid("1.3.6.1.5.5.7.3.1")], false));
         using var created = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(20));
         var pfx = created.Export(X509ContentType.Pfx);
-        File.WriteAllBytes(path, protector.Protect(pfx));
+        AtomicFile.WriteAllBytes(path, protector.Protect(pfx));
         return X509CertificateLoader.LoadPkcs12(pfx, null, X509KeyStorageFlags.Exportable);
     }
 }

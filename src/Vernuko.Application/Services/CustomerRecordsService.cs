@@ -127,7 +127,11 @@ public sealed class CustomerRecordsService(AppServiceDeps deps, AttachmentKeySto
             }
 
             var file = created.Value;
-            var key = await keys.GetOrCreateAsync(db, UtcNow, ct);
+            if (await keys.GetOrCreateAsync(db, UtcNow, ct) is not { } key)
+            {
+                return AttachmentKeyStore.KeyUnavailable;
+            }
+
             var encrypted = AttachmentCrypto.Encrypt(key, file.Id, content);
             CryptographicOperations.ZeroMemory(key);
             Directory.CreateDirectory(env.AttachmentsDirectory);

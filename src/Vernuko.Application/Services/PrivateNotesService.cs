@@ -71,7 +71,11 @@ public sealed class PrivateNotesService(AppServiceDeps deps, AttachmentKeyStore 
                 return Error.NotFound("Müşteri");
             }
 
-            var key = await keys.GetOrCreateAsync(db, UtcNow, ct);
+            if (await keys.GetOrCreateAsync(db, UtcNow, ct) is not { } key)
+            {
+                return AttachmentKeyStore.KeyUnavailable;
+            }
+
             try
             {
                 var created = PrivateNote.Create(customerId, me, text?.Trim() ?? string.Empty, id => AttachmentCrypto.Encrypt(key, id, Encoding.UTF8.GetBytes(text!.Trim())), UtcNow);

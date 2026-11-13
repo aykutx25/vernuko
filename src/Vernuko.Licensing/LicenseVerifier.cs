@@ -31,7 +31,8 @@ public sealed class LicenseVerifier
             return LicenseErrors.Malformed;
         }
 
-        if (envelope is null || envelope.Algorithm != "ES256")
+        // A damaged file may lack any field: that is "malformed", never an exception.
+        if (envelope is null || envelope.Algorithm != "ES256" || string.IsNullOrEmpty(envelope.KeyId) || envelope.Payload is null || envelope.Signature is null)
         {
             return LicenseErrors.Malformed;
         }

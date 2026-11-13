@@ -157,6 +157,20 @@ public sealed class LicenseService(IDbContextFactory<VernukoDbContext> factory, 
         {
             await using var tx = await db.Database.BeginTransactionAsync(ct);
             await SettingsStore.SetAsync(db, SettingKeys.LicenseSigned, signedLicenseJson, now, ct);
+
+            // A license just signed by the server carries trusted time. When this computer's clock agrees with it, a
+            // "highest time seen" far ahead of both can only come from a clock that was once set wrong (a year ahead,
+            // then fixed) — it would keep a paid license read-only for that year, so it is brought back. A rolled-back
+            // clock never qualifies: it cannot agree with a fresh server time.
+            var issued = verified.Value.IssuedAtUtc;
+            var highWater = await SettingsStore.GetUtcAsync(db, SettingKeys.LicenseHighWaterMarkUtc, ct);
+            var trusted = now > issued ? now : issued;
+            if (highWater is { } hw && (now - issued).Duration() <= LicenseEvaluator.RollbackTolerance && hw > trusted + LicenseEvaluator.RollbackTolerance)
+            {
+                await SettingsStore.SetUtcAsync(db, SettingKeys.LicenseHighWaterMarkUtc, trusted, now, ct);
+                await audit.AppendAsync(db, "license.clock_corrected", "License", null, $"Saat ileri alınmış görünüyordu ({hw.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}); sunucu saatine göre düzeltildi", ct);
+            }
+
             await audit.AppendAsync(db, action, "License", null, $"Lisans {verified.Value.LicenseId} ({verified.Value.Edition}) {verb}, geçerlilik {verified.Value.ValidUntilUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}", ct);
             await db.SaveChangesAsync(ct);
             await tx.CommitAsync(ct);

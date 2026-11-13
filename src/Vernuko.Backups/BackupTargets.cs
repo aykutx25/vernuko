@@ -165,11 +165,25 @@ public sealed class LocalFolderBackupTarget : IBackupTarget
 public static class BackupNaming
 {
     /// <summary>
-    /// "vernuko-20261112-091530-manual-1a2b3c4d.vbk" — sortable, no personal data. The suffix uses the random tail of
-    /// the (version 7) backup id; its leading characters are a timestamp and would collide within the same minute.
+    /// "vernuko-20261112-091530-manual-1a2b3c4d-9f8e7d6c.vbk" — sortable, no personal data. The fourth part is the
+    /// random tail of the (version 7) backup id (its leading characters are a timestamp and would collide within the
+    /// same minute); the last part tags the installation, so that clean-up in a folder shared by two branches (one
+    /// OneDrive account, a NAS) only ever deletes this installation's own backups.
     /// </summary>
-    public static string FileName(DateTime createdAtUtc, BackupTrigger trigger, Guid backupId) =>
-        $"vernuko-{createdAtUtc:yyyyMMdd-HHmmss}-{trigger.ToString().ToLowerInvariant()}-{backupId.ToString("N")[^8..]}{LocalFolderBackupTarget.Extension}";
+    public static string FileName(DateTime createdAtUtc, BackupTrigger trigger, Guid backupId, Guid installationId) =>
+        $"vernuko-{createdAtUtc:yyyyMMdd-HHmmss}-{trigger.ToString().ToLowerInvariant()}-{backupId.ToString("N")[^8..]}-{InstallationTag(installationId)}{LocalFolderBackupTarget.Extension}";
+
+    public static string InstallationTag(Guid installationId) => installationId.ToString("N")[^8..];
+
+    /// <summary>
+    /// True only for files tagged with this installation. Untagged files (made before version 0.13) are never
+    /// deleted automatically: in a shared folder they may well belong to another branch.
+    /// </summary>
+    public static bool BelongsTo(string fileName, Guid installationId)
+    {
+        var parts = Path.GetFileNameWithoutExtension(fileName).Split('-');
+        return parts.Length >= 6 && string.Equals(parts[5], InstallationTag(installationId), StringComparison.OrdinalIgnoreCase);
+    }
 
     public static BackupTrigger? TryParseTrigger(string fileName)
     {

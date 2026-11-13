@@ -119,13 +119,13 @@ public class BackupCryptoTests
     public void Backup_file_names_contain_no_personal_data_and_parse_back()
     {
         var created = new DateTime(2026, 11, 12, 9, 15, 30, DateTimeKind.Utc);
-        var name = BackupNaming.FileName(created, BackupTrigger.Scheduled, Guid.NewGuid());
+        var name = BackupNaming.FileName(created, BackupTrigger.Scheduled, Guid.NewGuid(), Guid.NewGuid());
         Assert.StartsWith("vernuko-20261112-091530-scheduled-", name, StringComparison.Ordinal);
         Assert.Equal(created, BackupNaming.TryParseCreatedAt(name));
         Assert.Equal(BackupTrigger.Scheduled, BackupNaming.TryParseTrigger(name));
 
         // Two backups created in the same second must not get the same file name.
-        var names = Enumerable.Range(0, 200).Select(_ => BackupNaming.FileName(created, BackupTrigger.Manual, Vernuko.Core.Ids.New())).ToHashSet();
+        var names = Enumerable.Range(0, 200).Select(_ => BackupNaming.FileName(created, BackupTrigger.Manual, Vernuko.Core.Ids.New(), Guid.NewGuid())).ToHashSet();
         Assert.Equal(200, names.Count);
     }
 

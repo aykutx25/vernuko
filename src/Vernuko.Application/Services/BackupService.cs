@@ -176,7 +176,7 @@ public sealed class BackupService(
     /// Copies the encrypted backup into the cloud sync folder and applies the same retention there. A cloud problem
     /// never fails the backup itself: the local copy is already safe; the error is recorded and shown.
     /// </summary>
-    private async Task<string?> CopyToCloudAsync(string encryptedFile, string fileName, BackupTrigger trigger, RetentionPolicy retention, TimeZoneInfo zone, CancellationToken ct)
+    private async Task<string?> CopyToCloudAsync(string encryptedFile, string fileName, BackupTrigger trigger, RetentionPolicy retention, TimeZoneInfo zone, Guid installationId, CancellationToken ct)
     {
         string? cloudRoot;
         await using (var db = await factory.CreateDbContextAsync(ct))
@@ -210,7 +210,7 @@ public sealed class BackupService(
             {
                 var records = (await cloud.ListAsync(ct))
                     .Select(f => (f.Name, Created: BackupNaming.TryParseCreatedAt(f.Name), Trigger: BackupNaming.TryParseTrigger(f.Name)))
-                    .Where(x => x.Created is not null && x.Trigger is not null)
+                    .Where(x => x.Created is not null && x.Trigger is not null && BackupNaming.BelongsTo(x.Name, installationId))
                     .Select(x => new BackupRecord(x.Name, x.Created!.Value, x.Trigger!.Value))
                     .ToList();
                 foreach (var old in BackupRetention.SelectForDeletion(records, retention, zone))
@@ -366,7 +366,14 @@ public sealed class BackupService(
 
     public async Task<Result<BackupRunResult>> CreateBackupAsync(BackupTrigger trigger, CancellationToken ct = default)
     {
-        if (trigger == BackupTrigger.Manual && !session.Has(Permission.BackupsCreate))
+        // Safety backups before a restore are taken internally only; a caller asking for one (e.g. from a connected
+        // computer) could fill the disk, as those are never cleaned up automatically.
+        if (trigger == BackupTrigger.PreRestore)
+        {
+            return Error.Validation("backup.trigger", "Bu yedek türü yalnızca geri yükleme sırasında otomatik alınır.");
+        }
+
+        if (trigger is BackupTrigger.Manual or BackupTrigger.PreUpdate && !session.Has(Permission.BackupsCreate))
         {
             return Error.Forbidden;
         }
@@ -511,16 +518,22 @@ public sealed class BackupService(
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 logger.LogError(ex, "Restore swap failed; putting the previous database back.");
-                SqliteSetup.DeleteDatabaseFiles(env.DatabasePath);
-                File.Copy(safetyCopy, env.DatabasePath);
-                return new Error("backup.restore_io", "Veritabanı dosyası değiştirilemedi; mevcut verileriniz geri yüklendi. Uygulamayı yeniden başlatıp tekrar deneyin.");
+                return PutPreviousDataBack(safetyCopy, null, new Error("backup.restore_io", "Veritabanı dosyası değiştirilemedi; mevcut verileriniz geri yüklendi. Uygulamayı yeniden başlatıp tekrar deneyin."));
             }
 
-            // 2b) Attachments: keep the current folder as a safety copy, then put the backed-up files in place.
-            RestoreAttachments(Path.GetDirectoryName(extractedDb)!);
-
-            // 3) Bring an older backup up to the current schema (with its own pre-migration snapshot).
-            await initializer.InitializeAsync(env.DatabasePath, env.SafetyDirectory, ct);
+            // 2b) Attachments (current folder kept as a safety copy) and 3) an older backup brought up to the current
+            // schema. If either fails the previous data goes back: never leave a half-restored, un-migrated database.
+            string? attachmentsSafety = null;
+            try
+            {
+                attachmentsSafety = RestoreAttachments(Path.GetDirectoryName(extractedDb)!);
+                await initializer.InitializeAsync(env.DatabasePath, env.SafetyDirectory, ct);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DatabaseMigrationFailedException or DatabaseTooNewException)
+            {
+                logger.LogError(ex, "Restore could not be completed; putting the previous data back.");
+                return PutPreviousDataBack(safetyCopy, attachmentsSafety, new Error("backup.restore_failed", "Yedek geri yüklenemedi; mevcut verileriniz olduğu gibi geri konuldu. Ayrıntılar günlük dosyasında."));
+            }
 
             // 4) Re-protect the backup key for this Windows account and record the restore in the restored log.
             var now = time.GetUtcNow().UtcDateTime;
@@ -553,12 +566,14 @@ public sealed class BackupService(
         }
     }
 
-    private void RestoreAttachments(string extractDirectory)
+    /// <returns>Where the current attachments were moved (null when there were none).</returns>
+    private string? RestoreAttachments(string extractDirectory)
     {
         var restored = Directory.EnumerateFiles(extractDirectory, AttachmentEntryPrefix + "*").ToList();
+        string? safety = null;
         if (Directory.Exists(env.AttachmentsDirectory) && Directory.EnumerateFileSystemEntries(env.AttachmentsDirectory).Any())
         {
-            var safety = Path.Combine(env.SafetyDirectory, $"prerestore-attachments-{time.GetUtcNow().UtcDateTime:yyyyMMdd-HHmmss}");
+            safety = Path.Combine(env.SafetyDirectory, $"prerestore-attachments-{time.GetUtcNow().UtcDateTime:yyyyMMdd-HHmmss}");
             Directory.Move(env.AttachmentsDirectory, safety);
         }
 
@@ -566,6 +581,36 @@ public sealed class BackupService(
         foreach (var file in restored)
         {
             File.Copy(file, Path.Combine(env.AttachmentsDirectory, Path.GetFileName(file)[AttachmentEntryPrefix.Length..]), overwrite: true);
+        }
+
+        return safety;
+    }
+
+    /// <summary>A restore went wrong after the files were swapped: the data from before the restore goes back.</summary>
+    private Error PutPreviousDataBack(string safetyCopy, string? attachmentsSafety, Error reported)
+    {
+        try
+        {
+            SqliteSetup.ReleaseFileHandles();
+            SqliteSetup.DeleteDatabaseFiles(env.DatabasePath);
+            File.Copy(safetyCopy, env.DatabasePath);
+            if (attachmentsSafety is not null)
+            {
+                if (Directory.Exists(env.AttachmentsDirectory))
+                {
+                    Directory.Delete(env.AttachmentsDirectory, recursive: true);
+                }
+
+                Directory.Move(attachmentsSafety, env.AttachmentsDirectory);
+            }
+
+            return reported;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            logger.LogError(ex, "Putting the previous data back after a failed restore failed too");
+            return new Error("backup.restore_manual",
+                $"Geri yükleme yarıda kaldı ve önceki veriler otomatik geri konulamadı. Verileriniz şu dosyada güvende: {safetyCopy}. Uygulamayı kapatıp destek ile iletişime geçin; dosyayı silmeyin.");
         }
     }
 
@@ -618,7 +663,7 @@ public sealed class BackupService(
             var zip = Path.Combine(work, "inner.zip");
             await BackupArchive.WriteAsync(zip, new BackupManifestSeed(backupId, now, env.AppVersion, schema, businessName), entries, ct);
 
-            var fileName = BackupNaming.FileName(now, trigger, backupId);
+            var fileName = BackupNaming.FileName(now, trigger, backupId, installationId);
             var encrypted = Path.Combine(work, fileName);
             await using (var input = File.OpenRead(zip))
             await using (var output = new FileStream(encrypted, FileMode.CreateNew, FileAccess.Write, FileShare.None))
@@ -643,7 +688,7 @@ public sealed class BackupService(
             {
                 var records = (await target.ListAsync(ct))
                     .Select(f => (f.Name, Created: BackupNaming.TryParseCreatedAt(f.Name), Trigger: BackupNaming.TryParseTrigger(f.Name)))
-                    .Where(x => x.Created is not null && x.Trigger is not null)
+                    .Where(x => x.Created is not null && x.Trigger is not null && BackupNaming.BelongsTo(x.Name, installationId))
                     .Select(x => new BackupRecord(x.Name, x.Created!.Value, x.Trigger!.Value))
                     .ToList();
                 foreach (var old in BackupRetention.SelectForDeletion(records, retention, zone))
@@ -653,7 +698,7 @@ public sealed class BackupService(
                 }
             }
 
-            var cloudNote = await CopyToCloudAsync(encrypted, fileName, trigger, retention, zone, ct);
+            var cloudNote = await CopyToCloudAsync(encrypted, fileName, trigger, retention, zone, installationId, ct);
 
             await using (var db = await factory.CreateDbContextAsync(ct))
             {

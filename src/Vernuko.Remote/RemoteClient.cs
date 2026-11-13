@@ -195,7 +195,10 @@ public sealed class RemoteConnection : IRpcChannel, IDisposable
             throw new ArgumentException("Connected computers use HTTPS (plain HTTP only for loopback tests).", nameof(address));
         }
 
-        return new HttpClient(handler) { BaseAddress = address, Timeout = TimeSpan.FromSeconds(60) };
+        // Connecting is capped at 5 s above; the overall limit leaves room for a 25 MiB file over slow Wi-Fi.
+        var client = new HttpClient(handler) { BaseAddress = address, Timeout = TimeSpan.FromMinutes(3) };
+        client.DefaultRequestHeaders.Add(RemoteHostServer.VersionHeader, RemoteHostServer.ProtocolVersion);
+        return client;
     }
 
     private static async Task<Error> ErrorAsync(HttpResponseMessage response, CancellationToken ct) =>

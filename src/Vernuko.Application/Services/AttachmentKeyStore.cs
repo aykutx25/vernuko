@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Vernuko.Application.Common;
 using Vernuko.Backups;
+using Vernuko.Core;
 using Vernuko.Persistence;
 
 namespace Vernuko.Application.Services;
@@ -15,14 +16,28 @@ public sealed class AttachmentKeyStore(ISecretProtector protector)
 {
     public const string ProtectedKeySetting = "attachments.protected_key";
     public const string WrappedKeySetting = "attachments.key_wrapped_by_kek";
+
+    public static readonly Error KeyUnavailable = new("attachments.key_unavailable",
+        "Dosya ve not şifreleme anahtarı bu Windows hesabında açılamıyor (parola sıfırlama veya veri klasörü başka hesaba taşınmış olabilir). " +
+        "Mevcut kayıtlarınız korunuyor; erişimi geri almak için kurtarma anahtarıyla yedekten geri yükleyin.");
     private static readonly byte[] WrapAad = Encoding.ASCII.GetBytes("vernuko/attachments/key/v1");
 
-    public async Task<byte[]> GetOrCreateAsync(VernukoDbContext db, DateTime nowUtc, CancellationToken ct)
+    /// <summary>
+    /// The attachment key, created on first use. Null when a key exists but this Windows account cannot open it
+    /// (password reset, data folder copied to another account): a new key must never replace it, or every earlier
+    /// note and file becomes unreadable. Access comes back with a restore using the recovery key.
+    /// </summary>
+    public async Task<byte[]?> GetOrCreateAsync(VernukoDbContext db, DateTime nowUtc, CancellationToken ct)
     {
         var existing = await TryLoadAsync(db, ct);
         if (existing is not null)
         {
             return existing;
+        }
+
+        if (await SettingsStore.GetAsync(db, ProtectedKeySetting, ct) is not null)
+        {
+            return null;
         }
 
         var key = RandomNumberGenerator.GetBytes(32);

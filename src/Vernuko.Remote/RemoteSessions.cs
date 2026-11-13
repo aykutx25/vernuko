@@ -63,6 +63,10 @@ public sealed class RemoteSessionHost(Func<ServiceProvider> createServices, Time
             return login.IsFailure ? login.Error : AppErrors.InvalidCredentials;
         }
 
+        // A connected computer runs one Vernuko at a time: its earlier session (the app was closed or restarted without
+        // signing out) is ended, and idle sessions of other computers are swept, so service containers do not pile up.
+        EndDevice(deviceId);
+        SweepIdle();
         var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
         _sessions[token] = new Session(deviceId, services, time.GetUtcNow().UtcDateTime);
         logger.LogInformation("Remote session started for device {Device}", deviceId);
@@ -101,6 +105,18 @@ public sealed class RemoteSessionHost(Func<ServiceProvider> createServices, Time
         if (_sessions.TryRemove(token, out var s))
         {
             s.Services.Dispose();
+        }
+    }
+
+    private void SweepIdle()
+    {
+        var now = time.GetUtcNow().UtcDateTime;
+        foreach (var (token, s) in _sessions)
+        {
+            if (now - s.LastSeenUtc > IdleTimeout)
+            {
+                End(token);
+            }
         }
     }
 

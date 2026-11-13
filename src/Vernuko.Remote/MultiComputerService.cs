@@ -36,7 +36,7 @@ public static class RemoteClientStore
     }
 
     public static void Save(IAppEnvironment env, ISecretProtector protector, RemoteEndpoint endpoint) =>
-        File.WriteAllBytes(Path.Combine(env.DataDirectory, FileName), protector.Protect(JsonSerializer.SerializeToUtf8Bytes(endpoint, RpcJson.Options)));
+        AtomicFile.WriteAllBytes(Path.Combine(env.DataDirectory, FileName), protector.Protect(JsonSerializer.SerializeToUtf8Bytes(endpoint, RpcJson.Options)));
 
     public static void Delete(IAppEnvironment env) => File.Delete(Path.Combine(env.DataDirectory, FileName));
 }
@@ -214,8 +214,13 @@ public sealed class MultiComputerService : IMultiComputer, IAsyncDisposable, IDi
         _gate.Dispose();
     }
 
-    /// <summary>The container is disposed synchronously when the app exits.</summary>
-    public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
+    /// <summary>
+    /// The container is disposed synchronously when the app exits, on the UI thread. Stopping Kestrel there and
+    /// blocking on it deadlocked (its continuations wait for the blocked UI thread): the process stayed alive holding
+    /// the single-instance lock and port 47250, so the next start said "Vernuko zaten açık". It now stops on a pool
+    /// thread (no UI context) and gives up after a few seconds — the process is exiting anyway.
+    /// </summary>
+    public void Dispose() => Task.Run(() => DisposeAsync().AsTask()).Wait(TimeSpan.FromSeconds(10));
 
     /// <summary>"192.168.1.20", "RESEPSIYON-PC", "host:47250" or a full https:// address.</summary>
     public static Uri? ParseAddress(string address)

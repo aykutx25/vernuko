@@ -23,9 +23,28 @@ public sealed class LicenseIssuer(LicenseServerDb db, ServerSecrets secrets, Lic
 {
     public const string Product = "vernuko-desktop";
 
+    /// <summary>
+    /// Seat check and the new activation are one step: two activations at the same moment on a one-seat license
+    /// both saw a free seat. The server is a single process, so an in-process lock is enough.
+    /// </summary>
+    private static readonly SemaphoreSlim SeatGate = new(1, 1);
+
     private DateTime Now => time.GetUtcNow().UtcDateTime;
 
     public async Task<IssueResult> ActivateAsync(string? licenseKey, string? deviceHash, string? machineLabel, CancellationToken ct)
+    {
+        await SeatGate.WaitAsync(ct);
+        try
+        {
+            return await ActivateCoreAsync(licenseKey, deviceHash, machineLabel, ct);
+        }
+        finally
+        {
+            SeatGate.Release();
+        }
+    }
+
+    private async Task<IssueResult> ActivateCoreAsync(string? licenseKey, string? deviceHash, string? machineLabel, CancellationToken ct)
     {
         if (!ValidDevice(deviceHash))
         {
