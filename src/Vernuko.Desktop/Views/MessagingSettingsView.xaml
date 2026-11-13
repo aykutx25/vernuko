@@ -75,12 +75,12 @@
                     </DockPanel>
                     <DataGrid ItemsSource="{Binding Outbox}" MaxHeight="360">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Oluşturma" Binding="{Binding CreatedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                            <DataGridTextColumn MinWidth="124" Header="Oluşturma" Binding="{Binding CreatedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
                             <DataGridTextColumn Header="Tür" Binding="{Binding PurposeName}" Width="140" />
                             <DataGridTextColumn Header="Kanal" Binding="{Binding ChannelName}" Width="80" />
                             <DataGridTextColumn Header="Alıcı" Binding="{Binding RecipientMasked}" Width="130" />
                             <DataGridTextColumn Header="Durum" Binding="{Binding StatusName}" Width="110" />
-                            <DataGridTextColumn Header="Gönderim" Binding="{Binding SentAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                            <DataGridTextColumn MinWidth="124" Header="Gönderim" Binding="{Binding SentAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
                             <DataGridTextColumn Header="Not" Binding="{Binding LastError}" Width="*" MinWidth="160" />
                         </DataGrid.Columns>
                     </DataGrid>

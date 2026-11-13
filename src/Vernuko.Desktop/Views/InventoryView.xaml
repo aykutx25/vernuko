@@ -41,7 +41,7 @@
                                 <DataGridTextColumn Header="Kod" Binding="{Binding Sku}" Width="90" />
                                 <DataGridTextColumn Header="Stok" Binding="{Binding StockText}" Width="90" />
                                 <DataGridTextColumn Header="Kritik" Binding="{Binding MinimumStock}" Width="60" />
-                                <DataGridTextColumn Header="Satış fiyatı" Binding="{Binding SalePriceMinor, Converter={StaticResource Money}}" Width="100" />
+                                <DataGridTextColumn MinWidth="104" Header="Satış fiyatı" Binding="{Binding SalePriceMinor, Converter={StaticResource Money}}" Width="100" />
                                 <DataGridCheckBoxColumn Header="Kritik mi" Binding="{Binding IsLow, Mode=OneWay}" Width="70" />
                                 <DataGridCheckBoxColumn Header="Aktif" Binding="{Binding IsActive, Mode=OneWay}" Width="55" />
                             </DataGrid.Columns>
@@ -52,7 +52,7 @@
                             <TextBlock DockPanel.Dock="Top" Text="Stok hareketleri (seçili ürün)" Style="{StaticResource SectionTitle}" Margin="14,12,14,6" />
                             <DataGrid ItemsSource="{Binding Movements}">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Tarih" Binding="{Binding AtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                                    <DataGridTextColumn MinWidth="124" Header="Tarih" Binding="{Binding AtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
                                     <DataGridTextColumn Header="Hareket" Binding="{Binding KindName}" Width="130" />
                                     <DataGridTextColumn Header="Miktar" Binding="{Binding QuantityDelta}" Width="70" />
                                     <DataGridTextColumn Header="Müşteri" Binding="{Binding CustomerName}" Width="130" />

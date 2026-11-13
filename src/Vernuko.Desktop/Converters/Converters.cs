@@ -33,6 +33,17 @@ public sealed class VisibleWhenConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>Width (double) below the parameter → Collapsed, else Visible: drops decorations when space is short.</summary>
+public sealed class HiddenBelowWidthConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is double width && double.TryParse(parameter as string, NumberStyles.Float, CultureInfo.InvariantCulture, out var limit) && width > 0 && width < limit
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 /// <summary>null → true (e.g. the page is usable only while no dialog overlay is open).</summary>
 public sealed class IsNullConverter : IValueConverter
 {

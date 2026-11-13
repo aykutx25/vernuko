@@ -129,7 +129,7 @@
                                 <DataGridTextColumn Header="Paket" Binding="{Binding Name}" Width="*" />
                                 <DataGridTextColumn Header="Hizmet" Binding="{Binding ServiceName}" Width="160" />
                                 <DataGridTextColumn Header="Seans" Binding="{Binding SessionCount}" Width="70" />
-                                <DataGridTextColumn Header="Fiyat" Binding="{Binding PriceMinor, Converter={StaticResource Money}}" Width="110" />
+                                <DataGridTextColumn MinWidth="104" Header="Fiyat" Binding="{Binding PriceMinor, Converter={StaticResource Money}}" Width="110" />
                                 <DataGridTextColumn Header="Geçerlilik (gün)" Binding="{Binding ValidityDays}" Width="120" />
                             </DataGrid.Columns>
                         </DataGrid>

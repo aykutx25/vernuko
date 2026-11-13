@@ -200,7 +200,7 @@
                                     </Border>
                                     <DataGrid ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}" MaxHeight="360">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Tarih" Binding="{Binding CreatedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="150" />
+                                            <DataGridTextColumn MinWidth="124" Header="Tarih" Binding="{Binding CreatedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="150" />
                                             <DataGridTextColumn Header="Tür" Binding="{Binding Trigger}" Width="120" />
                                             <DataGridTextColumn Header="Boyut (bayt)" Binding="{Binding SizeBytes, StringFormat={}{0:N0}}" Width="130" />
                                             <DataGridCheckBoxColumn Header="Bu anahtarla" Binding="{Binding KeyMatches, Mode=OneWay}" Width="110" />
@@ -331,7 +331,7 @@
                         <DataGrid ItemsSource="{Binding AuditEntries}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="#" Binding="{Binding Sequence}" Width="60" />
-                                <DataGridTextColumn Header="Zaman" Binding="{Binding OccurredAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="140" />
+                                <DataGridTextColumn MinWidth="124" Header="Zaman" Binding="{Binding OccurredAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="140" />
                                 <DataGridTextColumn Header="Kullanıcı" Binding="{Binding UserName}" Width="120" />
                                 <DataGridTextColumn Header="İşlem" Binding="{Binding Action}" Width="180" />
                                 <DataGridTextColumn Header="Ayrıntı" Binding="{Binding Summary}" Width="*" />

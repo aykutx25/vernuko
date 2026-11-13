@@ -125,9 +125,10 @@
                                         <Button Style="{StaticResource PrimaryButton}" Content="Randevu ver" Command="{Binding NewAppointmentCommand}" Margin="0,0,8,0" />
                                         <Button Content="Düzenle" Command="{Binding EditCommand}" />
                                     </StackPanel>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Details.FullName}" FontSize="22" FontWeight="SemiBold" />
-                                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0">
+                                    <!-- Name trims and the number/phone/e-mail line wraps: in a narrow window they ran under the buttons. -->
+                                    <StackPanel Margin="0,0,12,0" ClipToBounds="True">
+                                        <TextBlock Text="{Binding Details.FullName}" FontSize="22" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Details.FullName}" />
+                                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap">
                                             <Run Text="Müşteri #" /><Run Text="{Binding Details.Number, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding Details.Phone, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding Details.Email, Mode=OneWay}" />
                                         </TextBlock>
                                     </StackPanel>
@@ -154,11 +155,11 @@
                             <TabItem Header="Randevu geçmişi">
                                 <DataGrid ItemsSource="{Binding History}" MaxHeight="420">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Tarih" Binding="{Binding StartLocal, Converter={StaticResource DateFormat}}" Width="140" />
+                                        <DataGridTextColumn MinWidth="124" Header="Tarih" Binding="{Binding StartLocal, Converter={StaticResource DateFormat}}" Width="140" />
                                         <DataGridTextColumn Header="Hizmet" Binding="{Binding ServiceName}" Width="*" />
                                         <DataGridTextColumn Header="Seans" Binding="{Binding SessionLabel}" Width="90" />
                                         <DataGridTextColumn Header="Personel" Binding="{Binding StaffName}" Width="150" />
-                                        <DataGridTextColumn Header="Durum" Binding="{Binding StatusName}" Width="130" />
+                                        <DataGridTextColumn MinWidth="100" Header="Durum" Binding="{Binding StatusName}" Width="130" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </TabItem>
@@ -177,9 +178,9 @@
                             <TabItem Header="Hesap hareketleri" Visibility="{Binding CanSeePayments, Converter={StaticResource VisibleWhen}}">
                                 <DataGrid ItemsSource="{Binding Transactions}" MaxHeight="420">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Tarih" Binding="{Binding OccurredAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="140" />
+                                        <DataGridTextColumn MinWidth="124" Header="Tarih" Binding="{Binding OccurredAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="140" />
                                         <DataGridTextColumn Header="İşlem" Binding="{Binding KindName}" Width="150" />
-                                        <DataGridTextColumn Header="Tutar" Binding="{Binding AmountMinor, Converter={StaticResource Money}}" Width="120" />
+                                        <DataGridTextColumn MinWidth="104" Header="Tutar" Binding="{Binding AmountMinor, Converter={StaticResource Money}}" Width="120" />
                                         <DataGridTextColumn Header="Yöntem" Binding="{Binding MethodName}" Width="100" />
                                         <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="*" />
                                     </DataGrid.Columns>

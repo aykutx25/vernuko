@@ -12,7 +12,7 @@
                 <DataGridTextColumn Header="Form" Binding="{Binding Title}" Width="*" />
                 <DataGridTextColumn Header="Sürüm" Binding="{Binding TemplateVersion}" Width="60" />
                 <DataGridTextColumn Header="Yöntem" Binding="{Binding MethodName}" Width="140" />
-                <DataGridTextColumn Header="Tarih" Binding="{Binding AcceptedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                <DataGridTextColumn MinWidth="124" Header="Tarih" Binding="{Binding AcceptedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
                 <DataGridTextColumn Header="Kaydeden" Binding="{Binding RecordedBy}" Width="110" />
                 <DataGridTextColumn Header="Durum" Binding="{Binding StatusText}" Width="90" />
                 <DataGridTemplateColumn Width="90">
@@ -50,7 +50,7 @@
                     <DataGridTextColumn Header="Tür" Binding="{Binding KindName}" Width="110" />
                     <DataGridTextColumn Header="Dosya" Binding="{Binding OriginalName}" Width="*" />
                     <DataGridTextColumn Header="Boyut" Binding="{Binding SizeText}" Width="80" />
-                    <DataGridTextColumn Header="Tarih" Binding="{Binding CreatedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                    <DataGridTextColumn MinWidth="124" Header="Tarih" Binding="{Binding CreatedAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
                     <DataGridTextColumn Header="Not" Binding="{Binding Note}" Width="*" />
                     <DataGridTemplateColumn Width="200">
                         <DataGridTemplateColumn.CellTemplate>

@@ -18,6 +18,7 @@
             <c:VisibleWhenConverter x:Key="VisibleWhen" />
             <c:InverseBoolConverter x:Key="Not" />
             <c:IsNullConverter x:Key="IsNull" />
+            <c:HiddenBelowWidthConverter x:Key="HiddenBelowWidth" />
             <c:EnumEqualsConverter x:Key="EnumEquals" />
             <c:MoneyConverter x:Key="Money" />
             <c:DateFormatConverter x:Key="DateFormat" />

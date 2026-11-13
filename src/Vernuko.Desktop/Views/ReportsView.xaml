@@ -59,10 +59,10 @@
                     <DataGrid ItemsSource="{Binding Commission.Totals}" MaxHeight="320">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Personel" Binding="{Binding StaffName}" Width="*" />
-                            <DataGridTextColumn Header="Hizmet primi" Binding="{Binding ServiceMinor, Converter={StaticResource Money}}" Width="130" />
-                            <DataGridTextColumn Header="Paket satış primi" Binding="{Binding PackageSaleMinor, Converter={StaticResource Money}}" Width="140" />
-                            <DataGridTextColumn Header="Ürün satış primi" Binding="{Binding ProductSaleMinor, Converter={StaticResource Money}}" Width="140" />
-                            <DataGridTextColumn Header="Toplam" Binding="{Binding TotalMinor, Converter={StaticResource Money}}" Width="120" />
+                            <DataGridTextColumn MinWidth="104" Header="Hizmet primi" Binding="{Binding ServiceMinor, Converter={StaticResource Money}}" Width="130" />
+                            <DataGridTextColumn MinWidth="104" Header="Paket satış primi" Binding="{Binding PackageSaleMinor, Converter={StaticResource Money}}" Width="140" />
+                            <DataGridTextColumn MinWidth="104" Header="Ürün satış primi" Binding="{Binding ProductSaleMinor, Converter={StaticResource Money}}" Width="140" />
+                            <DataGridTextColumn MinWidth="104" Header="Toplam" Binding="{Binding TotalMinor, Converter={StaticResource Money}}" Width="120" />
                         </DataGrid.Columns>
                     </DataGrid>
                     <TextBlock Style="{StaticResource Muted}" Margin="14,8,14,12" TextWrapping="Wrap" Text="Primler işlem anında geçerli kurala göre hesaplanır ve sonradan değiştirilemez. Kurallar: Ayarlar › Prim kuralları." />
