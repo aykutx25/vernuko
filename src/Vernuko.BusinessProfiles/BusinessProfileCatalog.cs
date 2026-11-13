@@ -20,7 +20,7 @@ public static class BusinessProfileCatalog
             Set(ProfileFeature.SessionPackages, ProfileFeature.BodyAreas, ProfileFeature.Rooms, ProfileFeature.Devices,
                 ProfileFeature.PrepAndCleanupBuffers, ProfileFeature.Commissions, ProfileFeature.Deposits,
                 ProfileFeature.ProductStock, ProfileFeature.ConsentForms, ProfileFeature.CustomerPhotos,
-                ProfileFeature.Waitlist, ProfileFeature.MaintenanceReminders),
+                ProfileFeature.Waitlist, ProfileFeature.MaintenanceReminders, ProfileFeature.GiftCards),
             [ResourceKind.Room, ResourceKind.Device],
             [
                 new("Lazer Epilasyon", "Lazer", 30, 0, 10, ResourceKind.Room, ["Lazer"]),

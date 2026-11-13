@@ -145,3 +145,32 @@ internal sealed class PrivateNoteConfiguration : IEntityTypeConfiguration<Privat
         b.Ignore(e => e.IsDeleted);
     }
 }
+
+internal sealed class GiftCardConfiguration : IEntityTypeConfiguration<Vernuko.Payments.GiftCard>
+{
+    public void Configure(EntityTypeBuilder<Vernuko.Payments.GiftCard> b)
+    {
+        b.ToTable("GiftCards");
+        b.ConfigureEntity();
+        b.Property(e => e.Code).HasMaxLength(20).IsRequired();
+        b.HasIndex(e => e.Code).IsUnique();
+        b.Property(e => e.Currency).HasMaxLength(3).IsRequired();
+        b.Property(e => e.RecipientName).HasMaxLength(120);
+        b.Property(e => e.IdempotencyKey).HasMaxLength(100).IsRequired();
+        b.HasIndex(e => e.IdempotencyKey).IsUnique();
+        b.HasOne<Customer>().WithMany().HasForeignKey(e => e.BuyerCustomerId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class GiftCardEntryConfiguration : IEntityTypeConfiguration<Vernuko.Payments.GiftCardEntry>
+{
+    public void Configure(EntityTypeBuilder<Vernuko.Payments.GiftCardEntry> b)
+    {
+        b.ToTable("GiftCardEntries");
+        b.ConfigureEntity();
+        b.Property(e => e.Note).HasMaxLength(300);
+        b.HasIndex(e => e.GiftCardId);
+        b.HasIndex(e => e.TransactionId);
+        b.HasOne<Vernuko.Payments.GiftCard>().WithMany().HasForeignKey(e => e.GiftCardId).OnDelete(DeleteBehavior.Restrict);
+    }
+}

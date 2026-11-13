@@ -254,6 +254,20 @@ public partial interface IPrivateNotesService
     Task<Result<bool>> DeleteAsync(Guid noteId, CancellationToken ct = default);
 }
 
+/// <summary>Remotable contract of <see cref="GiftCardService"/> (generated from its public async methods).</summary>
+public partial interface IGiftCardService
+{
+    Task<Result<GiftCardDto>> SellAsync(SellGiftCardRequest r, CancellationToken ct = default);
+
+    Task<Result<GiftCardDto>> GetAsync(string code, CancellationToken ct = default);
+
+    Task<Result<IReadOnlyList<GiftCardDto>>> ListAsync(bool includeFinished = false, CancellationToken ct = default);
+
+    Task<Result<Guid>> RedeemAsync(RedeemGiftCardRequest r, CancellationToken ct = default);
+
+    Task<Result<bool>> VoidAsync(Guid cardId, string reason, CancellationToken ct = default);
+}
+
 /// <summary>Remotable contract of <see cref="AutoMessagingService"/> (generated from its public async methods).</summary>
 public partial interface IAutoMessagingService
 {

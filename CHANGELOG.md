@@ -2,6 +2,28 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.12.0] — 2026-11-13 — Faz 3 tamam: bekleme süresi, görüşme bağlantısı, gizli notlar, hediye kartı
+
+### Eklendi
+- **Boya bekleme süresi (kuaför):** hizmete "X. dakikadan sonra Y dakika bekleme" girilebilir.
+  - Bekleme sırasında uzman başka müşteriye randevu verebilir; koltuk tüm süre dolu kalır.
+  - Takvimde "Bekleme 10:30–11:10 (personel boşta)" yazar. Önerilen saatler ve randevu taşıma bunu hesaba katar.
+  - Kuaför profilinde saç boyama (30 + 40 dk) ve keratin (40 + 30 dk) hazır gelir.
+- **Çevrim içi görüşme bağlantısı** (danışmanlık, psikoloji, eğitim): randevuya Zoom/Meet/Teams adresi eklenir; yalnızca https kabul edilir. Takvimde "Görüşmeye katıl" ve "Bağlantıyı kopyala" düğmeleri var. SMS hatırlatmasına bağlantı eklenir.
+- **Gizli uzman notları** (psikoloji, danışmanlık, hukuk vb.):
+  - Müşteri kartında şifreli notlar tutulur ve yalnızca yazan uzman okur. Sekreter erişemez; diğer uzmanlar ve işletme sahibi yalnızca not sayısını görür.
+  - Okuma, ekleme ve silme denetim kaydına yazılır; içerik kayda girmez.
+  - Anonimleştirmede notlar silinir.
+- **Hediye kartı** (SPA, güzellik):
+  - Ödemeler sayfasından satılır ve sorgulanır; kod biçimi `HK-XXXX-XXXX`.
+  - Para satışta kasaya girer. Kartla ödeme, ödeme penceresinde "Hediye kartı" seçilip kod girilerek yapılır ve kasaya yeni para eklemez.
+  - Kısmi kullanım, son kullanma tarihi ve iptal var. Yanlış kart ödemesi düzeltilince tutar karta geri yüklenir.
+  - Kart hareketleri değiştirilemez, silinemez.
+  - Kart olmadan "hediye kartı ödemesi" girilemez.
+
+### Değişti
+- Randevu kayıtlarında aynı kişi için birden fazla zaman parçası tutulabilir (bekleme süresi için). Veritabanı çakışma koruması aynen geçerli.
+
 ## [0.11.0] — 2026-11-13 — Kendi satış sayfası (iyzico + PayTR) ve dış satış bağlantısı
 
 ### Eklendi

@@ -95,7 +95,7 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
 
     public IReadOnlyList<Option<PaymentMethod?>> PaymentOptions { get; } =
         new[] { new Option<PaymentMethod?>("Daha sonra ödenecek (borç)", null) }
-            .Concat(PaymentDialogViewModel.Methods.Select(m => new Option<PaymentMethod?>("Hemen tahsil et: " + m.Label, m.Value))).ToList();
+            .Concat(PaymentDialogViewModel.MoneyMethods.Select(m => new Option<PaymentMethod?>("Hemen tahsil et: " + m.Label, m.Value))).ToList();
 
     public bool CanManage => Shell?.Has(Permission.InventoryManage) ?? false;
 

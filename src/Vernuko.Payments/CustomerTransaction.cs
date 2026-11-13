@@ -26,6 +26,9 @@ public enum PaymentMethod
     Card,
     BankTransfer,
     Other,
+
+    /// <summary>Paid with a gift card: no new money (it came in when the card was sold).</summary>
+    GiftCard,
 }
 
 /// <summary>
@@ -98,6 +101,32 @@ public sealed class CustomerTransaction
     };
 
     public static Result<CustomerTransaction> Create(
+        Guid branchId,
+        Guid customerId,
+        TransactionKind kind,
+        Money amount,
+        PaymentMethod? method,
+        bool isDeposit,
+        Guid? appointmentId,
+        Guid? packageId,
+        string? description,
+        Guid? userId,
+        DateTime nowUtc,
+        string idempotencyKey)
+    {
+        if (method == PaymentMethod.GiftCard)
+        {
+            return Error.Validation("transaction.gift_card", "Hediye kartıyla ödeme kart koduyla alınır (bakiye kartından düşülür).");
+        }
+
+        return CreateCore(branchId, customerId, kind, amount, method, isDeposit, appointmentId, packageId, description, userId, nowUtc, idempotencyKey);
+    }
+
+    /// <summary>The only way to record a "Hediye kartı" payment: the caller lowers the card balance in the same transaction.</summary>
+    public static Result<CustomerTransaction> CreateGiftCardRedemption(Guid branchId, Guid customerId, Money amount, Guid? appointmentId, string description, Guid? userId, DateTime nowUtc, string idempotencyKey) =>
+        CreateCore(branchId, customerId, TransactionKind.Payment, amount, PaymentMethod.GiftCard, false, appointmentId, null, description, userId, nowUtc, idempotencyKey);
+
+    private static Result<CustomerTransaction> CreateCore(
         Guid branchId,
         Guid customerId,
         TransactionKind kind,
@@ -185,6 +214,7 @@ public sealed class CustomerTransaction
         PaymentMethod.Card => "Kart",
         PaymentMethod.BankTransfer => "Havale/EFT",
         PaymentMethod.Other => "Diğer",
+        PaymentMethod.GiftCard => "Hediye kartı",
         _ => "—",
     };
 }
@@ -200,7 +230,8 @@ public static class AccountMath
         var result = Enum.GetValues<PaymentMethod>().ToDictionary(m => m, _ => 0L);
         foreach (var e in entries)
         {
-            if (e.Method is not { } method)
+            // Gift card payments move no money (it entered the till when the card was sold).
+            if (e.Method is not { } method || method == PaymentMethod.GiftCard)
             {
                 continue;
             }

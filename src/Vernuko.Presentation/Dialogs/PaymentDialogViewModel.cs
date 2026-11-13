@@ -9,7 +9,7 @@ using Vernuko.Presentation.Common;
 namespace Vernuko.Presentation.Dialogs;
 
 /// <summary>"Ödeme Al" overlay. One idempotency key per dialog instance: double clicks never double-record.</summary>
-public sealed partial class PaymentDialogViewModel(IPaymentService payments) : ViewModelBase
+public sealed partial class PaymentDialogViewModel(IPaymentService payments, IGiftCardService giftCards) : ViewModelBase
 {
     private readonly string _idempotencyKey = Guid.NewGuid().ToString("N");
     private Guid _customerId;
@@ -35,8 +35,21 @@ public sealed partial class PaymentDialogViewModel(IPaymentService payments) : V
     [ObservableProperty]
     private string _balanceText = string.Empty;
 
+    [ObservableProperty]
+    private string _giftCardCode = string.Empty;
+
+    [ObservableProperty]
+    private string? _giftCardInfo;
+
+    public bool IsGiftCard => Method?.Value == PaymentMethod.GiftCard;
+
+    partial void OnMethodChanged(Option<PaymentMethod> value) => OnPropertyChanged(nameof(IsGiftCard));
+
     public static IReadOnlyList<Option<PaymentMethod>> Methods { get; } =
         Enum.GetValues<PaymentMethod>().Select(m => new Option<PaymentMethod>(CustomerTransaction.MethodName(m), m)).ToList();
+
+    /// <summary>Methods that bring money in (for sales screens; a gift card is used only in the payment dialog).</summary>
+    public static IReadOnlyList<Option<PaymentMethod>> MoneyMethods { get; } = Methods.Where(m => m.Value != PaymentMethod.GiftCard).ToList();
 
     public event EventHandler<bool>? Closed;
 
@@ -64,12 +77,21 @@ public sealed partial class PaymentDialogViewModel(IPaymentService payments) : V
             return;
         }
 
-        var r = await payments.RecordAsync(new RecordTransactionRequest(_customerId, TransactionKind.Payment, money.Value.Minor, Method.Value, IsDeposit, _appointmentId, _packageId, Description, _idempotencyKey));
+        var r = IsGiftCard
+            ? await giftCards.RedeemAsync(new RedeemGiftCardRequest(GiftCardCode, _customerId, money.Value.Minor, _appointmentId, _idempotencyKey))
+            : await payments.RecordAsync(new RecordTransactionRequest(_customerId, TransactionKind.Payment, money.Value.Minor, Method.Value, IsDeposit, _appointmentId, _packageId, Description, _idempotencyKey));
         if (Check(r))
         {
             _saved = true;
             Closed?.Invoke(this, true);
         }
+    });
+
+    [RelayCommand]
+    private Task CheckGiftCardAsync() => RunAsync(async () =>
+    {
+        var card = await giftCards.GetAsync(GiftCardCode);
+        GiftCardInfo = card.IsFailure ? card.Error.Message : $"{card.Value.Code}: {card.Value.StatusText}, kalan {Formatting.Money(card.Value.BalanceMinor)}" + (card.Value.ExpiresAtUtc is { } e ? $" (son gün {e:dd.MM.yyyy})" : string.Empty);
     });
 
     [RelayCommand]
@@ -133,7 +155,7 @@ public sealed partial class SellPackageDialogViewModel(IPackageService packages,
 
     public System.Collections.ObjectModel.ObservableCollection<CustomerListItem> CustomerResults { get; } = [];
 
-    public static IReadOnlyList<Option<PaymentMethod>> Methods => PaymentDialogViewModel.Methods;
+    public static IReadOnlyList<Option<PaymentMethod>> Methods => PaymentDialogViewModel.MoneyMethods;
 
     public event EventHandler<bool>? Closed;
 

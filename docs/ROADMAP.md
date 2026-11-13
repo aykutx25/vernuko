@@ -9,7 +9,7 @@
 | 0 | Araştırma, mimari, veri modeli, güvenlik modeli, lisans kararı, maliyet, UI sistemi, plan | ✅ (bu belgeler) |
 | 1 | Windows çekirdeği: kurulum, SQLite, kullanıcılar, müşteri, personel, hizmet, randevu motoru, testler | ✅ çekirdek · 🟡 arayüz |
 | 2 | Güzellik & Lazer: paket/seans, bölge, oda/cihaz, ödeme, iptal/iade, prim, stok, onam/fotoğraf, tekrarlayan randevu, bekleme listesi | ✅ iş kuralları ve view model'ler (testli) · 🟡 ekranlar Windows'ta doğrulanacak |
-| 3 | Diğer meslekler (önce kuaför, SPA, danışmanlık) | 🟡 hizmete özel oda/cihaz kuralı ✅ · danışmanlık firma müşterisi ✅ · ⬜ kuaför boya bekleme süresi, SPA hediye kartı, çevrim içi görüşme bağlantısı |
+| 3 | Diğer meslekler (önce kuaför, SPA, danışmanlık) | ✅ oda/cihaz kuralı, firma müşterisi, boya bekleme süresi, hediye kartı, görüşme bağlantısı, gizli uzman notları (testli) · 🟡 ekranlar Windows'ta elle denenmeli |
 | 4 | Yedekleme: yerel ✅ · OneDrive/Google Drive/Dropbox eşitleme klasörüne şifreli kopya ✅ · API (OAuth) bağlantısı ⬜ (sahip uygulama kaydı açmalı) | ✅ temel |
 | 5 | İletişim: SMS, WhatsApp API, e-posta, hatırlatma planlama | ✅ hatırlatma planlayıcı + giden kutusu + İleti Merkezi SMS + WhatsApp Cloud API (testli, gerçek hesapla denenmedi) · ⬜ Netgsm, Verimor, e-posta, ICS |
 | 6 | Lisans sunucusu ve satış | ✅ **WordPress eklentisi** (karar 2026-11-13), üç satış yolu: kendi satış sayfası (iyzico + PayTR, Lisanslarım e-posta bağlantısıyla), WooCommerce, dış sistem bağlantısı (imzalı API); gerçek WordPress'te uçtan uca ve masaüstü istemcisiyle denendi · ⬜ sitenin kurulması (tema sizde), gerçek iyzico/PayTR test hesabıyla deneme · (.NET sunucu yedek seçenek) |
@@ -51,9 +51,9 @@
 | P1-9 | Excel/PDF rapor dışa aktarımı, ICS | P0-5 | Türkçe karakterler doğru | ⬜ |
 | P1-10 | Kaynak sütunlu zaman ızgarası + sürükle-bırak | P0-12 | 1366×768'de okunur | ⬜ |
 | P1-11 | SQLite FTS5 arama (100 bin+ müşteri) | P0-5 | 100 bin kayıtta < 200 ms | ⬜ |
-| P1-12 | Kuaför, SPA, danışmanlık profillerinin özel modülleri | Faz 3 | Profil başına gerçek senaryo testleri | 🟡 danışmanlık: firma müşterisi + VKN doğrulama (test) · ⬜ kuaför: boya bekleme süresi (personel boşta, koltuk dolu) · ⬜ SPA: hediye kartı · ⬜ çevrim içi görüşme bağlantısı |
+| P1-12 | Kuaför, SPA, danışmanlık profillerinin özel modülleri | Faz 3 | Profil başına gerçek senaryo testleri | ✅ kuaför: boya bekleme süresi (personel boşta, koltuk dolu) · ✅ SPA/güzellik: hediye kartı · ✅ danışmanlık: firma müşterisi + VKN, çevrim içi görüşme bağlantısı (testli) · 🟡 ekranlar Windows'ta elle denenmeli |
 | P1-15 | Hizmete özel oda/cihaz kuralı (lazer → lazer odası + cihaz) | P0-3 | Yanlış oda veya cihazsız randevu kaydedilmez; öneriler diğer uygun odaları tarar | ✅ (test, uçtan uca senaryo dahil) · 🟡 ekran |
-| P1-13 | Gizli uzman notları (yazar bazlı, şifreli) | P0-8 | Sekreter göremez; denetim kaydı | ⬜ |
+| P1-13 | Gizli uzman notları (yazar bazlı, şifreli) | P0-8 | Sekreter göremez; denetim kaydı | ✅ (test: şifreli, yalnızca yazarı, denetim, anonimleştirmede silinir) |
 | P1-14 | Arayüz yerelleştirme altyapısı (resx) | P0-12 | İngilizce dil paketi derlenir | ⬜ |
 
 ## P2 — Gelecek

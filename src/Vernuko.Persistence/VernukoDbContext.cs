@@ -80,6 +80,10 @@ public sealed class VernukoDbContext : DbContext
 
     public DbSet<PrivateNote> PrivateNotes => Set<PrivateNote>();
 
+    public DbSet<Payments.GiftCard> GiftCards => Set<Payments.GiftCard>();
+
+    public DbSet<Payments.GiftCardEntry> GiftCardEntries => Set<Payments.GiftCardEntry>();
+
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         Stamp();

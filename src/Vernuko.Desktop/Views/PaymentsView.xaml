@@ -90,6 +90,9 @@
                         </Border>
                     </StackPanel>
                 </Border>
+                <Border Style="{StaticResource Card}" Margin="0,14,0,0" Visibility="{Binding ShowGiftCards, Converter={StaticResource VisibleWhen}}">
+                    <ContentControl Content="{Binding GiftCards}" Focusable="False" />
+                </Border>
                 <Border Style="{StaticResource Card}" Margin="0,14,0,0" Visibility="{Binding CanSeeDebtors, Converter={StaticResource VisibleWhen}}">
                     <StackPanel>
                         <TextBlock Text="Açık bakiyesi olan müşteriler" Style="{StaticResource SectionTitle}" />

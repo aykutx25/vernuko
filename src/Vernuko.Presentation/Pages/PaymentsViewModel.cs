@@ -14,7 +14,7 @@ namespace Vernuko.Presentation.Pages;
 public sealed record MethodTotal(string Method, string Amount);
 
 /// <summary>Daily cash desk, corrections and open balances. Not an invoicing system.</summary>
-public sealed partial class PaymentsViewModel(IPaymentService payments, ICustomerService customers, IServiceProvider services, IDialogService dialogs, TimeProvider time) : PageViewModel, IShellAware
+public sealed partial class PaymentsViewModel(IPaymentService payments, ICustomerService customers, IServiceProvider services, IDialogService dialogs, TimeProvider time, GiftCardsViewModel giftCards) : PageViewModel, IShellAware
 {
     [ObservableProperty]
     private DateTime _date = time.GetLocalNow().Date;
@@ -37,6 +37,11 @@ public sealed partial class PaymentsViewModel(IPaymentService payments, ICustome
 
     public ObservableCollection<MethodTotal> Totals { get; } = [];
 
+    /// <summary>SPA / güzellik: hediye kartı satışı ve sorgulama.</summary>
+    public GiftCardsViewModel GiftCards { get; } = giftCards;
+
+    public bool ShowGiftCards => Shell?.Business?.Features.Contains(BusinessProfiles.ProfileFeature.GiftCards) == true && (Shell?.Has(Security.Permission.PaymentsRecord) ?? false);
+
     public ObservableCollection<TransactionDto> Transactions { get; } = [];
 
     public ObservableCollection<DebtorDto> Debtors { get; } = [];
@@ -49,7 +54,15 @@ public sealed partial class PaymentsViewModel(IPaymentService payments, ICustome
 
     public string Disclaimer => "Bu ekran tahsilat kayıtlarını tutar; resmî fatura/e-Arşiv belgesi düzenlemez.";
 
-    public override Task OnNavigatedToAsync(object? parameter) => LoadAsync();
+    public override async Task OnNavigatedToAsync(object? parameter)
+    {
+        await LoadAsync();
+        OnPropertyChanged(nameof(ShowGiftCards));
+        if (ShowGiftCards)
+        {
+            await GiftCards.LoadAsync();
+        }
+    }
 
     partial void OnDateChanged(DateTime value) => _ = LoadAsync();
 

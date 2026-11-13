@@ -1,0 +1,44 @@
+<UserControl x:Class="Vernuko.Desktop.Views.GiftCardsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <TextBlock Text="Hediye kartları" Style="{StaticResource SectionTitle}" />
+        <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
+        <Border Style="{StaticResource InfoBanner}" Visibility="{Binding InfoMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding InfoMessage}" TextWrapping="Wrap" /></Border>
+        <TextBlock Text="SATIN ALAN MÜŞTERİ" Style="{StaticResource FieldLabel}" />
+        <TextBox Text="{Binding BuyerSearch, UpdateSourceTrigger=PropertyChanged}" Tag="Ad soyad veya telefon" AutomationProperties.Name="Satın alan müşteri" />
+        <UniformGrid Columns="2">
+            <StackPanel Margin="0,0,6,0"><TextBlock Text="TUTAR (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Kart tutarı" /></StackPanel>
+            <StackPanel><TextBlock Text="ÖDEME" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" DisplayMemberPath="Label" /></StackPanel>
+            <StackPanel Margin="0,0,6,0"><TextBlock Text="KİME (isteğe bağlı)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding RecipientName, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+            <StackPanel><TextBlock Text="GEÇERLİLİK (gün)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ValidDays, UpdateSourceTrigger=PropertyChanged}" Tag="boş = süresiz" /></StackPanel>
+        </UniformGrid>
+        <Button Style="{StaticResource PrimaryButton}" Content="Hediye kartı sat" Command="{Binding SellCommand}" HorizontalAlignment="Left" Margin="0,8,0,0" />
+
+        <TextBlock Text="KART SORGULA" Style="{StaticResource FieldLabel}" Margin="0,14,0,0" />
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Content="Sorgula" Command="{Binding LookupCommand}" Margin="6,0,0,0" />
+            <TextBox Text="{Binding LookupCode, UpdateSourceTrigger=PropertyChanged}" Tag="HK-XXXX-XXXX" FontFamily="Consolas" AutomationProperties.Name="Kart kodu" />
+        </DockPanel>
+        <Border Style="{StaticResource Card}" Margin="0,8,0,0" Padding="10" Visibility="{Binding Found, Converter={StaticResource VisibleWhen}}">
+            <StackPanel>
+                <TextBlock FontWeight="SemiBold"><Run Text="{Binding Found.Code, Mode=OneWay}" FontFamily="Consolas" /><Run Text=" · " /><Run Text="{Binding Found.StatusText, Mode=OneWay}" /></TextBlock>
+                <TextBlock><Run Text="Kalan: " /><Run Text="{Binding Found.BalanceMinor, Mode=OneWay, Converter={StaticResource Money}}" FontWeight="SemiBold" /><Run Text=" / " /><Run Text="{Binding Found.InitialMinor, Mode=OneWay, Converter={StaticResource Money}}" /></TextBlock>
+                <TextBlock Style="{StaticResource Muted}"><Run Text="Alan: " /><Run Text="{Binding Found.BuyerName, Mode=OneWay}" /><Run Text=" · Kime: " /><Run Text="{Binding Found.RecipientName, Mode=OneWay, TargetNullValue='—'}" /></TextBlock>
+                <ItemsControl ItemsSource="{Binding Found.Entries}" Focusable="False" Margin="0,4,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding AmountMinor, Converter={StaticResource Money}}" />
+                                <TextBlock Style="{StaticResource Muted}"><Run Text="{Binding AtUtc, Mode=OneWay, StringFormat='dd.MM.yyyy'}" /><Run Text=" " /><Run Text="{Binding KindName, Mode=OneWay}" /></TextBlock>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Style="{StaticResource GhostButton}" Content="Kartı iptal et…" Command="{Binding VoidCommand}" HorizontalAlignment="Left" Margin="0,6,0,0" />
+            </StackPanel>
+        </Border>
+        <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,10,0,0"
+                   Text="Kartla ödeme: müşterinin ödeme penceresinde yöntem olarak &quot;Hediye kartı&quot; seçip kodu girin. Satışta para kasaya girer; kartla ödemede kasaya yeni para girmez." />
+    </StackPanel>
+</UserControl>

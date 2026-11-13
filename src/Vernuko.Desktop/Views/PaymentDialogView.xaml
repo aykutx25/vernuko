@@ -20,6 +20,15 @@
                 <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" DisplayMemberPath="Label" />
             </StackPanel>
         </UniformGrid>
+        <StackPanel Visibility="{Binding IsGiftCard, Converter={StaticResource VisibleWhen}}">
+            <TextBlock Text="HEDİYE KARTI KODU" Style="{StaticResource FieldLabel}" />
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Bakiyeyi göster" Command="{Binding CheckGiftCardCommand}" Margin="8,0,0,0" />
+                <TextBox Text="{Binding GiftCardCode, UpdateSourceTrigger=PropertyChanged}" Tag="HK-XXXX-XXXX" FontFamily="Consolas" AutomationProperties.Name="Hediye kartı kodu" />
+            </DockPanel>
+            <TextBlock Text="{Binding GiftCardInfo}" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding GiftCardInfo, Converter={StaticResource VisibleWhen}}" />
+            <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0" Text="Tutar karttan düşülür; kasaya yeni para girmez (para, kart satılırken alınmıştı)." />
+        </StackPanel>
         <CheckBox Content="Kapora (ön ödeme)" IsChecked="{Binding IsDeposit}" Margin="0,12,0,0" />
         <TextBlock Text="AÇIKLAMA" Style="{StaticResource FieldLabel}" />
         <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" />

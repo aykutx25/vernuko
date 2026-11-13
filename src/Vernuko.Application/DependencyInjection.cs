@@ -54,6 +54,8 @@ public static class DependencyInjection
         services.AddSingleton<AttachmentKeyStore>();
         services.AddSingleton<CustomerRecordsService>();
         services.AddSingleton<PrivateNotesService>();
+        services.AddSingleton<GiftCardService>();
+        services.TryAddSingleton<IGiftCardService>(sp => sp.GetRequiredService<GiftCardService>());
         services.TryAddSingleton<IPrivateNotesService>(sp => sp.GetRequiredService<PrivateNotesService>());
 
         // Screens depend on these contracts: the real services here, remote proxies on a connected computer.
