@@ -2,6 +2,87 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.13.0] — 2026-11-14 — Genel hata ve görünüm denetimi
+
+Dört alanlı kod incelemesi (alan/servisler, arayüz, altyapı, WordPress eklentisi) ve gerçek boyutlu ekran görüntüleriyle yapılan görsel denetimden çıkan hatalar düzeltildi. Her düzeltmenin testi var (C# ve PHP).
+
+### Düzeltildi — veri ve para
+- **Tutar girişi:** "12.50" artık 12,50 TL. Daha önce 1.250,00 TL okunuyordu. Nokta yalnızca binlik yerinde binlik ayırıcıdır; belirsiz giriş reddedilir. Prim kuralı değeri de aynı kurala uyar ("12.5" artık %125 değil).
+- **Bedelsiz paket/ürün satışı** çift tıklamada iki kez işlenmiyor.
+- **Paket süresi** randevunun kendi tarihine göre kontrol edilir. 30 günlük pakete iki ay sonrasına randevu verilip seans düşülebiliyordu. Geçerlilik 1–3650 gün.
+- **Bekleme süreli hizmet** kısaltılınca çökmüyor.
+- İptal edilmiş hediye kartıyla yapılan ödemenin ters kaydı karta para yüklemiyor.
+
+### Düzeltildi — mesajlaşma
+- İptal edilen hatırlatma gerektiğinde yeniden planlanır. Kapat-aç, iptali geri alma ve taşıyıp geri alma durumlarında hatırlatma kayboluyordu.
+- Kanal değişince eski kanalın bekleyen mesajı iptal edilir; iki mesaj gitmez.
+- Deneme mesajı salt-okunur lisans modunda gönderilmez.
+
+### Düzeltildi — güvenlik ve KVKK
+- **Kilit ekranı:** girişteki deneme sınırı burada da geçerli ve denemeler denetim kaydına yazılır. Çok fazla yanlış denemede oturum kapanır.
+- Ödeme yetkisi olmayan roller müşteri kartında bakiyeyi görmez.
+- Personel iznini silmek için de "personel yönetimi" yetkisi gerekir.
+- **Anonimleştirme** şunları da temizler: mesajlardaki numara ve metin, bekleme listesi notları, geçmiş randevuların serbest metni, hediye kartındaki alıcı adı.
+
+### Düzeltildi — yedek, lisans, çoklu bilgisayar
+- Ana bilgisayar modunda kapanışta program donup kalmıyor. Önceden süreç açık kalıyor ve tekrar açılınca "Vernuko zaten açık" deniyordu.
+- **Geri yükleme** yarıda kalırsa (ek dosyalar, eski yedeğin yükseltilmesi) önceki veriler otomatik geri konur.
+- **Yedek dosyaları** kurulum etiketi taşır. Aynı bulut/NAS klasörünü kullanan iki şube artık birbirinin yedeğini silmiyor. Etiketsiz eski dosyalar hiç otomatik silinmez.
+- Saat bir kez ileri alınıp düzeltildiyse, sunucudan gelen yeni lisans bu durumu düzeltir. Ücretli lisans salt-okunur kalmıyor.
+- Windows hesabının açamadığı dosya/not anahtarının yerine yeni anahtar yazılmıyor. Yazılsaydı eski kayıtlar okunamaz olurdu; artık açık bir hata mesajı çıkıyor.
+- **Bağlı bilgisayarlar:**
+  - 25 MB dosya gönderilebiliyor.
+  - Kapanışta ana bilgisayarda yedek tetiklenmiyor.
+  - Eski oturumlar temizleniyor.
+  - İki bilgisayarın sürümü farklıysa açık mesaj çıkıyor.
+  - Eşleştirme tek adımda yapılıyor; aynı kodla iki cihaz eklenemiyor.
+  - Sertifika ve eşleştirme dosyaları bozulmaya karşı korumalı yazılıyor.
+- Bozuk lisans dosyası "okunamadı" hatası verir, program çökmez. Lisans sunucusunda aynı anda iki etkinleştirme son boş yeri birlikte alamaz.
+
+### Düzeltildi — arayüz
+- **Yanlış müşteriye kayıt:** aramaya başka isim yazınca önceki müşteri seçimi kalkar. Önceden randevu veya satış eski müşteriye kaydedilebiliyordu.
+- **Gizli notlar:** kaydedilmemiş not bir sonraki müşteriye taşınmıyor.
+- **Hızlı tıklama:** müşteri kartı, takvim günü, onam/dosya listesi ve fotoğraf önizlemesi her zaman son seçimi gösterir. Bağlı bilgisayarda önceki müşterinin bilgisi görünebiliyordu.
+- **Kaydedilmemiş değişiklikler:** başka müşteriye geçerken ya da yeni randevu formu açarken onay sorulur. Süre değişince boş saatler yenilenir.
+- **Yetkiler:**
+  - Ctrl+N yetki ve açık pencere kontrolünü atlamıyor.
+  - "Yeni Randevu", hızlı işlem kutuları ve "Yeni saate taşı" yetkiye göre görünür.
+  - Kullanıcının erişemediği sayfaların kutuları gizlenir.
+  - Ayarlar'da gizli "İşletme" sekmesinin formu görünmüyor.
+- **Ayarlar ve listeler:**
+  - Otomatik kilit süresi hemen uygulanır.
+  - Yeni hizmet, oda ve onam şablonları oturumu kapatmadan listelere gelir.
+- **Durum ve saat bilgileri:**
+  - Durum çubuğu gerçek hatırlatma kanalını ve bağlantı türünü gösterir; sabit "SMS: Kapalı" yazısı kaldırıldı.
+  - UTC saatler yerel saatle gösterilir.
+- **Türkçe tarih ve sayı:** İngilizce Windows'ta da tarih seçici 25.11.2026 biçiminde. Önceden 11/25/2026 gösterip öyle okuyordu.
+- **Düzen:**
+  - Sol menü kaydırılabilir. Önceden "Ayarlar" bazı ekranlarda görünmüyordu.
+  - Açık pencere (ödeme, paket satışı) küçük ekranda kaydırılır ve arkasındaki sayfa klavyeyle kullanılamaz; kilit ekranı da öyle.
+  - Hizmet formu, ödemeler yan sütunu, paket seans geçmişi ve ayarlar formu kaydırılır. Önceden "Kaydet"e ulaşılamıyordu.
+  - Randevu satırlarında "…" menüsü hiç kaybolmaz; uzun yazılar "…" ile kısalır. Başlık ve özet kartları dar pencerede taşmıyor.
+- **Pencere boyutu:** en küçük boyut 1080×560. Pencere 1366×768 ekranda %125 ölçekte sığar.
+- **Görsel test (CI):** ekran görüntüleri artık gerçekten 1366×768, 1920×1080 ve en küçük boyutta çekiliyor. CI makinesinin ekranı pencereyi kırptığı için hepsi yaklaşık 1030 piksel genişlikteydi. Boyut tutmazsa test başarısız olur.
+
+### WordPress lisans eklentisi 1.2.0
+- **Güvenlik:** "Hesabım › Lisanslarım" yalnızca o hesapla alınmış lisansları gösterir. Önceden hesap e-postası başkasınınkiyle değiştirilerek o kişinin anahtarları görülebiliyordu.
+- **iyzico:** müşteri siteye dönmese de ödeme sonradan iyzico'ya sorulur (durum sayfası ve "iyzico'ya sor" düğmesi). Dolandırıcılık incelemesindeki ödeme başarısız sayılmaz.
+- **Etkinleştirme:** aynı anda gelen iki istek son boş yeri birlikte alamaz.
+- **Sipariş:** satın alındığı andaki paketi saklar; paket sonradan değiştirilse ya da silinse de sipariş etkilenmez.
+- **Kurulum ve yükseltme:**
+  - Güncellemeden sonra tablolar kendiliğinden yükseltilir.
+  - Veritabanı hataları artık "kayıt yok" gibi görünmüyor.
+  - Anahtar oluştururken özel anahtar veritabanına yazılmıyor.
+- **Önbellek ve adresler:**
+  - Anahtar ve giriş sayfaları önbelleğe alınmaz.
+  - Alt klasöre kurulu sitede adresler bozulmuyor.
+- **Muhasebe dosyası (CSV) ve fiyat:**
+  - CSV'de formül çalıştırılamaz; ay ve tarihler sitenin saat dilimine göre.
+  - Fiyat girişi Türkçe kurala uyar ("49.90" artık 4.990 TL değil).
+- **Görünüm:**
+  - Bir sayfada birden fazla satın alma formu olunca formlar karışmıyor.
+  - Formlar temaya uygun stil aldı ve telefonda düzgün görünüyor; erişilebilirlik iyileştirildi.
+
 ## [0.12.0] — 2026-11-13 — Faz 3 tamam: bekleme süresi, görüşme bağlantısı, gizli notlar, hediye kartı
 
 ### Eklendi
