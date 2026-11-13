@@ -44,7 +44,10 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
     private readonly ISettingsService _settings;
     private readonly IDialogService _dialogs;
     private readonly Debouncer _searchDebounce = new(TimeSpan.FromMilliseconds(250));
+    private readonly Lock _listLock = new();
     private Guid? _rescheduleId;
+    private int _slotsVersion;
+    private int _packagesVersion;
     private bool _initializing;
 
     [ObservableProperty]
@@ -555,54 +558,83 @@ public sealed partial class AppointmentEditorViewModel : ViewModelBase
 
     private async Task LoadPackagesAsync()
     {
-        Packages.Clear();
-        SelectedPackage = null;
-        if (SelectedCustomer is null || SelectedService is null || IsReschedule)
+        // Several changes can start a reload at once (customer, service); only the latest one is shown.
+        var version = Interlocked.Increment(ref _packagesVersion);
+        var customer = SelectedCustomer;
+        var service = SelectedService;
+        IReadOnlyList<CustomerPackageDto> found = [];
+        if (customer is not null && service is not null && !IsReschedule)
         {
+            var r = await _packages.GetCustomerPackagesAsync(customer.Id, activeOnly: true);
+            found = r.OrEmpty().Where(p => p.ServiceId == service.Id && p.RemainingSessions > 0).ToList();
+        }
+
+        lock (_listLock)
+        {
+            if (version != Volatile.Read(ref _packagesVersion))
+            {
+                return;
+            }
+
+            Packages.Clear();
+            foreach (var p in found)
+            {
+                Packages.Add(p);
+            }
+
+            SelectedPackage = Packages.FirstOrDefault();
+            if (SelectedPackage?.BodyArea is { } area && string.IsNullOrWhiteSpace(BodyArea))
+            {
+                BodyArea = area;
+            }
+
             OnPropertyChanged(nameof(HasPackages));
-            return;
         }
-
-        var r = await _packages.GetCustomerPackagesAsync(SelectedCustomer.Id, activeOnly: true);
-        foreach (var p in r.OrEmpty().Where(p => p.ServiceId == SelectedService.Id && p.RemainingSessions > 0))
-        {
-            Packages.Add(p);
-        }
-
-        SelectedPackage = Packages.FirstOrDefault();
-        if (SelectedPackage?.BodyArea is { } area && string.IsNullOrWhiteSpace(BodyArea))
-        {
-            BodyArea = area;
-        }
-
-        OnPropertyChanged(nameof(HasPackages));
     }
 
     private async Task LoadSlotsAsync()
     {
-        Slots.Clear();
-        if (SelectedService is null || SelectedStaff is null)
-        {
-            return;
-        }
-
-        int? duration = int.TryParse(DurationMinutes, out var d) ? d : null;
+        // Selection changes and explicit refreshes can overlap (slowly over the network on a connected computer);
+        // results are applied in one step and only for the latest request, so an older answer never wins.
+        var version = Interlocked.Increment(ref _slotsVersion);
+        var service = SelectedService;
+        var staff = SelectedStaff;
         var selected = Resources.Where(x => x.IsSelected).Select(x => x.Resource.Id).ToList();
-        var r = await _appointments.GetAvailableSlotsAsync(new SlotQuery(
-            DateOnly.FromDateTime(Date), SelectedService.Id, SelectedStaff.Id, selected, duration, _rescheduleId,
-            SearchAllowedResources: SelectedService.AllowedResourceIds is { Count: > 0 }));
-        foreach (var s in r.OrEmpty())
+        IReadOnlyList<SlotChoice> found = [];
+        if (service is not null && staff is not null)
         {
-            var other = s.ResourceIds.Where(id => !selected.Contains(id)).ToList();
-            var hint = other.Count == 0 ? null : string.Join(", ", Resources.Where(x => other.Contains(x.Resource.Id)).Select(x => x.Resource.Name));
-            Slots.Add(new SlotChoice(s.LocalStart, s.ResourceIds, hint));
+            int? duration = int.TryParse(DurationMinutes, out var d) ? d : null;
+            var r = await _appointments.GetAvailableSlotsAsync(new SlotQuery(
+                DateOnly.FromDateTime(Date), service.Id, staff.Id, selected, duration, _rescheduleId,
+                SearchAllowedResources: service.AllowedResourceIds is { Count: > 0 }));
+            var names = Resources.ToDictionary(x => x.Resource.Id, x => x.Resource.Name);
+            found = r.OrEmpty().Select(s =>
+            {
+                var other = s.ResourceIds.Where(id => !selected.Contains(id)).ToList();
+                var hint = other.Count == 0 ? null : string.Join(", ", other.Select(id => names.GetValueOrDefault(id, "?")));
+                return new SlotChoice(s.LocalStart, s.ResourceIds, hint);
+            }).ToList();
         }
 
-        NoSlots = Slots.Count == 0;
-        if (string.IsNullOrEmpty(Time) && Slots.Count > 0)
+        lock (_listLock)
         {
-            // Only auto-fill a time that fits the current selection; a different room needs a deliberate click.
-            Time = Slots.FirstOrDefault(s => s.ResourceHint is null)?.TimeText ?? string.Empty;
+            if (version != Volatile.Read(ref _slotsVersion))
+            {
+                return;
+            }
+
+            Slots.Clear();
+            foreach (var slot in found)
+            {
+                Slots.Add(slot);
+            }
+
+            NoSlots = Slots.Count == 0;
+            if (string.IsNullOrEmpty(Time) && Slots.Count > 0)
+            {
+                // Only auto-fill a time that fits the current selection; a different room needs a deliberate click.
+                Time = Slots.FirstOrDefault(s => s.ResourceHint is null)?.TimeText ?? string.Empty;
+            }
         }
     }
 }
