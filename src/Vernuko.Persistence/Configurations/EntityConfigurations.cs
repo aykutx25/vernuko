@@ -227,6 +227,10 @@ internal sealed class CustomerPackageConfiguration : IEntityTypeConfiguration<Cu
     {
         b.ToTable("CustomerPackages");
         b.ConfigureEntity();
+
+        // Idempotency of the sale itself: a free package has no charge row to carry the key (double click = 2 packages).
+        b.Property<string?>(PersistenceNames.SaleKey).HasMaxLength(120);
+        b.HasIndex(PersistenceNames.SaleKey).IsUnique();
         b.Property(e => e.Name).HasMaxLength(120).IsRequired();
         b.Property(e => e.BodyArea).HasMaxLength(80);
         b.Property(e => e.Notes).HasMaxLength(1000);

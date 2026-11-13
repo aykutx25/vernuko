@@ -69,6 +69,52 @@ public abstract class AppServiceBase(AppServiceDeps deps)
             return Error.ReadOnlyMode;
         }
 
+        var afterCommit = new List<Action>();
+        var outer = PendingAfterCommit.Value;
+        PendingAfterCommit.Value = afterCommit;
+        try
+        {
+            var result = await WriteInTransactionAsync(work, ct);
+            if (result.IsSuccess)
+            {
+                RunAfterCommit(afterCommit);
+            }
+
+            return result;
+        }
+        finally
+        {
+            PendingAfterCommit.Value = outer;
+        }
+    }
+
+    private static readonly AsyncLocal<List<Action>?> PendingAfterCommit = new();
+
+    /// <summary>
+    /// Runs <paramref name="action"/> only once the current write has been committed — for things the database
+    /// cannot roll back, such as deleting an attachment file (deleted before a failed commit, the record survived
+    /// pointing at a missing file).
+    /// </summary>
+    protected static void AfterCommit(Action action) =>
+        (PendingAfterCommit.Value ?? throw new InvalidOperationException("AfterCommit is only valid inside a write.")).Add(action);
+
+    private static void RunAfterCommit(List<Action> actions)
+    {
+        foreach (var action in actions)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // The data change is committed; a leftover file is harmless (encrypted, no record points to it).
+            }
+        }
+    }
+
+    private async Task<Result<T>> WriteInTransactionAsync<T>(Func<VernukoDbContext, Task<Result<T>>> work, CancellationToken ct)
+    {
         await using var db = await Factory.CreateDbContextAsync(ct);
         await using var tx = await db.Database.BeginTransactionAsync(ct);
         try

@@ -188,7 +188,8 @@ public sealed class CustomerRecordsService(AppServiceDeps deps, AttachmentKeySto
                 return r.Error;
             }
 
-            DeleteBlob(env, file.StoredName);
+            var storedName = file.StoredName;
+            AfterCommit(() => DeleteBlob(env, storedName));
             await Audit.AppendAsync(db, "file.deleted", "Customer", file.CustomerId, $"{CustomerFile.KindName(file.Kind)} silindi", ct);
             return true;
         }, ct);
@@ -200,7 +201,8 @@ public sealed class CustomerRecordsService(AppServiceDeps deps, AttachmentKeySto
         foreach (var f in files)
         {
             f.Delete(nowUtc);
-            DeleteBlob(env, f.StoredName);
+            var storedName = f.StoredName;
+            AfterCommit(() => DeleteBlob(env, storedName));
         }
 
         return files.Count;

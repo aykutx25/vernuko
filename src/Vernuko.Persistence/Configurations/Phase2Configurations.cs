@@ -53,6 +53,10 @@ internal sealed class StockMovementConfiguration : IEntityTypeConfiguration<Stoc
     {
         b.ToTable("StockMovements");
         b.HasKey(e => e.Id);
+
+        // Idempotency of a product sale: a free sale has no charge row to carry the key (double click = stock out twice).
+        b.Property<string?>(PersistenceNames.SaleKey).HasMaxLength(120);
+        b.HasIndex(PersistenceNames.SaleKey).IsUnique();
         b.Property(e => e.Id).ValueGeneratedNever();
         b.Property(e => e.Note).HasMaxLength(300);
         b.HasIndex(e => new { e.ProductId, e.AtUtc });

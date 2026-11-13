@@ -152,6 +152,14 @@ public sealed class OutboxMessage : Entity
         }
     }
 
+    /// <summary>KVKK erasure: the number and the text (first name, date) go; the row stays for the monthly count.</summary>
+    public void Anonymize()
+    {
+        Cancel("Müşteri verisi anonimleştirildi.");
+        Recipient = "***";
+        Text = "[anonimleştirildi]";
+    }
+
     public static TimeSpan Backoff(int attempts) => attempts switch
     {
         1 => TimeSpan.FromMinutes(1),

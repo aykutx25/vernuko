@@ -17,9 +17,17 @@ public sealed class PackageService(AppServiceDeps deps) : AppServiceBase(deps), 
     public Task<Result<Guid>> SellAsync(SellPackageRequest r, CancellationToken ct = default) =>
         WriteAsync<Guid>(Permission.PackagesSell, async db =>
         {
-            if (await db.Transactions.AnyAsync(t => t.IdempotencyKey == $"package-sale:{r.IdempotencyKey}", ct))
+            var saleKey = $"package-sale:{r.IdempotencyKey}";
+            if (await db.Transactions.AnyAsync(t => t.IdempotencyKey == saleKey, ct))
             {
-                return await db.Transactions.Where(t => t.IdempotencyKey == $"package-sale:{r.IdempotencyKey}").Select(t => t.CustomerPackageId!.Value).FirstAsync(ct);
+                return await db.Transactions.Where(t => t.IdempotencyKey == saleKey).Select(t => t.CustomerPackageId!.Value).FirstAsync(ct);
+            }
+
+            // A free package has no charge row: the key is on the package itself.
+            var earlier = await db.CustomerPackages.AsNoTracking().Where(p => EF.Property<string?>(p, PersistenceNames.SaleKey) == saleKey).Select(p => (Guid?)p.Id).FirstOrDefaultAsync(ct);
+            if (earlier is { } earlierId)
+            {
+                return earlierId;
             }
 
             var (settings, _) = await BusinessContext.LoadAsync(db, ct);
@@ -52,6 +60,7 @@ public sealed class PackageService(AppServiceDeps deps) : AppServiceBase(deps), 
 
             var package = sold.Value;
             db.CustomerPackages.Add(package);
+            db.Entry(package).Property(PersistenceNames.SaleKey).CurrentValue = saleKey;
             if (r.PriceMinor > 0)
             {
                 var charge = CustomerTransaction.Create(Branch.DefaultId, r.CustomerId, TransactionKind.Charge, new Money(r.PriceMinor, settings.Currency), null, false,

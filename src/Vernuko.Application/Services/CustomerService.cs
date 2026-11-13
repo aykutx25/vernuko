@@ -61,7 +61,10 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
                 return Error.NotFound("Müşteri");
             }
 
-            var balance = await db.Transactions.Where(t => t.CustomerId == id).SumAsync(t => t.BalanceEffectMinor, ct);
+            // The balance is payment data: roles without PaymentsView (staff, specialists) do not get it here either.
+            var balance = Session.Has(Permission.PaymentsView)
+                ? await db.Transactions.Where(t => t.CustomerId == id).SumAsync(t => t.BalanceEffectMinor, ct)
+                : 0;
             return ToDto(c, balance, Session.Has(Permission.CustomerSensitiveDataView));
         }, ct);
 
@@ -202,13 +205,34 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
             }
 
             var now = UtcNow;
-            var future = await db.Appointments.Include(a => a.Bookings).Include(a => a.History)
-                .Where(a => a.CustomerId == id && a.StartUtc > now)
+            var appointments = await db.Appointments.Include(a => a.Bookings).Include(a => a.History)
+                .Where(a => a.CustomerId == id)
                 .ToListAsync(ct);
-            foreach (var a in future.Where(a => AppointmentStatusRules.CanTransition(a.Status, AppointmentStatus.Cancelled)))
+            foreach (var a in appointments)
             {
-                a.ChangeStatus(AppointmentStatus.Cancelled, now, UserId, "Müşteri verisi anonimleştirildi");
-                a.UpdateNotes(null);
+                if (a.StartUtc > now && AppointmentStatusRules.CanTransition(a.Status, AppointmentStatus.Cancelled))
+                {
+                    a.ChangeStatus(AppointmentStatus.Cancelled, now, UserId, "Müşteri verisi anonimleştirildi");
+                }
+
+                // Past ones too: the statistics stay, the free text about the person does not.
+                a.ClearPersonalDetails();
+            }
+
+            // Sent and planned messages keep the phone number and the text with the first name.
+            foreach (var m in await db.Outbox.Where(m => m.CustomerId == id).ToListAsync(ct))
+            {
+                m.Anonymize();
+            }
+
+            foreach (var w in await db.Waitlist.Where(w => w.CustomerId == id).ToListAsync(ct))
+            {
+                w.Anonymize();
+            }
+
+            foreach (var card in await db.GiftCards.Where(g => g.BuyerCustomerId == id && g.RecipientName != null).ToListAsync(ct))
+            {
+                card.ClearRecipient();
             }
 
             await CustomerRecordsService.DeleteAllForCustomerAsync(db, env, c.Id, now, ct);
@@ -291,6 +315,15 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
     {
         if (string.IsNullOrWhiteSpace(query))
         {
+            yield break;
+        }
+
+        // A whole phone number, however it is written ("+90 532 456 78 90", "0 (532) 456-78-90"): one digit run, so
+        // "+90" is not searched as a separate word (it matched nothing).
+        var allDigits = new string(query.Where(char.IsAsciiDigit).ToArray());
+        if (allDigits.Length >= 7 && query.All(ch => char.IsAsciiDigit(ch) || ch is ' ' or '+' or '(' or ')' or '-' or '.'))
+        {
+            yield return allDigits;
             yield break;
         }
 

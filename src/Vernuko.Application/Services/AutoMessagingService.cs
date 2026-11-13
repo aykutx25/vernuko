@@ -181,6 +181,12 @@ public sealed class AutoMessagingService(
             return auth.Error;
         }
 
+        // Read-only license: no sending (it costs money), same as the automatic dispatcher.
+        if (!license.CanWrite)
+        {
+            return Error.ReadOnlyMode;
+        }
+
         var to = PhoneNumber.Parse(phone);
         if (to.IsFailure)
         {
@@ -260,9 +266,10 @@ public sealed class AutoMessagingService(
         var current = await db.Appointments.AsNoTracking().Where(a => ids.Contains(a.Id)).ToDictionaryAsync(a => a.Id, ct);
         foreach (var m in pending)
         {
-            if (!current.TryGetValue(m.AppointmentId!.Value, out var a) || !IsRemindable(a.Status) || m.IdempotencyKey != ReminderKey(a, m.Channel) || !settings.RemindersEnabled)
+            current.TryGetValue(m.AppointmentId!.Value, out var a);
+            if (StaleReminderReason(m, a, settings) is { } reason)
             {
-                m.Cancel(settings.RemindersEnabled ? "Randevu iptal edildi, tamamlandı veya taşındı." : "Otomatik hatırlatma kapatıldı.");
+                m.Cancel(reason);
             }
         }
 
@@ -271,16 +278,26 @@ public sealed class AutoMessagingService(
             var horizon = now.AddHours(settings.ReminderHoursBefore + 24);
             var open = new[] { AppointmentStatus.Created, AppointmentStatus.PendingConfirmation, AppointmentStatus.Confirmed };
             var appointments = await db.Appointments.AsNoTracking().Where(a => a.StartUtc > now && a.StartUtc <= horizon && open.Contains(a.Status)).ToListAsync(ct);
-            var keys = appointments.Select(a => ReminderKey(a, settings.ReminderChannel)).ToList();
-            var existing = (await db.Outbox.AsNoTracking().Where(m => keys.Contains(m.IdempotencyKey)).Select(m => m.IdempotencyKey).ToListAsync(ct)).ToHashSet(StringComparer.Ordinal);
+            var appointmentIds = appointments.Select(a => a.Id).ToList();
+            var earlier = (await db.Outbox.AsNoTracking()
+                    .Where(m => m.Purpose == MessagePurpose.AppointmentReminder && m.AppointmentId != null && appointmentIds.Contains(m.AppointmentId.Value))
+                    .Select(m => new { m.IdempotencyKey, m.Status })
+                    .ToListAsync(ct))
+                .Select(m => (m.IdempotencyKey, m.Status))
+                .ToList();
             var nowLocal = TimeZones.ToLocal(now, zone);
             foreach (var a in appointments)
             {
-                var key = ReminderKey(a, settings.ReminderChannel);
-                if (existing.Contains(key))
+                // A reminder cancelled earlier (reminders switched off, appointment cancelled then restored, moved and
+                // moved back) must not block a new one: the key is unique, so the new one gets a numbered key.
+                var baseKey = ReminderKey(a, settings.ReminderChannel);
+                var same = earlier.Where(m => IsKeyFor(m.IdempotencyKey, baseKey)).ToList();
+                if (same.Any(m => m.Status != OutboxStatus.Cancelled))
                 {
                     continue;
                 }
+
+                var key = same.Count == 0 ? baseKey : $"{baseKey}:{same.Count + 1}";
 
                 var customer = await db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == a.CustomerId, ct);
                 if (customer is null || customer.State != CustomerState.Active || customer.Phone is null || !Allows(customer, settings.ReminderChannel)
@@ -374,9 +391,10 @@ public sealed class AutoMessagingService(
                 if (m.AppointmentId is { } apptId)
                 {
                     var appt = await db.Appointments.AsNoTracking().FirstOrDefaultAsync(a => a.Id == apptId, ct);
-                    if (appt is null || !IsRemindable(appt.Status) || m.IdempotencyKey != ReminderKey(appt, m.Channel))
+                    var stale = StaleReminderReason(m, appt, settings);
+                    if (appt is null || stale is not null)
                     {
-                        m.Cancel("Randevu iptal edildi, tamamlandı veya taşındı.");
+                        m.Cancel(stale ?? "Randevu bulunamadı.");
                         continue;
                     }
 
@@ -434,6 +452,32 @@ public sealed class AutoMessagingService(
 
     public static string ReminderKey(Appointment a, MessageChannel channel) =>
         $"reminder:{a.Id:N}:{a.StartUtc.ToString("yyyyMMddHHmm", CultureInfo.InvariantCulture)}:{channel}";
+
+    /// <summary>The reminder key itself or a re-planned one ("…:2").</summary>
+    private static bool IsKeyFor(string key, string baseKey) =>
+        key.Equals(baseKey, StringComparison.Ordinal) || key.StartsWith(baseKey + ":", StringComparison.Ordinal);
+
+    /// <summary>Why a planned reminder must not go out any more (null = still wanted).</summary>
+    private static string? StaleReminderReason(OutboxMessage m, Appointment? appointment, MessagingSettings settings)
+    {
+        if (appointment is null || !IsRemindable(appointment.Status) || !IsKeyFor(m.IdempotencyKey, ReminderKey(appointment, m.Channel)))
+        {
+            return "Randevu iptal edildi, tamamlandı veya taşındı.";
+        }
+
+        if (m.Purpose != MessagePurpose.AppointmentReminder)
+        {
+            return null;
+        }
+
+        if (!settings.RemindersEnabled)
+        {
+            return "Otomatik hatırlatma kapatıldı.";
+        }
+
+        // The channel was switched after planning: the new channel's reminder replaces it (never both).
+        return m.Channel != settings.ReminderChannel ? "Hatırlatma kanalı değiştirildi." : null;
+    }
 
     /// <summary>"+90 5** *** 45 67" — enough to recognise, not enough to copy.</summary>
     public static string Mask(string e164)

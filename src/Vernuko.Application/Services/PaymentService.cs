@@ -71,17 +71,27 @@ public sealed class PaymentService(AppServiceDeps deps) : AppServiceBase(deps), 
             }
 
             db.Transactions.Add(reversal.Value);
+            var note = string.Empty;
             if (original.Method == PaymentMethod.GiftCard && original.Kind == TransactionKind.Payment)
             {
-                // The wrong gift card payment is undone: the amount goes back onto the card.
+                // The wrong gift card payment is undone: the amount goes back onto the card — unless the card has been
+                // voided since (a voided card must not show a balance again).
                 var used = await db.GiftCardEntries.AsNoTracking().FirstOrDefaultAsync(e => e.TransactionId == original.Id && e.Kind == GiftCardEntryKind.Redeem, ct);
                 if (used is not null)
                 {
-                    db.GiftCardEntries.Add(GiftCardEntry.Of(used.GiftCardId, GiftCardEntryKind.Restore, -used.AmountMinor, original.CustomerId, reversal.Value.Id, UserId, UtcNow, reason.Trim()));
+                    var voided = await db.GiftCards.AsNoTracking().AnyAsync(g => g.Id == used.GiftCardId && g.VoidedAtUtc != null, ct);
+                    if (voided)
+                    {
+                        note = " Kart iptal edilmiş olduğu için tutar karta geri yüklenmedi.";
+                    }
+                    else
+                    {
+                        db.GiftCardEntries.Add(GiftCardEntry.Of(used.GiftCardId, GiftCardEntryKind.Restore, -used.AmountMinor, original.CustomerId, reversal.Value.Id, UserId, UtcNow, reason.Trim()));
+                    }
                 }
             }
 
-            await Audit.AppendAsync(db, "transaction.reversed", "CustomerTransaction", original.Id, $"Ters kayıt oluşturuldu. Gerekçe: {reason.Trim()}", ct);
+            await Audit.AppendAsync(db, "transaction.reversed", "CustomerTransaction", original.Id, $"Ters kayıt oluşturuldu. Gerekçe: {reason.Trim()}{note}", ct);
             return reversal.Value.Id;
         }, ct);
 

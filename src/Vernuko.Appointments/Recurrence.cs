@@ -158,6 +158,18 @@ public sealed class WaitlistEntry : Entity
         return Result.Success();
     }
 
+    /// <summary>KVKK erasure: closes the entry and removes its free text.</summary>
+    public void Anonymize()
+    {
+        if (IsOpen)
+        {
+            Status = WaitlistStatus.Cancelled;
+        }
+
+        Notes = null;
+        PreferredTime = null;
+    }
+
     public static string StatusName(WaitlistStatus status) => status switch
     {
         WaitlistStatus.Waiting => "Bekliyor",

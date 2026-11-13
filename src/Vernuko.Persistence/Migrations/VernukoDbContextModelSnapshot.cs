@@ -1017,6 +1017,10 @@ namespace Vernuko.Persistence.Migrations
                     b.Property<Guid?>("ReversesMovementId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SaleKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
                     b.Property<long?>("UnitCostMinor")
                         .HasColumnType("INTEGER");
 
@@ -1028,6 +1032,9 @@ namespace Vernuko.Persistence.Migrations
                     b.HasIndex("AppointmentId");
 
                     b.HasIndex("ReversesMovementId")
+                        .IsUnique();
+
+                    b.HasIndex("SaleKey")
                         .IsUnique();
 
                     b.HasIndex("ProductId", "AtUtc");
@@ -1163,6 +1170,10 @@ namespace Vernuko.Persistence.Migrations
                     b.Property<DateTime>("PurchasedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SaleKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("ServiceId")
                         .HasColumnType("TEXT");
 
@@ -1188,6 +1199,9 @@ namespace Vernuko.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SaleKey")
+                        .IsUnique();
 
                     b.HasIndex("ServiceId");
 

@@ -150,6 +150,12 @@ public sealed class CustomerPackage : Entity
             return Error.Validation("package.price", "Paket fiyatı negatif olamaz.");
         }
 
+        // Same range as templates and gift cards: 0 or less sold an already expired package, a huge value threw.
+        if (validityDays is < 1 or > 3650)
+        {
+            return Error.Validation("package.validity", "Geçerlilik süresi 1 ile 3650 gün arasında olmalıdır (süresiz için boş bırakın).");
+        }
+
         DateTime? expires = validityDays is { } days ? nowUtc.AddDays(days) : null;
         return new CustomerPackage(customerId, serviceId, templateId, name.Trim(), string.IsNullOrWhiteSpace(bodyArea) ? null : bodyArea.Trim(), totalSessions, priceMinor, nowUtc, expires)
         {

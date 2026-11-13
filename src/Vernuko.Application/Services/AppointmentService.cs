@@ -168,6 +168,10 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
                 {
                     issues.Add(new SchedulingIssue(canBook.Error.Code, canBook.Error.Message, IssueSeverity.Blocking));
                 }
+                else if (PackageDateIssue(package, slot.StartUtc, zone) is { } dateIssue)
+                {
+                    issues.Add(dateIssue);
+                }
                 else
                 {
                     var upcoming = await CountOpenPackageAppointmentsAsync(db, packageId, null, ct);
@@ -206,6 +210,15 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
             return new BookingOutcome(created.Value.Id, issues);
         }, ct);
 
+    /// <summary>
+    /// A package session must fall inside the package's validity. Checked at the appointment's own date, not today:
+    /// a 30-day package otherwise accepted (and later consumed) an appointment two months ahead.
+    /// </summary>
+    private static SchedulingIssue? PackageDateIssue(CustomerPackage package, DateTime startUtc, TimeZoneInfo zone) =>
+        package.IsExpired(startUtc) && package.ExpiresAtUtc is { } expires
+            ? new SchedulingIssue("package.expires_before", $"Paketin geçerlilik süresi {TimeZones.ToLocal(expires, zone):dd.MM.yyyy HH:mm} itibarıyla doluyor; paket seansı bu tarihten sonraya verilemez.", IssueSeverity.Blocking)
+            : null;
+
     public Task<Result<BookingOutcome>> RescheduleAsync(RescheduleRequest r, bool confirmWarnings, CancellationToken ct = default) =>
         WriteAsync<BookingOutcome>(Permission.AppointmentsManage, async db =>
         {
@@ -239,6 +252,8 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
             var ignore = group.Select(a => a.Id).ToHashSet();
             var plan = new List<(Appointment Appointment, AppointmentSlot Slot)>();
             var allIssues = new List<SchedulingIssue>();
+            var packageIds = group.Where(a => a.CustomerPackageId != null).Select(a => a.CustomerPackageId!.Value).Distinct().ToList();
+            var packages = await db.CustomerPackages.AsNoTracking().Where(p => packageIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id, ct);
             foreach (var a in group)
             {
                 var current = a.CurrentSlot();
@@ -251,6 +266,11 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
                 }
 
                 var (slot, issues) = prepared.Value;
+                if (a.CustomerPackageId is { } pid && packages.TryGetValue(pid, out var package) && PackageDateIssue(package, slot.StartUtc, zone) is { } dateIssue)
+                {
+                    issues = [.. issues, dateIssue];
+                }
+
                 var prefix = group.Count > 1 ? $"{newLocal:dd.MM.yyyy HH:mm}: " : string.Empty;
                 allIssues.AddRange(issues.Select(i => i with { Message = prefix + i.Message }));
                 plan.Add((a, slot));
@@ -312,6 +332,7 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
             }
 
             var seriesIssues = new List<SchedulingIssue>();
+            CustomerPackage? seriesPackage = null;
             long price = service.PriceMinor;
             if (r.CustomerPackageId is { } packageId)
             {
@@ -326,6 +347,8 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
                 {
                     return canBook.Error;
                 }
+
+                seriesPackage = package;
 
                 var upcoming = await CountOpenPackageAppointmentsAsync(db, packageId, null, ct);
                 if (upcoming + pattern.Count > package.RemainingSessions)
@@ -347,6 +370,11 @@ public sealed class AppointmentService(AppServiceDeps deps) : AppServiceBase(dep
                 }
 
                 var (slot, issues) = prepared.Value;
+                if (seriesPackage is not null && PackageDateIssue(seriesPackage, slot.StartUtc, zone) is { } dateIssue)
+                {
+                    issues = [.. issues, dateIssue];
+                }
+
                 if (issues.Count > 0)
                 {
                     problems.Add((local, issues));

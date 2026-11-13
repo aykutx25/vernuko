@@ -119,6 +119,9 @@ public sealed class GiftCard : Entity
     }
 
     public void MarkVoided(DateTime nowUtc) => VoidedAtUtc = Guard.Utc(nowUtc);
+
+    /// <summary>KVKK erasure of the buyer: the name written on the card goes too.</summary>
+    public void ClearRecipient() => RecipientName = null;
 }
 
 /// <summary>One movement on a gift card (append-only; database triggers refuse UPDATE/DELETE).</summary>

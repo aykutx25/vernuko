@@ -188,8 +188,16 @@ public sealed class CatalogService(AppServiceDeps deps) : AppServiceBase(deps), 
             return e.Id;
         }, ct);
 
-    public Task<Result<bool>> RemoveExceptionAsync(Guid id, CancellationToken ct = default) =>
-        WriteAsync<bool>(Permission.CatalogManage, async db =>
+    /// <summary>Needs the same permission as adding it: staff leave = StaffManage, closures/devices = CatalogManage.</summary>
+    public async Task<Result<bool>> RemoveExceptionAsync(Guid id, CancellationToken ct = default)
+    {
+        ScheduleExceptionScope? scope;
+        await using (var lookup = await Factory.CreateDbContextAsync(ct))
+        {
+            scope = await lookup.ScheduleExceptions.AsNoTracking().Where(x => x.Id == id).Select(x => (ScheduleExceptionScope?)x.Scope).FirstOrDefaultAsync(ct);
+        }
+
+        return await WriteAsync<bool>(scope == ScheduleExceptionScope.Staff ? Permission.StaffManage : Permission.CatalogManage, async db =>
         {
             var e = await db.ScheduleExceptions.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (e is null)
@@ -201,6 +209,7 @@ public sealed class CatalogService(AppServiceDeps deps) : AppServiceBase(deps), 
             await Audit.AppendAsync(db, "schedule_exception.removed", "ScheduleException", e.Id, $"{ScheduleException.KindName(e.Kind)} kaldırıldı", ct);
             return true;
         }, ct);
+    }
 
     public Task<Result<IReadOnlyList<PackageTemplateDto>>> GetPackageTemplatesAsync(bool includeInactive = false, CancellationToken ct = default) =>
         ReadAsync<IReadOnlyList<PackageTemplateDto>>(Permission.PackagesView, async db =>

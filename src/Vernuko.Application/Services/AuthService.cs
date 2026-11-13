@@ -73,13 +73,36 @@ public sealed class AuthService(IDbContextFactory<VernukoDbContext> factory, Pas
             return Error.Validation("auth.empty", "Parolanızı girin.");
         }
 
+        // Same lock-out as the login screen: otherwise anyone at an auto-locked computer could guess without limit.
+        var now = time.GetUtcNow().UtcDateTime;
         await using var db = await factory.CreateDbContextAsync(ct);
-        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, ct);
-        if (user is null || !user.IsActive || !hasher.Verify(password ?? string.Empty, user.PasswordHash))
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
+        if (user is null || !user.IsActive || user.IsLockedOut(now))
         {
+            session.SignOut();
+            return user is { IsActive: true } ? AppErrors.AccountLocked : AppErrors.InvalidCredentials;
+        }
+
+        if (!hasher.Verify(password ?? string.Empty, user.PasswordHash))
+        {
+            user.RegisterFailedLogin(now);
+            await audit.AppendAsAsync(db, user.Id, user.Username, "auth.unlock_failed", "User", user.Id, $"Kilit ekranında hatalı parola ({user.FailedLoginCount})", ct);
+            await db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+            if (user.IsLockedOut(now))
+            {
+                // Too many tries: the session ends; signing in again goes through the normal lock-out.
+                session.SignOut();
+                return AppErrors.AccountLocked;
+            }
+
             return AppErrors.InvalidCredentials;
         }
 
+        user.RegisterSuccessfulLogin(now);
+        await db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
         session.Unlock();
         return Result.Success();
     }

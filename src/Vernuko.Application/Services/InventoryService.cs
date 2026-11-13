@@ -73,6 +73,13 @@ public sealed class InventoryService(AppServiceDeps deps) : AppServiceBase(deps)
                 return id;
             }
 
+            // A free sale has no charge row: the key is on the stock movement.
+            var earlierMovement = await db.StockMovements.AsNoTracking().Where(m => EF.Property<string?>(m, PersistenceNames.SaleKey) == key).Select(m => (Guid?)m.Id).FirstOrDefaultAsync(ct);
+            if (earlierMovement is { } movementId)
+            {
+                return movementId;
+            }
+
             if (r.Quantity is < 1 or > 10_000)
             {
                 return Error.Validation("product.quantity", "Miktar 1 ile 10.000 arasında olmalıdır.");
@@ -104,6 +111,7 @@ public sealed class InventoryService(AppServiceDeps deps) : AppServiceBase(deps)
             }
 
             db.StockMovements.Add(movement.Value);
+            db.Entry(movement.Value).Property(PersistenceNames.SaleKey).CurrentValue = key;
             Guid saleId;
             if (total > 0)
             {

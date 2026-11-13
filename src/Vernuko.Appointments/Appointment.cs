@@ -108,8 +108,11 @@ public sealed record AppointmentSlot(
 
     public UtcRange BlockRange => new(StartUtc.AddMinutes(-PrepMinutes), EndUtc.AddMinutes(CleanupMinutes));
 
-    /// <summary>Applies only when the (possibly shortened) appointment still contains the whole waiting part.</summary>
-    public bool HasProcessing => ProcessingMinutes > 0 && ProcessingStartMinutes > 0 && ProcessingStartMinutes + ProcessingMinutes <= DurationMinutes;
+    /// <summary>
+    /// Applies only when the (possibly shortened) appointment still has work after the whole waiting part: a wait
+    /// that reaches the end would leave an empty staff block after it.
+    /// </summary>
+    public bool HasProcessing => ProcessingMinutes > 0 && ProcessingStartMinutes > 0 && ProcessingStartMinutes + ProcessingMinutes < DurationMinutes;
 
     /// <summary>The waiting part during which the staff member is free (null when none).</summary>
     public UtcRange? StaffFreeRange => HasProcessing
@@ -373,6 +376,14 @@ public sealed class Appointment : Entity
     }
 
     public void UpdateNotes(string? notes) => Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+
+    /// <summary>KVKK erasure: free text that may describe the person (notes, body area, meeting link) is removed.</summary>
+    public void ClearPersonalDetails()
+    {
+        Notes = null;
+        BodyArea = null;
+        MeetingUrl = null;
+    }
 
     public const int MaxMeetingUrlLength = 500;
 

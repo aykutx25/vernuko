@@ -142,7 +142,8 @@
                                         <Button Content="Paket sat" Command="{Binding SellPackageCommand}" Margin="0,0,8,0" />
                                         <Button Content="Ödeme al" Command="{Binding TakePaymentCommand}" />
                                     </StackPanel>
-                                    <Border Background="{StaticResource NeutralSoftBrush}" CornerRadius="8" Padding="12,6" HorizontalAlignment="Left">
+                                    <Border Background="{StaticResource NeutralSoftBrush}" CornerRadius="8" Padding="12,6" HorizontalAlignment="Left"
+                                            Visibility="{Binding CanSeePayments, Converter={StaticResource VisibleWhen}}">
                                         <TextBlock Text="{Binding BalanceText}" FontWeight="SemiBold" />
                                     </Border>
                                 </DockPanel>
