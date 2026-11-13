@@ -58,6 +58,8 @@ Vernuko'nun kaynak kodu **AGPL-3.0-only** ile açılır (`LICENSE`). Sahibin kar
 - Testler: `Expired_license_is_read_only_but_data_stays_readable_and_exportable`, `Hardware_change_keeps_data_and_switches_to_read_only_until_reactivation`, `Offline_use_works_until_grace_ends_then_read_only`, `Clock_rollback_cannot_extend_validity_but_does_not_lock_by_itself`.
 
 ## Lisans sunucusu (Faz 6 — uygulandı)
+**Karar (2026-11-13): WordPress + WooCommerce eklentisi** (`wordpress/vernuko-license`). Satış, ödeme (iyzico/PayTR/havale gibi WooCommerce ödeme eklentileri), anahtarın e-postayla gönderimi, Hesabım › Lisanslarım, yenileme ve iade sitenin içinde; ayrı sunucu yok. Aşağıdaki .NET sunucusu aynı protokolle yedek seçenek olarak kalır.
+
 Ayrıntı, kurulum ve işletme: [LICENSE_SERVER.md](LICENSE_SERVER.md). Özet:
 - `src/Vernuko.LicenseServer`: ASP.NET Core minimal API + SQLite, tek süreç, TLS ters vekil arkasında. **Müşterinin randevu/müşteri verisi bu sunucuya gönderilmez.**
 - Etkinleştirme (anahtar + özetlenmiş cihaz kimliği), haftalık yenileme, "bu bilgisayardan kaldır" (taşıma), cihaz sınırı, sunucu tarafı deneme kaydı (yeniden kurulumla deneme baştan başlamaz), güncelleme izni (Velopack dosyaları yalnızca etkin aboneliğe).

@@ -2,6 +2,25 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.10.0] — 2026-11-13 — Lisans sunucusu WordPress'te
+
+### Eklendi
+- **WordPress eklentisi "Vernuko Lisans"** (`wordpress/vernuko-license`, kurulum `README.md`). Satış sitesinin içinde çalışır, ayrı sunucu gerekmez.
+  - WooCommerce'te "Vernuko lisansı" işaretli ürün satılınca, ödeme tamamlandığında lisans anahtarı oluşur. Anahtar müşterinin sipariş e-postasında, sipariş sayfasında ve Hesabım › Lisanslarım'da görünür.
+  - Yenileme süreyi dönem sonuna ekler. İade ve iptal lisansı durdurur.
+  - Müşteri bozulan bilgisayarını kendisi kaldırabilir.
+  - Yönetici ekranı: elle lisans, uzatma, iptal, bilgisayar kaldırma, anahtarı yeniden gösterme.
+  - İmzalama anahtarları `wp-config.php` içindedir; veritabanına yazılmaz.
+- Masaüstü uygulama değişmedi. Eklenti .NET lisans sunucusuyla aynı protokolü ve aynı imzalı belgeyi kullanır.
+- CI: PHP çekirdek testleri ve kurulabilir `vernuko-license.zip` paketi.
+
+### Doğrulandı
+- Gerçek WordPress + WooCommerce 11.3 kurulumunda satış, e-posta içeriği, çift işlem koruması, yenileme, iade, Hesabım ve yönetici ekranı.
+- Masaüstü istemcisi gerçek siteden etkinleştirme, yenileme ve kaldırma yaptı.
+
+### Denenmedi
+- MySQL'li gerçek barındırma, gerçek iyzico/PayTR ödemesi, gerçek e-posta gönderimi.
+
 ## [0.9.0] — 2026-11-12 — Faz 7: çoklu bilgisayar
 
 ### Eklendi

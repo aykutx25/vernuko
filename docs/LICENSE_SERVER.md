@@ -1,5 +1,7 @@
 # Lisans Sunucusu (Faz 6)
 
+> **Karar (sahip, 2026-11-13): lisans sunucusu olarak WordPress eklentisi kullanılacak.** Satış sitesi WordPress + WooCommerce olacağı için ayrı sunucu (VPS) gerekmez. Ayrıntı: [`wordpress/vernuko-license/README.md`](../wordpress/vernuko-license/README.md). Eklenti, aşağıdaki .NET sunucusuyla **aynı protokolü ve aynı imzalı belge biçimini** kullanır; masaüstü uygulama ikisiyle de çalışır (testler her ikisini de doğrular). Bu belge .NET sunucusunu anlatır; VPS ile çalışmak gerekirse diye yedek seçenek olarak depoda kalır.
+
 `src/Vernuko.LicenseServer` — tek süreçli ASP.NET Core (.NET 10) + SQLite. Küçük bir Linux VPS'te, TLS sağlayan bir ters vekilin (ör. Caddy) arkasında çalışır. **Masaüstü uygulamayla birlikte dağıtılmaz.**
 
 **Bu sunucuya müşterinin randevu, müşteri veya ödeme kayıtları gelmez.** Gelenler yalnızca şunlardır: lisans anahtarı, özetlenmiş cihaz kimliği (SHA-256'nın ilk 32 karakteri) ve etkinleştirme kimliği. Paddle tarafından da abonelik kimliği, durum ve dönem tarihleri gelir.

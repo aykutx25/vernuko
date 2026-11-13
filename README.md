@@ -88,6 +88,7 @@ src/
   Vernuko.Desktop           WPF uygulaması
   Vernuko.Remote            çoklu bilgisayar: ana bilgisayar sunucusu, eşleştirme, ağ vekili (docs/MULTI_PC.md)
   Vernuko.LicenseServer     lisans sunucusu (ayrı Linux sunucusunda; docs/LICENSE_SERVER.md)
+wordpress/vernuko-license   lisans sunucusu olarak WordPress + WooCommerce eklentisi (seçilen yol)
 tests/Vernuko.Tests         domain, entegrasyon, view model, XAML kontrolleri
 docs/                       mimari, kararlar ve araştırma
 ```

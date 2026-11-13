@@ -12,7 +12,7 @@
 | 3 | Diğer meslekler (önce kuaför, SPA, danışmanlık) | 🟡 hizmete özel oda/cihaz kuralı ✅ · danışmanlık firma müşterisi ✅ · ⬜ kuaför boya bekleme süresi, SPA hediye kartı, çevrim içi görüşme bağlantısı |
 | 4 | Yedekleme: yerel ✅ · OneDrive/Google Drive/Dropbox eşitleme klasörüne şifreli kopya ✅ · API (OAuth) bağlantısı ⬜ (sahip uygulama kaydı açmalı) | ✅ temel |
 | 5 | İletişim: SMS, WhatsApp API, e-posta, hatırlatma planlama | ✅ hatırlatma planlayıcı + giden kutusu + İleti Merkezi SMS + WhatsApp Cloud API (testli, gerçek hesapla denenmedi) · ⬜ Netgsm, Verimor, e-posta, ICS |
-| 6 | Lisans sunucusu ve satış (Paddle/iyzico) | ✅ sunucu + Paddle webhook + masaüstü etkinleştirme (testli) · ⬜ VPS kurulumu, gerçek Paddle denemesi, iyzico, anahtarın e-postayla gönderimi |
+| 6 | Lisans sunucusu ve satış | ✅ **WordPress + WooCommerce eklentisi** (karar 2026-11-13): satış → lisans → e-posta, Hesabım › Lisanslarım, yenileme, iade, yönetici ekranı; gerçek WordPress + WooCommerce'te ve masaüstü istemcisiyle denendi · ⬜ sitenin kurulması (tema sizde), gerçek ödeme eklentisiyle deneme · (.NET sunucu yedek seçenek) |
 | 7 | Çoklu bilgisayar | ✅ ana bilgisayar + bağlanan bilgisayarlar (SQLite, PostgreSQL yok; testli, CI yeşil) · 🟡 iki gerçek bilgisayarda denenmedi |
 | 8 | Üretime hazırlık: güvenlik denetimi, performans, kurulum, imzalama, güncelleme, dokümantasyon | Kısmen: kurulum paketi + güncelleme ✅ (Linux'ta paket üretildi, Windows'ta kur/güncelle denenmedi 🟡) · imzalama ⬜ (sertifika yok) |
 
@@ -35,7 +35,7 @@
 | P0-12 | WPF arayüz: kabuk, randevu gün/hafta/ay, yan panelde hızlı randevu, müşteri, hizmet, personel, paket, ödeme, rapor, ayarlar | P0-3..11 | Smoke test (Windows) 0 bağlama hatası; başarı kriterleri elle uçtan uca | ✅ smoke test + **başarı senaryosu gerçek WPF ekranlarında otomatik** (iki Windows bilgisayarda, 2026-11-12) · 🟡 kurulum sihirbazının elle tamamlanması ayrıca denenmeli |
 | P0-13 | Windows CI: derleme + test + smoke test + ekran görüntüsü artefaktı | P0-12 | Workflow yeşil | ✅ yerelde `kontrol.cmd` ile (Windows'ta 141/141 + smoke test temiz, 2026-11-12) · GitHub Actions yalnızca elle |
 | P0-14 | Kurulum paketi (Velopack), güncelleme öncesi yedek, imzalı yükleyici (OV + bulut HSM) | P0-12 | Temiz Windows 10/11'de kur-kaldır-güncelle | 🟡 paket + taslak sürüm iş akışı + güncelleme öncesi yedek (test) + Windows'ta paket üretildi ve kuruldu · ⏸ **imza: sahip kararıyla ertelendi (2026-11-12)** — kabul edilen risk: Akıllı Uygulama Denetimi açık Windows 11 bilgisayarlarda program açılmaz, diğerlerinde SmartScreen uyarısı çıkar; gerektiğinde kod değişmeden eklenir (`vpk pack --signParams`) |
-| P0-15 | Lisans sunucusu + ödeme (Paddle/iyzico) + aktivasyon | P0-10 | Webhook idempotent; ödeme olmadan lisans yok | ✅ sunucu + etkinleştirme/yenileme/taşıma + Paddle webhook + güncelleme izni (gerçek sunucuyla uçtan uca test) · ⬜ gerçek Paddle hesabıyla deneme, iyzico webhook, anahtarın e-postayla gönderimi, VPS kurulumu |
+| P0-15 | Lisans sunucusu + ödeme (Paddle/iyzico) + aktivasyon | P0-10 | Webhook idempotent; ödeme olmadan lisans yok | ✅ WordPress eklentisi (sipariş kalemi başına tek lisans, iade geri alır; gerçek WooCommerce'te denendi) · ✅ .NET sunucu + etkinleştirme/yenileme/taşıma + Paddle webhook + güncelleme izni (gerçek sunucuyla uçtan uca test) · ⬜ gerçek Paddle hesabıyla deneme, iyzico webhook, anahtarın e-postayla gönderimi, VPS kurulumu |
 
 ## P1 — İlk ticari sürümü güçlendirir
 | # | İş | Bağımlılık | Kabul kriteri | Durum |
