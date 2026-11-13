@@ -25,6 +25,14 @@ internal static class SmokeTest
 {
     private static readonly List<string> UnhandledErrors = [];
 
+    /// <summary>Screens rendered smaller than requested (the check would then not show what it claims to).</summary>
+    private static readonly List<string> SizeErrors = [];
+
+    /// <summary>The main window's MinWidth/MinHeight: the tightest layout a user can get.</summary>
+    private const int MinimumWidth = 1180;
+
+    private const int MinimumHeight = 680;
+
     public static void RecordUnhandled(Exception ex) => UnhandledErrors.Add(ex.GetType().Name + ": " + ex.Message);
 
     /// <summary>Real time shifted to next week's Wednesday 10:00 (Istanbul): inside business hours whenever the check runs.</summary>
@@ -124,8 +132,15 @@ internal static class SmokeTest
             foreach (var item in shell.NavItems.ToList())
             {
                 await shell.NavigateAsync(item, null);
+                if (shell.CurrentPage is CustomersViewModel customers && customers.Results.Count > 0)
+                {
+                    // The customer card's tabs only have content with a customer selected.
+                    customers.Selected = customers.Results[0];
+                }
+
                 var tabs = await RenderAsync(root, 1366, 768, Path.Combine(outputDirectory, $"page-{item.Key}-1366.png"), renderAllTabs: true);
                 await RenderAsync(root, 1920, 1080, Path.Combine(outputDirectory, $"page-{item.Key}-1920.png"));
+                await RenderAsync(root, MinimumWidth, MinimumHeight, Path.Combine(outputDirectory, $"page-{item.Key}-min.png"));
                 report.AppendLine($"page {item.Key}: ok ({tabs} tabs rendered)");
             }
 
@@ -203,6 +218,17 @@ internal static class SmokeTest
             code = 4;
         }
 
+        report.AppendLine($"size errors: {SizeErrors.Count}");
+        foreach (var e in SizeErrors)
+        {
+            report.AppendLine("  " + e);
+        }
+
+        if (code == 0 && SizeErrors.Count > 0)
+        {
+            code = 8;
+        }
+
         report.AppendLine($"binding errors: {listener.Errors.Count}");
         foreach (var e in listener.Errors.Distinct())
         {
@@ -216,8 +242,29 @@ internal static class SmokeTest
 
     /// <summary>Renders the content to a PNG. With <paramref name="renderAllTabs"/> every visible tab of the page's first
     /// TabControl is selected and rendered too, so bindings inside non-default tabs are exercised as well.</summary>
+    /// <remarks>
+    /// Windows never makes a window larger than the screen (the CI runner's is 1024×768), so a 1366×768 window came
+    /// out about 1030 px wide and every "1366"/"1920" shot showed the same cramped layout. The page is therefore laid
+    /// out at exactly the requested size on a <see cref="System.Windows.Controls.Canvas"/> (which never squeezes its
+    /// children) inside the hidden window, and that element is rendered.
+    /// </remarks>
     private static async Task<int> RenderAsync(object dataContext, int width, int height, string file, bool renderAllTabs = false)
     {
+        object? content = dataContext is RootViewModel r ? r.Screen : dataContext;
+        if (dataContext is RootViewModel { LockScreen: { } lockVm })
+        {
+            content = lockVm;
+        }
+
+        var page = new System.Windows.Controls.Border
+        {
+            Width = width,
+            Height = height,
+            Background = (Brush)System.Windows.Application.Current.FindResource("AppBackgroundBrush"),
+            Child = new System.Windows.Controls.ContentControl { Content = content },
+        };
+        var canvas = new System.Windows.Controls.Canvas();
+        canvas.Children.Add(page);
         var window = new Window
         {
             Width = width,
@@ -227,45 +274,47 @@ internal static class SmokeTest
             ShowInTaskbar = false,
             ShowActivated = false,
             WindowStyle = WindowStyle.None,
-            Background = (Brush)System.Windows.Application.Current.FindResource("AppBackgroundBrush"),
+            ResizeMode = ResizeMode.NoResize,
             FontFamily = (FontFamily)System.Windows.Application.Current.FindResource("AppFont"),
             FontSize = 14,
-            Content = new System.Windows.Controls.ContentControl { Content = dataContext is RootViewModel r ? r.Screen : dataContext },
+            Content = canvas,
         };
-        if (dataContext is RootViewModel { LockScreen: { } lockVm })
-        {
-            window.Content = new System.Windows.Controls.ContentControl { Content = lockVm };
-        }
 
         window.Show();
-        await SnapshotAsync(window, width, height, file);
+        await SnapshotAsync(page, width, height, file);
         var rendered = 0;
-        if (renderAllTabs && FindTabControls(window).FirstOrDefault() is { } tabControl)
+        if (renderAllTabs && FindTabControls(page).FirstOrDefault() is { } tabControl)
         {
             for (var i = 0; i < tabControl.Items.Count; i++)
             {
                 if (tabControl.Items[i] is System.Windows.Controls.TabItem { Visibility: Visibility.Visible })
                 {
                     tabControl.SelectedIndex = i;
-                    await SnapshotAsync(window, width, height, Path.ChangeExtension(file, null) + $"-tab{i + 1:00}.png");
+                    await SnapshotAsync(page, width, height, Path.ChangeExtension(file, null) + $"-tab{i + 1:00}.png");
                     rendered++;
                 }
             }
         }
 
+        page.Child = null;
         window.Content = null;
         window.Close();
         return rendered;
     }
 
-    private static async Task SnapshotAsync(Window window, int width, int height, string file)
+    private static async Task SnapshotAsync(FrameworkElement page, int width, int height, string file)
     {
         await Task.Delay(400);
-        await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
-        window.UpdateLayout();
-        var dpi = VisualTreeHelper.GetDpi(window);
+        await page.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+        page.UpdateLayout();
+        if (Math.Abs(page.ActualWidth - width) > 0.5 || Math.Abs(page.ActualHeight - height) > 0.5)
+        {
+            SizeErrors.Add($"{Path.GetFileName(file)}: laid out at {page.ActualWidth:0}×{page.ActualHeight:0} instead of {width}×{height}");
+        }
+
+        var dpi = VisualTreeHelper.GetDpi(page);
         var bitmap = new RenderTargetBitmap((int)(width * dpi.DpiScaleX), (int)(height * dpi.DpiScaleY), dpi.PixelsPerInchX, dpi.PixelsPerInchY, PixelFormats.Pbgra32);
-        bitmap.Render((Visual)window.Content);
+        bitmap.Render(page);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
         await using var fs = File.Create(file);

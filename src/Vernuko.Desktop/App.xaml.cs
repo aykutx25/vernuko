@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.IO;
 using System.Windows;
+using System.Windows.Markup;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -11,6 +13,7 @@ using Vernuko.Presentation;
 using Vernuko.Presentation.Common;
 using Vernuko.Remote;
 using Vernuko.Application.Common;
+using Vernuko.Core;
 
 namespace Vernuko.Desktop;
 
@@ -23,6 +26,7 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        UseTurkishCulture();
         base.OnStartup(e);
         var demo = e.Args.Contains("--demo", StringComparer.OrdinalIgnoreCase);
         var smokeIndex = Array.FindIndex(e.Args, a => a.Equals("--smoke-test", StringComparison.OrdinalIgnoreCase));
@@ -144,6 +148,24 @@ public partial class App : System.Windows.Application
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         window.Show();
         await root.StartAsync();
+    }
+
+    /// <summary>
+    /// The interface is Turkish only, so dates, numbers and sorting must be Turkish even on an English Windows:
+    /// otherwise the date picker shows and parses "11/25/2026" and bound numbers use "1,234.50". WPF does not follow
+    /// the system culture on its own (bindings default to en-US), hence both the thread culture and the default
+    /// <see cref="FrameworkElement.Language"/>.
+    /// </summary>
+    private static void UseTurkishCulture()
+    {
+        var culture = TurkishText.Culture;
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.CurrentUICulture = culture;
+        var language = XmlLanguage.GetLanguage(culture.IetfLanguageTag);
+        FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(language));
+        FrameworkContentElement.LanguageProperty.OverrideMetadata(typeof(System.Windows.Documents.TextElement), new FrameworkPropertyMetadata(language));
     }
 
     protected override void OnExit(ExitEventArgs e)
