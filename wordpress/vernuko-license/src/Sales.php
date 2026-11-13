@@ -85,6 +85,21 @@ final class Plan
     {
         return number_format($this->priceKurus / 100, 2, ',', '.') . ' TL';
     }
+
+    /**
+     * Turkish price input → kuruş, or null. "4.990,00", "4990", "4.990" (thousands), "49,90"; a single dot followed by
+     * one or two digits is the decimal point ("49.90" — it used to become 4.990,00 TL). Anything else is rejected.
+     */
+    public static function parsePrice(string $text): ?int
+    {
+        $t = str_replace([' ', "\u{00A0}", 'TL', 'tl', '₺'], '', trim($text));
+        if (preg_match('/^(\d+|\d{1,3}(\.\d{3})+)(,\d{1,2})?$/', $t) === 1) {
+            $t = str_replace(['.', ','], ['', '.'], $t);
+        } elseif (preg_match('/^\d+\.\d{1,2}$/', $t) !== 1) {
+            return null;
+        }
+        return (int) round(((float) $t) * 100);
+    }
 }
 
 final class Orders
@@ -147,9 +162,28 @@ final class Orders
             'currency' => 'TRY', 'provider' => $provider, 'status' => 'pending', 'customer_name' => mb_substr($name, 0, 200), 'email' => mb_substr($email, 0, 200),
             'phone' => $phone, 'company' => self::opt($f['company'] ?? '', 200), 'tax_office' => self::opt($f['tax_office'] ?? '', 100), 'tax_number' => $tax ?: null,
             'address' => self::opt($f['address'] ?? '', 500), 'city' => self::opt($f['city'] ?? '', 100), 'ip' => mb_substr($ip, 0, 64), 'created_at' => $this->issuer->now(),
+            // What was bought (devices, days, edition): a plan edited or deleted while the payment page was open must
+            // neither change nor block what this order gets.
+            'plan_snapshot' => json_encode($plan->toArray(), JSON_UNESCAPED_UNICODE),
         ];
         $this->db->execute('INSERT INTO {orders} (' . implode(',', array_keys($order)) . ') VALUES (' . implode(',', array_fill(0, count($order), '?')) . ')', array_values($order));
         return $this->find($order['id']);
+    }
+
+    /** The plan as it was when the order was placed (older orders: the current definition, if it still exists). */
+    public static function planFor(array $order, array $plans): ?Plan
+    {
+        $snapshot = is_string($order['plan_snapshot'] ?? null) ? json_decode($order['plan_snapshot'], true) : null;
+        if (is_array($snapshot)) {
+            return Plan::fromArray((string) $order['plan_id'], $snapshot);
+        }
+        return $plans[$order['plan_id']] ?? null;
+    }
+
+    /** iyzico's checkout token: lets the site ask iyzico later if the customer never came back to the site. */
+    public function setProviderToken(string $id, string $token): void
+    {
+        $this->db->execute('UPDATE {orders} SET provider_token = ? WHERE id = ?', [mb_substr($token, 0, 200), $id]);
     }
 
     public function find(string $id): array
@@ -228,17 +262,34 @@ final class Orders
         return $this->db->rows('SELECT * FROM {orders} ORDER BY created_at DESC LIMIT ' . max(1, min($limit, 1000)));
     }
 
-    /** Paid/refunded orders as CSV for the accountant (invoices are issued outside this plugin). */
-    public function csv(int $fromUnix, int $toUnix): string
+    /**
+     * Paid/refunded orders as CSV for the accountant (invoices are issued outside this plugin). Dates are in the
+     * site's time zone ($zone): a sale at 01:30 on the 1st (Istanbul) belongs to that month, not the previous one.
+     */
+    public function csv(int $fromUnix, int $toUnix, ?\DateTimeZone $zone = null): string
     {
+        $zone ??= new \DateTimeZone('UTC');
         $rows = $this->db->rows("SELECT * FROM {orders} WHERE status IN ('paid','refunded') AND paid_at >= ? AND paid_at < ? ORDER BY paid_at", [$fromUnix, $toUnix]);
         $out = "\u{FEFF}Sipariş;Tarih;Durum;Paket;Tutar (TL);Ödeme;Ödeme no;Ad soyad;Firma;Vergi dairesi;Vergi no;E-posta;Telefon;Adres;Şehir\n";
         foreach ($rows as $r) {
-            $cells = [$r['id'], gmdate('d.m.Y H:i', (int) $r['paid_at']), $r['status'] === 'paid' ? 'Ödendi' : 'İade', $r['plan_id'], number_format($r['amount'] / 100, 2, ',', ''), $r['provider'],
-                $r['provider_ref'], $r['customer_name'], $r['company'], $r['tax_office'], $r['tax_number'], $r['email'], $r['phone'], $r['address'], $r['city']];
-            $out .= implode(';', array_map(static fn ($c) => '"' . str_replace('"', '""', (string) $c) . '"', $cells)) . "\n";
+            $date = (new \DateTimeImmutable('@' . (int) $r['paid_at']))->setTimezone($zone)->format('d.m.Y H:i');
+            $cells = [$r['id'], $date, $r['status'] === 'paid' ? 'Ödendi' : 'İade', $r['plan_id'], number_format($r['amount'] / 100, 2, ',', ''), $r['provider'],
+                $r['provider_ref'], $r['customer_name'], $r['company'], $r['tax_office'], $r['tax_number'], $r['email'], self::nationalPhone((string) $r['phone']), $r['address'], $r['city']];
+            $out .= implode(';', array_map(static fn ($c) => '"' . str_replace('"', '""', self::spreadsheetSafe((string) $c)) . '"', $cells)) . "\n";
         }
         return $out;
+    }
+
+    /** "+905321234567" → "05321234567": what the accountant expects, and no leading "+" for Excel to read as a formula. */
+    private static function nationalPhone(string $e164): string
+    {
+        return str_starts_with($e164, '+90') ? '0' . substr($e164, 3) : $e164;
+    }
+
+    /** Customer text starting with = + - @ (or a tab/CR) would run as a formula in Excel; a leading ' keeps it text. */
+    public static function spreadsheetSafe(string $value): string
+    {
+        return $value !== '' && str_contains("=+-@\t\r", $value[0]) ? "'" . $value : $value;
     }
 
     private static function opt(string $v, int $max): ?string

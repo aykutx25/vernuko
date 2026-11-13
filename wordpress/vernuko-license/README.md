@@ -62,10 +62,15 @@ Vernuko masaüstü uygulamasının lisans sunucusu, WordPress sitenizin içinde.
 - **Lisansın oluşması:** yalnızca sağlayıcının **imzalı onayı** gelince ve ödenen tutar paketin fiyatına eşit ya da fazlaysa. Taksit farkı nedeniyle fazla olabilir; eksik ödeme kabul edilmez. iyzico'da sonuç iyzico'dan sorulup imzası doğrulanır; PayTR'de bildirimin imzası doğrulanır.
 - Anahtar e-postayla gelir. Siparişi veren tarayıcıda ayrıca ekranda görünür.
 - Aynı onay iki kez gelirse tek lisans oluşur ve tek e-posta gider.
+- **iyzico'da müşteri siteye geri dönmezse** (sekmeyi kapattı, bağlantı koptu): sipariş durum sayfası ve Siparişler'deki **"iyzico'ya sor"** düğmesi sonucu iyzico'dan yeniden sorar. iyzico'nun dolandırıcılık incelemesindeki ödeme "bekliyor"da kalır, başarısız sayılmaz; inceleme bitince aynı yolla tamamlanır.
+- Sipariş, verildiği andaki paketi (bilgisayar sayısı, gün, paket adı) kendisiyle saklar: ödeme sırasında paketi değiştirmek ya da silmek o siparişi etkilemez.
+- Satın alma, Lisanslarım ve sipariş sonucu sayfaları önbelleğe alınmaz (`DONOTCACHEPAGE` + `no-store`): önbellek eklentisi bir müşterinin anahtarlarını başkasına göstermesin.
+- Görünüm: formlar temanın yazı tipini ve düğme stilini (`wp-element-button`) kullanır; ince ayar için `.vernuko-checkout`, `.vernuko-licenses`, `.vernuko-card` sınıfları.
 
 **Siparişler sayfası:**
 - **İade:** parayı sağlayıcının panelinden iade ettikten sonra "İade edildi"ye basın. Lisans durur; müşterinin bilgisayarındaki veriler silinmez.
-- **Muhasebe dosyası:** "Muhasebe için CSV indir" seçilen ayın satışlarını indirir: fatura bilgileri, tutar, ödeme numarası.
+- **Muhasebe dosyası:** "Muhasebe için CSV indir" seçilen ayın satışlarını indirir: fatura bilgileri, tutar, ödeme numarası. Ay ve tarihler sitenin saat dilimindedir (Ayarlar › Genel). `=`, `+`, `-`, `@` ile başlayan müşteri metinleri Excel'de formül olarak çalışmasın diye başına `'` konur.
+- **Fiyat:** `4.990,00`, `4990` veya `49,90` yazılabilir. Tek nokta ve 1–2 hane (`49.90`) ondalık sayılır. Okunamayan fiyat tahmin edilmez; eski fiyat korunur ve uyarı çıkar.
 - **Fatura:** bu eklenti fatura kesmez. e-Arşiv için CSV'yi mali müşavirinize ya da fatura programınıza verin.
 
 **Test ortamında doğrulanması gerekenler** (gerçek hesapla denenmedi):
@@ -99,7 +104,10 @@ Vernuko Lisans sayfasından:
 - bilgisayar kaldırma.
 
 ## Güvenlik
-- Özel imzalama anahtarı yalnızca `wp-config.php` dosyasındadır. Masaüstü uygulamada yalnızca açık anahtar bulunur; sahte lisans üretilemez.
+- Özel imzalama anahtarı yalnızca `wp-config.php` dosyasındadır. "Anahtarları oluştur" onu yalnızca o yanıtta gösterir; veritabanına (geçici kayıt dahil) yazılmaz. Masaüstü uygulamada yalnızca açık anahtar bulunur; sahte lisans üretilemez.
+- **Hesabım › Lisanslarım** yalnızca o hesapla alınmış lisansları gösterir. WooCommerce'te hesap e-postası doğrulama olmadan değiştirilebildiği için e-postayla eşleştirme yapılmaz; misafir olarak ya da kendi satış sayfasından alınan lisanslara Lisanslarım sayfasındaki e-posta bağlantısıyla erişilir.
+- Aynı anda gelen iki etkinleştirme aynı boş yeri kapamaz: lisans satırı kilitlenerek sırayla işlenir.
+- Güncelleme (zip yükleme, otomatik güncelleme) sonrası tablolar ilk istekte kendiliğinden güncellenir; eklentiyi kapatıp açmak gerekmez.
 - Lisans anahtarı veritabanında saklanmaz, yalnızca SHA-256 özeti tutulur. Anahtar, lisans kimliği ve sırdan yeniden türetilir.
 - Uç noktalar IP başına dakikada 30 istekle sınırlıdır. Yönetim işlemleri WordPress yetkisi (`manage_woocommerce`) ve nonce ister.
 - Hazır "lisans yöneticisi" eklentilerinin aksine, mağazanızın API anahtarı programa konmaz.
@@ -112,7 +120,8 @@ Gerçek WordPress'te, gerçek HTTP istekleriyle denendi. iyzico ve PayTR yerine,
 - **Lisanslarım:** kayıtsız adrese e-posta gitmiyor ve yanıt aynı. Oynanmış bağlantı girişi açmıyor. Bilgisayar kaldırma çalışıyor.
 - **Yenileme:** süre uzuyor, e-posta gidiyor.
 - **Dış satış bağlantısı:** imzasız ya da eski istek reddediliyor; tekrar ve iade doğru çalışıyor.
-- PHP testleri: `tests/core-test.php` (33 kontrol) ve `tests/sales-test.php` (41 kontrol).
+- PHP testleri: `tests/core-test.php` (33 kontrol) ve `tests/sales-test.php` (51 kontrol).
+- **1.2.0 (2026-11-14):** güncel eklenti aynı sitede yeniden denendi: tablo yükseltmesi, müşteri dönmeden iyzico onayı, PayTR bildirimi, hesap e-postasını değiştirerek başkasının lisansını görme denemesi (görünmüyor), önbellek başlıkları, telefon ve masaüstü genişliğinde görünüm.
 
 ## Neler denendi (WooCommerce)
 - Çekirdek: `php tests/core-test.php` (33 kontrol).

@@ -17,7 +17,9 @@ final class WpDb implements Db
     public function rows(string $sql, array $params = []): array
     {
         $result = $this->wpdb->get_results($this->prepare($sql, $params), ARRAY_A);
-        if ($result === null && $this->wpdb->last_error !== '') {
+        // get_results() returns [] on an SQL error, which read as "no rows" (e.g. "nothing to revoke"); every query
+        // resets last_error, so a non-empty one belongs to this query.
+        if ($this->wpdb->last_error !== '') {
             throw new \RuntimeException('Veritabanı hatası: ' . $this->wpdb->last_error);
         }
         return $result ?? [];
@@ -32,21 +34,25 @@ final class WpDb implements Db
         return (int) $result;
     }
 
-    private int $depth = 0;
+    /**
+     * Shared by every WpDb object: they all use the one $wpdb connection, and MySQL commits the open transaction
+     * when a second START TRANSACTION arrives (Orders and Issuer each have their own WpDb).
+     */
+    private static int $depth = 0;
 
     /** Re-entrant: only the outermost call begins and commits; any failure rolls back everything. */
     public function transaction(callable $work): mixed
     {
-        if ($this->depth > 0) {
-            $this->depth++;
+        if (self::$depth > 0) {
+            self::$depth++;
             try {
                 return $work();
             } finally {
-                $this->depth--;
+                self::$depth--;
             }
         }
         $this->wpdb->query('START TRANSACTION');
-        $this->depth = 1;
+        self::$depth = 1;
         try {
             $result = $work();
             $this->wpdb->query('COMMIT');
@@ -55,7 +61,7 @@ final class WpDb implements Db
             $this->wpdb->query('ROLLBACK');
             throw $e;
         } finally {
-            $this->depth = 0;
+            self::$depth = 0;
         }
     }
 

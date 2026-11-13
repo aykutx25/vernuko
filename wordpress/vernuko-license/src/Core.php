@@ -226,6 +226,12 @@ final class PdoDb implements Db
         foreach (Schema::sqlite() as $sql) {
             $this->pdo->exec($this->tables($sql));
         }
+        foreach (Schema::addedColumns() as [$table, $column, $type]) {
+            $existing = array_column($this->pdo->query('PRAGMA table_info(' . $this->tables('{' . $table . '}') . ')')->fetchAll(\PDO::FETCH_ASSOC), 'name');
+            if (!in_array($column, $existing, true)) {
+                $this->pdo->exec('ALTER TABLE ' . $this->tables('{' . $table . '}') . " ADD COLUMN $column $type");
+            }
+        }
     }
 
     private function tables(string $sql): string
@@ -245,8 +251,18 @@ final class Schema
             'CREATE TABLE IF NOT EXISTS {trials} (device_hash TEXT PRIMARY KEY, started_at INTEGER NOT NULL)',
             'CREATE TABLE IF NOT EXISTS {audit} (id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, action TEXT NOT NULL, license_id TEXT, detail TEXT NOT NULL)',
             'CREATE TABLE IF NOT EXISTS {grants} (grant_key TEXT PRIMARY KEY, order_ref TEXT NOT NULL, kind TEXT NOT NULL, license_ids TEXT NOT NULL, days INTEGER NOT NULL, created_at INTEGER NOT NULL, reverted_at INTEGER)',
-            'CREATE TABLE IF NOT EXISTS {orders} (id TEXT PRIMARY KEY, plan_id TEXT NOT NULL, kind TEXT NOT NULL, renew_license_id TEXT, amount INTEGER NOT NULL, currency TEXT NOT NULL, provider TEXT NOT NULL, provider_ref TEXT, status TEXT NOT NULL, customer_name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT, company TEXT, tax_office TEXT, tax_number TEXT, address TEXT, city TEXT, ip TEXT, created_at INTEGER NOT NULL, paid_at INTEGER, refunded_at INTEGER)',
+            'CREATE TABLE IF NOT EXISTS {orders} (id TEXT PRIMARY KEY, plan_id TEXT NOT NULL, kind TEXT NOT NULL, renew_license_id TEXT, amount INTEGER NOT NULL, currency TEXT NOT NULL, provider TEXT NOT NULL, provider_ref TEXT, status TEXT NOT NULL, customer_name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT, company TEXT, tax_office TEXT, tax_number TEXT, address TEXT, city TEXT, ip TEXT, created_at INTEGER NOT NULL, paid_at INTEGER, refunded_at INTEGER, plan_snapshot TEXT, provider_token TEXT)',
         ];
+    }
+
+    /**
+     * Columns added after a table first shipped (1.2.0): [table, column, SQLite type]. WordPress gets them through
+     * dbDelta; the SQLite test database through ALTER TABLE.
+     * @return array<int,array{0:string,1:string,2:string}>
+     */
+    public static function addedColumns(): array
+    {
+        return [['orders', 'plan_snapshot', 'TEXT'], ['orders', 'provider_token', 'TEXT']];
     }
 
     /** WordPress dbDelta biçimi (MySQL/MariaDB). */
@@ -332,6 +348,8 @@ final class Schema
   created_at bigint(20) NOT NULL,
   paid_at bigint(20) DEFAULT NULL,
   refunded_at bigint(20) DEFAULT NULL,
+  plan_snapshot text,
+  provider_token varchar(200) DEFAULT NULL,
   PRIMARY KEY  (id),
   KEY email (email),
   KEY status (status)
@@ -385,6 +403,9 @@ final class Issuer
         }
 
         return $this->db->transaction(function () use ($normalized, $deviceHash, $machineLabel) {
+            // Takes the license row's write lock first (InnoDB row lock / SQLite write lock) so that two activations
+            // at the same moment are handled one after the other: both counted a free seat on a one-seat license.
+            $this->db->execute('UPDATE {licenses} SET status = status WHERE key_hash = ?', [Keys::hash($normalized)]);
             $license = $this->db->rows('SELECT * FROM {licenses} WHERE key_hash = ?', [Keys::hash($normalized)])[0] ?? null;
             if ($license === null) {
                 throw new Error(404, 'license.not_found', 'Bu lisans anahtarı bulunamadı. Anahtarı kontrol edin.');
@@ -612,15 +633,18 @@ final class Issuer
         return $row;
     }
 
-    /** $userId/$email: a customer's own licenses (guest orders are matched by e-mail). */
-    public function licenses(?string $search = null, ?int $userId = null, int $limit = 200, ?string $email = null): array
+    /**
+     * $userId: a customer's own licenses — by account only. A WooCommerce account's e-mail can be changed without
+     * confirmation, so matching on it would hand someone else's keys to whoever types their address. Licenses bought
+     * without an account are reached through the e-mailed sign-in link ([vernuko_lisanslarim]), which proves the address.
+     */
+    public function licenses(?string $search = null, ?int $userId = null, int $limit = 200): array
     {
         $where = [];
         $params = [];
         if ($userId !== null) {
-            $where[] = '(user_id = ? OR (customer_email IS NOT NULL AND customer_email = ?))';
+            $where[] = 'user_id = ?';
             $params[] = $userId;
-            $params[] = $email ?? '';
         }
         if ($search !== null && trim($search) !== '') {
             $where[] = '(id = ? OR customer_name LIKE ? OR customer_email LIKE ?)';

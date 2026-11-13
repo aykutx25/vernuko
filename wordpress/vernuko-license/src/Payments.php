@@ -53,10 +53,12 @@ final class Iyzico
     }
 
     /**
-     * Starts the hosted payment page. Returns the page URL to send the customer to.
+     * Starts the hosted payment page. Returns the page URL to send the customer to and iyzico's token for this
+     * payment (kept with the order, so the result can be asked again if the customer never comes back).
      * $identityNumber: the buyer's T.C. kimlik no if known (iyzico requires a value).
+     * @return array{url:string,token:string}
      */
-    public function initialize(array $order, Plan $plan, string $callbackUrl, string $identityNumber): string
+    public function initialize(array $order, Plan $plan, string $callbackUrl, string $identityNumber): array
     {
         [$first, $last] = self::splitName($order['customer_name']);
         $address = ['contactName' => $order['customer_name'], 'city' => $order['city'], 'country' => 'Turkey', 'address' => $order['address']];
@@ -87,12 +89,14 @@ final class Iyzico
         if (isset($r['signature']) && !hash_equals(hash_hmac('sha256', $r['conversationId'] . ':' . $r['token'], $this->secretKey), (string) $r['signature'])) {
             throw new Error(502, 'pay.iyzico_signature', 'iyzico yanıtının imzası doğrulanamadı.');
         }
-        return $r['paymentPageUrl'];
+        return ['url' => $r['paymentPageUrl'], 'token' => $r['token']];
     }
 
     /**
-     * After the customer returns with the token: asks iyzico for the result and verifies its signature.
-     * @return array{orderId:string,paid:bool,paymentId:string,priceKurus:int,currency:string,reason:string}
+     * After the customer returns with the token (or later, from the stored token): asks iyzico for the result and
+     * verifies its signature. review: the payment went through but iyzico's fraud check is still pending
+     * (fraudStatus 0) — neither paid nor failed yet; asking again later settles it.
+     * @return array{orderId:string,paid:bool,review:bool,paymentId:string,priceKurus:int,currency:string,reason:string}
      */
     public function retrieve(string $token): array
     {
@@ -105,10 +109,13 @@ final class Iyzico
         if (!is_string($r['signature'] ?? null) || !hash_equals(hash_hmac('sha256', implode(':', $fields), $this->secretKey), $r['signature'])) {
             throw new Error(502, 'pay.iyzico_signature', 'iyzico sonucunun imzası doğrulanamadı; lisans oluşturulmadı.');
         }
-        $paid = strtoupper((string) $r['paymentStatus']) === 'SUCCESS' && (string) ($r['fraudStatus'] ?? '1') === '1';
+        $success = strtoupper((string) $r['paymentStatus']) === 'SUCCESS';
+        $fraud = (string) ($r['fraudStatus'] ?? '1');
+        $paid = $success && $fraud === '1';
         return [
             'orderId' => (string) $r['basketId'],
             'paid' => $paid,
+            'review' => $success && $fraud === '0',
             'paymentId' => (string) $r['paymentId'],
             'priceKurus' => (int) round((float) $r['price'] * 100),
             'currency' => (string) $r['currency'],

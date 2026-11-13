@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Vernuko Lisans
  * Description:       Vernuko masaüstü uygulamasının lisans sunucusu: kendi satış sayfası (iyzico/PayTR) veya WooCommerce ile satış, dış satış sistemleri için bağlantı, lisans anahtarı, etkinleştirme, yenileme, bilgisayar taşıma ve güncelleme izni. Müşterilerin randevu/müşteri verisi bu siteye gelmez.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Author:            Vernuko

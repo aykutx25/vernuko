@@ -20,9 +20,13 @@ final class Plugin
     private static ?Issuer $issuer = null;
     private static string $file = '';
 
+    /** Database layout version; a different stored value runs upgrade() once (updates never run the activation hook). */
+    public const DB_VERSION = '1.2.0';
+
     public static function boot(string $file): void
     {
         self::$file = $file;
+        add_action('plugins_loaded', [self::class, 'maybeUpgrade']);
         add_action('rest_api_init', [self::class, 'registerRoutes']);
         add_action('init', [self::class, 'registerEndpoint']);
         add_action('admin_menu', [self::class, 'adminMenu']);
@@ -55,13 +59,35 @@ final class Plugin
 
     public static function activate(): void
     {
+        self::upgrade();
+        self::registerEndpoint();
+        flush_rewrite_rules();
+    }
+
+    /** An update replaced the files (zip upload, auto-update): bring the tables up to date without deactivating. */
+    public static function maybeUpgrade(): void
+    {
+        if (get_option('vernuko_license_db') !== self::DB_VERSION) {
+            self::upgrade();
+        }
+    }
+
+    private static function upgrade(): void
+    {
         global $wpdb;
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        // 1.0.0 keyed grants by WooCommerce order line (item_id/order_id); dbDelta cannot change a primary key.
+        $grants = $wpdb->prefix . 'vernuko_grants';
+        if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $grants)) === $grants && $wpdb->get_var("SHOW COLUMNS FROM `$grants` LIKE 'item_id'") !== null) {
+            $wpdb->query("RENAME TABLE `$grants` TO `{$grants}_v1`");
+        }
         foreach (Schema::mysql($wpdb->prefix, $wpdb->get_charset_collate()) as $sql) {
             dbDelta($sql);
         }
-        self::registerEndpoint();
-        flush_rewrite_rules();
+        if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $grants . '_v1')) === $grants . '_v1') {
+            $wpdb->query("INSERT IGNORE INTO `$grants` (grant_key, order_ref, kind, license_ids, days, created_at, reverted_at) SELECT CONCAT('wc:item:', item_id), CONCAT('wc:', order_id), kind, license_ids, days, created_at, reverted_at FROM `{$grants}_v1`");
+        }
+        update_option('vernuko_license_db', self::DB_VERSION, true);
     }
 
     /** Null when the wp-config constants are missing or invalid (endpoints then answer 503). */
@@ -364,9 +390,13 @@ final class Plugin
             echo '<p>Lisanslar şu anda gösterilemiyor.</p>';
             return;
         }
-        $licenses = $issuer->licenses(null, $user->ID, 100, $user->user_email);
+        $licenses = $issuer->licenses(null, $user->ID, 100);
+        // Only licenses bought while signed in to this account. Those bought as a guest, on the own checkout page or
+        // elsewhere are reached by e-mail link: an account's e-mail address can be changed without any check.
+        $page = Checkout::settings()['licenses_url'];
+        $other = '<p style="font-size:.9em">Misafir olarak veya site dışından aldığınız lisanslar burada görünmez' . ($page ? '; onlar için <a href="' . esc_url($page) . '">Lisanslarım</a> sayfasında e-postanıza gelen bağlantıyı kullanın.' : '.') . '</p>';
         if (!$licenses) {
-            echo '<p>Henüz lisansınız yok.</p>';
+            echo '<p>Bu hesapla alınmış lisans yok.</p>' . $other;
             return;
         }
         if (isset($_GET['vernuko_removed'])) {
@@ -394,6 +424,7 @@ final class Plugin
             }
             echo '</div>';
         }
+        echo $other;
     }
 
     /** Customer removes a broken/sold computer from their own license (nonce + ownership checked). */
@@ -406,7 +437,7 @@ final class Plugin
         if ($issuer === null || !$user->exists()) {
             wp_die('Giriş yapmanız gerekiyor.', 403);
         }
-        foreach ($issuer->licenses(null, $user->ID, 100, $user->user_email) as $l) {
+        foreach ($issuer->licenses(null, $user->ID, 100) as $l) {
             foreach ($issuer->activations($l['id']) as $a) {
                 if ($a['id'] === $activationId) {
                     $issuer->removeActivation($activationId, 'müşteri, Hesabım');
@@ -432,7 +463,7 @@ final class Plugin
         if ($issuer === null || $licenseId === '' || !$user->exists()) {
             return null;
         }
-        foreach ($issuer->licenses(null, $user->ID, 100, $user->user_email) as $l) {
+        foreach ($issuer->licenses(null, $user->ID, 100) as $l) {
             if ($l['id'] === $licenseId) {
                 return $l;
             }
@@ -479,9 +510,9 @@ final class Plugin
         $nonce = wp_nonce_field('vernuko_license', '_wpnonce', true, false);
         echo '<h2>Elle lisans oluştur</h2><p>Havale/EFT veya mağaza dışı satışlar için. WooCommerce siparişleri lisansı kendisi oluşturur.</p>';
         echo '<form method="post" action="' . $action . '">' . $nonce . '<input type="hidden" name="action" value="vernuko_license"><input type="hidden" name="op" value="create">';
-        echo '<input name="name" placeholder="İşletme / müşteri adı" required> <input name="email" type="email" placeholder="E-posta"> <input name="edition" placeholder="Standart"> ';
-        echo '<input name="devices" type="number" min="1" max="50" value="1" style="width:70px" title="Bilgisayar"> <input name="days" type="number" min="1" value="365" style="width:80px" title="Gün"> ';
-        echo '<input name="note" placeholder="Not"> <button class="button button-primary">Oluştur</button></form>';
+        echo '<input name="name" placeholder="İşletme / müşteri adı" aria-label="İşletme / müşteri adı" required> <input name="email" type="email" placeholder="E-posta" aria-label="E-posta"> <input name="edition" placeholder="Standart" aria-label="Paket"> ';
+        echo '<input name="devices" type="number" min="1" max="50" value="1" style="width:70px" title="Bilgisayar" aria-label="Bilgisayar sayısı"> <input name="days" type="number" min="1" value="365" style="width:80px" title="Gün" aria-label="Gün"> ';
+        echo '<input name="note" placeholder="Not" aria-label="Not"> <button class="button button-primary">Oluştur</button></form>';
 
         $search = sanitize_text_field(wp_unslash($_GET['s'] ?? ''));
         echo '<h2>Lisanslar</h2><form method="get"><input type="hidden" name="page" value="vernuko-license"><input name="s" value="' . esc_attr($search) . '" placeholder="Ad, e-posta veya lic_…"> <button class="button">Ara</button></form>';
@@ -522,8 +553,12 @@ final class Plugin
                 [$pem, $public] = Signer::generate();
                 $kid = gmdate('Y-m');
                 $secret = base64_encode(random_bytes(32));
-                $notice = '<strong>Anahtarlar oluşturuldu — yalnızca bir kez gösterilir.</strong> Aşağıdaki satırları <code>wp-config.php</code> dosyasına, "That\'s all, stop editing" satırının üstüne ekleyin ve bir kopyasını güvenli bir yerde (parola yöneticisi) saklayın. Bu anahtarlar kaybolursa satılmış lisanslar yenilenemez.'
-                    . '<textarea readonly rows="12" style="width:100%;font-family:monospace">' . esc_textarea("define('VERNUKO_LICENSE_KEY_ID', '$kid');\ndefine('VERNUKO_LICENSE_KEY_SECRET', '$secret');\ndefine('VERNUKO_LICENSE_SIGNING_KEY', '" . trim($pem) . "');\n") . '</textarea>';
+                // Shown in this response only — never stored (a transient would put the private key in wp_options,
+                // and so in database backups and object caches).
+                nocache_headers();
+                wp_die('<h1>Vernuko lisans anahtarları</h1><p><strong>Yalnızca bir kez gösterilir; sunucuda saklanmaz.</strong> Aşağıdaki satırları <code>wp-config.php</code> dosyasına, "That\'s all, stop editing" satırının üstüne ekleyin ve bir kopyasını güvenli bir yerde (parola yöneticisi) saklayın. Bu anahtarlar kaybolursa satılmış lisanslar yenilenemez.</p>'
+                    . '<textarea readonly rows="12" style="width:100%;font-family:monospace">' . esc_textarea("define('VERNUKO_LICENSE_KEY_ID', '$kid');\ndefine('VERNUKO_LICENSE_KEY_SECRET', '$secret');\ndefine('VERNUKO_LICENSE_SIGNING_KEY', '" . trim($pem) . "');\n") . '</textarea>'
+                    . '<p><a href="' . esc_url(admin_url('admin.php?page=vernuko-license')) . '">Ekledikten sonra Vernuko Lisans sayfasına dönün</a></p>', 'Vernuko lisans anahtarları', ['response' => 200]);
             } elseif ($issuer === null) {
                 $notice = 'Önce anahtarları wp-config.php\'ye ekleyin.';
             } elseif ($op === 'create') {
