@@ -121,19 +121,19 @@ check(Api::safeReleaseFile($dir, '../etc/passwd') === null && Api::safeReleaseFi
 expectError(fn () => $issuer->createLicense('', null, null, 'Standart', 1, 365, 'manual'), 'request.invalid', 'boş müşteri adı');
 
 // Sipariş kalemi → lisans: tam bir kez (aynı kalem ikinci kez işlenmez), iade geri alır
-$note = $issuer->grantOrderItem(100, 501, 'new', 'Standart', 2, 365, 2, null, 'Sipariş Müşterisi', 'siparis@example.com', 9);
-check($note !== null && count($issuer->orderLicenses(100)) === 2, 'adet 2 → 2 lisans');
-check($issuer->grantOrderItem(100, 501, 'new', 'Standart', 2, 365, 2, null, 'Sipariş Müşterisi', 'siparis@example.com', 9) === null, 'aynı kalem ikinci kez lisans üretmez');
+$note = $issuer->grant('wc:item:501', 'wc:100', 100, 'new', 'Standart', 2, 365, 2, null, 'Sipariş Müşterisi', 'siparis@example.com', 9);
+check($note !== null && count($issuer->orderLicenses('wc:100')) === 2, 'adet 2 → 2 lisans');
+check($issuer->grant('wc:item:501', 'wc:100', 100, 'new', 'Standart', 2, 365, 2, null, 'Sipariş Müşterisi', 'siparis@example.com', 9) === null, 'aynı kalem ikinci kez lisans üretmez');
 check(count($issuer->licenses('siparis@example.com')) === 2, 'hâlâ 2 lisans');
-$sold = $issuer->orderLicenses(100)[0];
+$sold = $issuer->orderLicenses('wc:100')[0];
 $until = (int) $sold['paid_until'];
-$issuer->grantOrderItem(101, 502, 'renewal', '', 1, 365, 1, $sold['id'], '', null, null);
+$issuer->grant('wc:item:502', 'wc:101', 101, 'renewal', '', 1, 365, 1, $sold['id'], '', null, null);
 check((int) $issuer->license($sold['id'])['paid_until'] === $until + 365 * 86400, 'yenileme kalemi süre ekler');
-check($issuer->revokeOrder(101, 'iade') === 1 && (int) $issuer->license($sold['id'])['paid_until'] === $until, 'yenileme iadesi süreyi geri alır');
-check($issuer->revokeOrder(101, 'iade') === 0, 'iade ikinci kez uygulanmaz');
-$issuer->revokeOrder(100, 'iade');
-check($issuer->orderLicenses(100) === [] && $issuer->license($sold['id'])['status'] === 'cancelled', 'satış iadesi lisansları bitirir');
-expectError(fn () => $issuer->grantOrderItem(102, 503, 'renewal', '', 1, 365, 1, null, '', null, null), 'grant.no_license', 'lisanssız yenileme');
+check($issuer->revokeOrder('wc:101', 'iade') === 1 && (int) $issuer->license($sold['id'])['paid_until'] === $until, 'yenileme iadesi süreyi geri alır');
+check($issuer->revokeOrder('wc:101', 'iade') === 0, 'iade ikinci kez uygulanmaz');
+$issuer->revokeOrder('wc:100', 'iade');
+check($issuer->orderLicenses('wc:100') === [] && $issuer->license($sold['id'])['status'] === 'cancelled', 'satış iadesi lisansları bitirir');
+expectError(fn () => $issuer->grant('wc:item:503', 'wc:102', 102, 'renewal', '', 1, 365, 1, null, '', null, null), 'grant.no_license', 'lisanssız yenileme');
 
 echo $failures === 0 ? "OK ($count kontrol)\n" : "$failures/$count BAŞARISIZ\n";
 exit($failures === 0 ? 0 : 1);

@@ -32,9 +32,21 @@ final class WpDb implements Db
         return (int) $result;
     }
 
+    private int $depth = 0;
+
+    /** Re-entrant: only the outermost call begins and commits; any failure rolls back everything. */
     public function transaction(callable $work): mixed
     {
+        if ($this->depth > 0) {
+            $this->depth++;
+            try {
+                return $work();
+            } finally {
+                $this->depth--;
+            }
+        }
         $this->wpdb->query('START TRANSACTION');
+        $this->depth = 1;
         try {
             $result = $work();
             $this->wpdb->query('COMMIT');
@@ -42,6 +54,8 @@ final class WpDb implements Db
         } catch (\Throwable $e) {
             $this->wpdb->query('ROLLBACK');
             throw $e;
+        } finally {
+            $this->depth = 0;
         }
     }
 

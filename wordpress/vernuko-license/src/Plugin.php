@@ -264,7 +264,7 @@ final class Plugin
                 continue;
             }
             try {
-                $note = $issuer->grantOrderItem($orderId, (int) $itemId, $plan['kind'], $plan['edition'], $plan['devices'], $plan['days'],
+                $note = $issuer->grant("wc:item:$itemId", "wc:$orderId", $orderId, $plan['kind'], $plan['edition'], $plan['devices'], $plan['days'],
                     (int) $item->get_quantity(), (string) $item->get_meta('_vernuko_renew_license') ?: null, $name, $email, $userId);
                 if ($note !== null) {
                     $order->add_order_note($note);
@@ -284,7 +284,7 @@ final class Plugin
             return;
         }
         try {
-            if ($issuer->revokeOrder($orderId, "Sipariş #$orderId iade/iptal") > 0) {
+            if ($issuer->revokeOrder("wc:$orderId", "Sipariş #$orderId iade/iptal") > 0) {
                 $order->add_order_note('Vernuko: sipariş iade/iptal edildiği için lisans durduruldu. Müşterinin verileri silinmez; program salt-okunur moda geçer.');
             }
         } catch (\Throwable $e) {
@@ -301,7 +301,7 @@ final class Plugin
         if ($issuer === null || $order->has_status(['refunded', 'cancelled', 'failed'])) {
             return [];
         }
-        return array_map(static fn (array $l) => $issuer->keyFor($l['id']), $issuer->orderLicenses($order->get_id()));
+        return array_map(static fn (array $l) => $issuer->keyFor($l['id']), $issuer->orderLicenses('wc:' . $order->get_id()));
     }
 
     public static function orderKeys(\WC_Order $order): void

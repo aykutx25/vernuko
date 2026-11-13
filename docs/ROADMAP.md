@@ -12,7 +12,7 @@
 | 3 | Diğer meslekler (önce kuaför, SPA, danışmanlık) | 🟡 hizmete özel oda/cihaz kuralı ✅ · danışmanlık firma müşterisi ✅ · ⬜ kuaför boya bekleme süresi, SPA hediye kartı, çevrim içi görüşme bağlantısı |
 | 4 | Yedekleme: yerel ✅ · OneDrive/Google Drive/Dropbox eşitleme klasörüne şifreli kopya ✅ · API (OAuth) bağlantısı ⬜ (sahip uygulama kaydı açmalı) | ✅ temel |
 | 5 | İletişim: SMS, WhatsApp API, e-posta, hatırlatma planlama | ✅ hatırlatma planlayıcı + giden kutusu + İleti Merkezi SMS + WhatsApp Cloud API (testli, gerçek hesapla denenmedi) · ⬜ Netgsm, Verimor, e-posta, ICS |
-| 6 | Lisans sunucusu ve satış | ✅ **WordPress + WooCommerce eklentisi** (karar 2026-11-13): satış → lisans → e-posta, Hesabım › Lisanslarım, yenileme, iade, yönetici ekranı; gerçek WordPress + WooCommerce'te ve masaüstü istemcisiyle denendi · ⬜ sitenin kurulması (tema sizde), gerçek ödeme eklentisiyle deneme · (.NET sunucu yedek seçenek) |
+| 6 | Lisans sunucusu ve satış | ✅ **WordPress eklentisi** (karar 2026-11-13), üç satış yolu: kendi satış sayfası (iyzico + PayTR, Lisanslarım e-posta bağlantısıyla), WooCommerce, dış sistem bağlantısı (imzalı API); gerçek WordPress'te uçtan uca ve masaüstü istemcisiyle denendi · ⬜ sitenin kurulması (tema sizde), gerçek iyzico/PayTR test hesabıyla deneme · (.NET sunucu yedek seçenek) |
 | 7 | Çoklu bilgisayar | ✅ ana bilgisayar + bağlanan bilgisayarlar (SQLite, PostgreSQL yok; testli, CI yeşil) · 🟡 iki gerçek bilgisayarda denenmedi |
 | 8 | Üretime hazırlık: güvenlik denetimi, performans, kurulum, imzalama, güncelleme, dokümantasyon | Kısmen: kurulum paketi + güncelleme ✅ (Linux'ta paket üretildi, Windows'ta kur/güncelle denenmedi 🟡) · imzalama ⬜ (sertifika yok) |
 

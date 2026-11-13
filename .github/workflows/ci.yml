@@ -31,6 +31,7 @@ jobs:
           php -v
           for f in wordpress/vernuko-license/*.php wordpress/vernuko-license/src/*.php wordpress/vernuko-license/tests/*.php; do php -l "$f"; done
           php wordpress/vernuko-license/tests/core-test.php
+          php wordpress/vernuko-license/tests/sales-test.php
       - name: Package WordPress plugin
         run: |
           mkdir -p wp-plugin && cd wordpress && zip -r ../wp-plugin/vernuko-license.zip vernuko-license -x "vernuko-license/tests/*"

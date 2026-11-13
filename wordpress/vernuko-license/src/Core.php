@@ -194,9 +194,21 @@ final class PdoDb implements Db
         return $st->rowCount();
     }
 
+    private int $depth = 0;
+
+    /** Re-entrant: only the outermost call begins and commits; any failure rolls back everything. */
     public function transaction(callable $work): mixed
     {
+        if ($this->depth > 0) {
+            $this->depth++;
+            try {
+                return $work();
+            } finally {
+                $this->depth--;
+            }
+        }
         $this->pdo->beginTransaction();
+        $this->depth = 1;
         try {
             $result = $work();
             $this->pdo->commit();
@@ -204,6 +216,8 @@ final class PdoDb implements Db
         } catch (\Throwable $e) {
             $this->pdo->rollBack();
             throw $e;
+        } finally {
+            $this->depth = 0;
         }
     }
 
@@ -230,7 +244,8 @@ final class Schema
             'CREATE TABLE IF NOT EXISTS {activations} (id TEXT PRIMARY KEY, license_id TEXT NOT NULL, device_hash TEXT NOT NULL, machine_label TEXT, created_at INTEGER NOT NULL, last_seen INTEGER NOT NULL, deactivated_at INTEGER)',
             'CREATE TABLE IF NOT EXISTS {trials} (device_hash TEXT PRIMARY KEY, started_at INTEGER NOT NULL)',
             'CREATE TABLE IF NOT EXISTS {audit} (id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, action TEXT NOT NULL, license_id TEXT, detail TEXT NOT NULL)',
-            'CREATE TABLE IF NOT EXISTS {grants} (item_id INTEGER PRIMARY KEY, order_id INTEGER NOT NULL, kind TEXT NOT NULL, license_ids TEXT NOT NULL, days INTEGER NOT NULL, created_at INTEGER NOT NULL, reverted_at INTEGER)',
+            'CREATE TABLE IF NOT EXISTS {grants} (grant_key TEXT PRIMARY KEY, order_ref TEXT NOT NULL, kind TEXT NOT NULL, license_ids TEXT NOT NULL, days INTEGER NOT NULL, created_at INTEGER NOT NULL, reverted_at INTEGER)',
+            'CREATE TABLE IF NOT EXISTS {orders} (id TEXT PRIMARY KEY, plan_id TEXT NOT NULL, kind TEXT NOT NULL, renew_license_id TEXT, amount INTEGER NOT NULL, currency TEXT NOT NULL, provider TEXT NOT NULL, provider_ref TEXT, status TEXT NOT NULL, customer_name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT, company TEXT, tax_office TEXT, tax_number TEXT, address TEXT, city TEXT, ip TEXT, created_at INTEGER NOT NULL, paid_at INTEGER, refunded_at INTEGER)',
         ];
     }
 
@@ -285,15 +300,41 @@ final class Schema
   KEY license_id (license_id)
 ) $charset;",
             "CREATE TABLE {$t('grants')} (
-  item_id bigint(20) unsigned NOT NULL,
-  order_id bigint(20) unsigned NOT NULL,
+  grant_key varchar(80) NOT NULL,
+  order_ref varchar(80) NOT NULL,
   kind varchar(20) NOT NULL,
   license_ids text NOT NULL,
   days int(11) NOT NULL,
   created_at bigint(20) NOT NULL,
   reverted_at bigint(20) DEFAULT NULL,
-  PRIMARY KEY  (item_id),
-  KEY order_id (order_id)
+  PRIMARY KEY  (grant_key),
+  KEY order_ref (order_ref)
+) $charset;",
+            "CREATE TABLE {$t('orders')} (
+  id varchar(40) NOT NULL,
+  plan_id varchar(40) NOT NULL,
+  kind varchar(20) NOT NULL,
+  renew_license_id varchar(40) DEFAULT NULL,
+  amount bigint(20) NOT NULL,
+  currency varchar(3) NOT NULL,
+  provider varchar(20) NOT NULL,
+  provider_ref varchar(120) DEFAULT NULL,
+  status varchar(20) NOT NULL,
+  customer_name varchar(200) NOT NULL,
+  email varchar(200) NOT NULL,
+  phone varchar(40) DEFAULT NULL,
+  company varchar(200) DEFAULT NULL,
+  tax_office varchar(100) DEFAULT NULL,
+  tax_number varchar(11) DEFAULT NULL,
+  address varchar(500) DEFAULT NULL,
+  city varchar(100) DEFAULT NULL,
+  ip varchar(64) DEFAULT NULL,
+  created_at bigint(20) NOT NULL,
+  paid_at bigint(20) DEFAULT NULL,
+  refunded_at bigint(20) DEFAULT NULL,
+  PRIMARY KEY  (id),
+  KEY email (email),
+  KEY status (status)
 ) $charset;",
         ];
     }
@@ -483,10 +524,14 @@ final class Issuer
      * call — another hook, a retry, a stale order object — changes nothing). Returns an order note, or null when
      * this line was already handled.
      */
-    public function grantOrderItem(int $orderId, int $itemId, string $kind, string $edition, int $devices, int $days, int $qty, ?string $renewLicenseId, string $name, ?string $email, ?int $userId): ?string
+    /**
+     * $grantKey identifies the sale line ("wc:item:12", "own:ord_…", "ext:<id>"); $orderRef groups lines of one
+     * order for refunds ("wc:5", "own:ord_…", "ext:<id>"). $orderId is the WooCommerce order id when there is one.
+     */
+    public function grant(string $grantKey, string $orderRef, ?int $orderId, string $kind, string $edition, int $devices, int $days, int $qty, ?string $renewLicenseId, string $name, ?string $email, ?int $userId, string $source = 'woocommerce'): ?string
     {
-        return $this->db->transaction(function () use ($orderId, $itemId, $kind, $edition, $devices, $days, $qty, $renewLicenseId, $name, $email, $userId) {
-            if ($this->db->rows('SELECT item_id FROM {grants} WHERE item_id = ?', [$itemId])) {
+        return $this->db->transaction(function () use ($grantKey, $orderRef, $orderId, $kind, $edition, $devices, $days, $qty, $renewLicenseId, $name, $email, $userId, $source) {
+            if ($this->db->rows('SELECT grant_key FROM {grants} WHERE grant_key = ?', [$grantKey])) {
                 return null;
             }
             $qty = max(1, $qty);
@@ -494,51 +539,68 @@ final class Issuer
                 if ($renewLicenseId === null || $renewLicenseId === '') {
                     throw new Error(400, 'grant.no_license', 'Yenilenecek lisans seçilmemiş.');
                 }
-                $this->extend($renewLicenseId, $days * $qty, "Sipariş #$orderId");
+                $this->extend($renewLicenseId, $days * $qty, "Satış $orderRef");
                 $ids = [$renewLicenseId];
                 $note = 'Vernuko: lisans yenilendi (+' . ($days * $qty) . ' gün).';
             } else {
                 $ids = [];
                 for ($i = 0; $i < $qty; $i++) {
-                    $ids[] = $this->createLicense($name, $email, $userId, $edition, $devices, $days, 'woocommerce', $orderId)['id'];
+                    $ids[] = $this->createLicense($name, $email, $userId, $edition, $devices, $days, $source, $orderId)['id'];
                 }
                 $note = 'Vernuko: ' . count($ids) . ' lisans oluşturuldu.';
             }
-            $this->db->execute('INSERT INTO {grants} (item_id, order_id, kind, license_ids, days, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-                [$itemId, $orderId, $kind, implode(',', $ids), $days * $qty, $this->now()]);
+            $this->db->execute('INSERT INTO {grants} (grant_key, order_ref, kind, license_ids, days, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+                [$grantKey, $orderRef, $kind, implode(',', $ids), $days * $qty, $this->now()]);
             return $note;
         });
     }
 
     /** Refund/cancel: new licenses end now; renewal days are taken back. Returns how many lines were reverted. */
-    public function revokeOrder(int $orderId, string $reason): int
+    public function revokeOrder(string $orderRef, string $reason): int
     {
-        return $this->db->transaction(function () use ($orderId, $reason) {
-            $grants = $this->db->rows('SELECT * FROM {grants} WHERE order_id = ? AND reverted_at IS NULL', [$orderId]);
+        return $this->db->transaction(function () use ($orderRef, $reason) {
+            $grants = $this->db->rows('SELECT * FROM {grants} WHERE order_ref = ? AND reverted_at IS NULL', [$orderRef]);
             foreach ($grants as $g) {
                 foreach (array_filter(explode(',', $g['license_ids'])) as $id) {
                     $g['kind'] === 'renewal' ? $this->shorten($id, (int) $g['days'], $reason) : $this->cancel($id, true, $reason);
                 }
-                $this->db->execute('UPDATE {grants} SET reverted_at = ? WHERE item_id = ?', [$this->now(), (int) $g['item_id']]);
+                $this->db->execute('UPDATE {grants} SET reverted_at = ? WHERE grant_key = ?', [$this->now(), $g['grant_key']]);
             }
             return count($grants);
         });
     }
 
     /** New licenses sold in this order (not refunded), for the customer's e-mail and order page. */
-    public function orderLicenses(int $orderId): array
+    public function orderLicenses(string $orderRef): array
     {
         $ids = [];
-        foreach ($this->db->rows("SELECT license_ids FROM {grants} WHERE order_id = ? AND kind = 'new' AND reverted_at IS NULL ORDER BY item_id", [$orderId]) as $g) {
+        foreach ($this->db->rows("SELECT license_ids FROM {grants} WHERE order_ref = ? AND kind = 'new' AND reverted_at IS NULL ORDER BY created_at, grant_key", [$orderRef]) as $g) {
             array_push($ids, ...array_filter(explode(',', $g['license_ids'])));
         }
         return array_map(fn (string $id) => $this->license($id), $ids);
+    }
+
+    /** The renewed license of a renewal sale (for its confirmation page/e-mail). */
+    public function orderRenewals(string $orderRef): array
+    {
+        $rows = $this->db->rows("SELECT license_ids FROM {grants} WHERE order_ref = ? AND kind = 'renewal' AND reverted_at IS NULL", [$orderRef]);
+        return array_map(fn (array $g) => $this->license($g['license_ids']), $rows);
+    }
+
+    public function keySecret(): string
+    {
+        return $this->keySecret;
     }
 
     public function keyFor(string $licenseId): string
     {
         $this->license($licenseId);
         return Keys::derive($this->keySecret, $licenseId);
+    }
+
+    public function licenseByKeyHash(string $hash): ?array
+    {
+        return $this->db->rows('SELECT * FROM {licenses} WHERE key_hash = ?', [$hash])[0] ?? null;
     }
 
     public function license(string $licenseId): array

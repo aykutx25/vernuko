@@ -2,6 +2,23 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.11.0] — 2026-11-13 — Kendi satış sayfası (iyzico + PayTR) ve dış satış bağlantısı
+
+### Eklendi
+- **WooCommerce'siz satış:** satın alma sayfası (`[vernuko_satin_al plan="…"]`). Ödeme **iyzico** (Ortak Ödeme Sayfası) veya **PayTR** (iFrame) ile yapılır; ikisi aynı anda açık olabilir, müşteri seçer.
+  - Lisans yalnızca sağlayıcının imzalı onayı gelince ve tutar tutunca oluşur. Aynı onay iki kez gelirse tek lisans ve tek e-posta.
+  - Formda mesafeli satış sözleşmesi ve KVKK onayı var.
+- **Lisanslarım** (`[vernuko_lisanslarim]`): parola yok, e-postaya gelen 30 dakikalık bağlantıyla giriş. Anahtar, bilgisayarlar ve bitiş tarihi görünür; bilgisayar kaldırılabilir, lisans yenilenebilir.
+- **Yönetici ekranı:** Siparişler (iade işaretleme, muhasebe için aylık CSV) ve Paketler (fiyat, süre, bilgisayar sayısı, sayfa bağlantıları).
+- **Dış satış sistemi bağlantısı:** WordPress dışındaki bir satış sistemi, imzalı istekle lisans açar, yeniler ve iade eder. Aynı satış iki kez işlenmez.
+- WooCommerce desteği aynen sürüyor. Üç yol aynı lisans tablolarını ve aynı "satış → tek lisans" kuralını kullanır.
+
+### Düzeltildi (denemede bulundu)
+- Form alanı adları WordPress'in ayrılmış parametreleriyle çakışıyordu ("name" alanı "sayfa bulunamadı" açıyordu). Alanlar `vk_` önekiyle değiştirildi.
+
+### Denenmedi
+- Gerçek iyzico/PayTR hesabıyla ödeme. İstek ve imza biçimleri resmi belgelerden alındı ve testlerle doğrulandı; iyzico'nun test sunucusu adresi ve "başarılı" durum değeri ilk test ödemesinde kontrol edilmeli.
+
 ## [0.10.0] — 2026-11-13 — Lisans sunucusu WordPress'te
 
 ### Eklendi
