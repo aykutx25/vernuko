@@ -9,11 +9,11 @@
 | 0 | Araştırma, mimari, veri modeli, güvenlik modeli, lisans kararı, maliyet, UI sistemi, plan | ✅ (bu belgeler) |
 | 1 | Windows çekirdeği: kurulum, SQLite, kullanıcılar, müşteri, personel, hizmet, randevu motoru, testler | ✅ çekirdek · 🟡 arayüz |
 | 2 | Güzellik & Lazer: paket/seans, bölge, oda/cihaz, ödeme, iptal/iade, prim, stok, onam/fotoğraf, tekrarlayan randevu, bekleme listesi | ✅ iş kuralları ve view model'ler (testli) · 🟡 ekranlar Windows'ta doğrulanacak |
-| 3 | Diğer meslekler (önce kuaför, SPA, danışmanlık) | ⬜ (profil kataloğu hazır) |
+| 3 | Diğer meslekler (önce kuaför, SPA, danışmanlık) | 🟡 hizmete özel oda/cihaz kuralı ✅ · danışmanlık firma müşterisi ✅ · ⬜ kuaför boya bekleme süresi, SPA hediye kartı, çevrim içi görüşme bağlantısı |
 | 4 | Yedekleme: yerel ✅ · OneDrive/Google Drive/Dropbox eşitleme klasörüne şifreli kopya ✅ · API (OAuth) bağlantısı ⬜ (sahip uygulama kaydı açmalı) | ✅ temel |
 | 5 | İletişim: SMS, WhatsApp API, e-posta, hatırlatma planlama | ✅ hatırlatma planlayıcı + giden kutusu + İleti Merkezi SMS + WhatsApp Cloud API (testli, gerçek hesapla denenmedi) · ⬜ Netgsm, Verimor, e-posta, ICS |
-| 6 | Lisans sunucusu ve satış (Paddle/iyzico) | ⬜ (istemci doğrulama ✅) |
-| 7 | Çoklu bilgisayar: yerel API, PostgreSQL, eşzamanlılık, veri taşıma | ⬜ |
+| 6 | Lisans sunucusu ve satış (Paddle/iyzico) | ✅ sunucu + Paddle webhook + masaüstü etkinleştirme (testli) · ⬜ VPS kurulumu, gerçek Paddle denemesi, iyzico, anahtarın e-postayla gönderimi |
+| 7 | Çoklu bilgisayar | ✅ ana bilgisayar + bağlanan bilgisayarlar (SQLite, PostgreSQL yok; testli, CI yeşil) · 🟡 iki gerçek bilgisayarda denenmedi |
 | 8 | Üretime hazırlık: güvenlik denetimi, performans, kurulum, imzalama, güncelleme, dokümantasyon | Kısmen: kurulum paketi + güncelleme ✅ (Linux'ta paket üretildi, Windows'ta kur/güncelle denenmedi 🟡) · imzalama ⬜ (sertifika yok) |
 
 **Kural:** Başarı kriterleri (REQUIREMENTS.md › I) Windows'ta uçtan uca doğrulanmadan Faz 3'e geçilmez.
