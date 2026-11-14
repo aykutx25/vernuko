@@ -66,6 +66,9 @@ public sealed record CustomerDetailsDto(
 {
     public string FullName => string.IsNullOrEmpty(LastName) ? FirstName : $"{FirstName} {LastName}";
 
+    /// <summary>"Müşteri #8 · 0505 221 33 44 · e-posta" — empty parts left out; the phone never breaks across lines.</summary>
+    public string ContactLine => string.Join("  ·  ", new[] { $"Müşteri #{Number}", Phone?.Replace(' ', '\u00A0'), Email }.Where(x => !string.IsNullOrEmpty(x)));
+
     /// <summary>"Unvan · Vergi dairesi · VKN" for the customer card, null without company data.</summary>
     public string? CompanyLine => CompanyName is null && TaxNumber is null
         ? null

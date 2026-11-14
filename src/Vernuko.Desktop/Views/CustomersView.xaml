@@ -128,9 +128,7 @@
                                     <!-- Name trims and the number/phone/e-mail line wraps: in a narrow window they ran under the buttons. -->
                                     <StackPanel Margin="0,0,12,0" ClipToBounds="True">
                                         <TextBlock Text="{Binding Details.FullName}" FontSize="22" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Details.FullName}" />
-                                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap">
-                                            <Run Text="Müşteri #" /><Run Text="{Binding Details.Number, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding Details.Phone, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding Details.Email, Mode=OneWay}" />
-                                        </TextBlock>
+                                        <TextBlock Text="{Binding Details.ContactLine}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </DockPanel>
                                 <TextBlock Text="{Binding Details.Notes}" Style="{StaticResource Subtle}" Margin="0,10,0,0" Visibility="{Binding Details.Notes, Converter={StaticResource VisibleWhen}}" />

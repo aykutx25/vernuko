@@ -145,7 +145,7 @@
                     </StackPanel>
                 </Border>
                 <Button Grid.Column="2" Style="{StaticResource PrimaryButton}" Height="44" Command="{Binding NewAppointmentCommand}" ToolTip="Yeni randevu (Ctrl+N)" VerticalAlignment="Center"
-                        Visibility="{Binding CanManage, Converter={StaticResource VisibleWhen}}">
+                        Visibility="{Binding ShowNewAppointmentButton, Converter={StaticResource VisibleWhen}}">
                     <StackPanel Orientation="Horizontal">
                         <Path Data="{StaticResource IconPlus}" Style="{StaticResource Icon}" />
                         <TextBlock Text="Yeni Randevu" Margin="10,0,0,0" FontSize="15" />

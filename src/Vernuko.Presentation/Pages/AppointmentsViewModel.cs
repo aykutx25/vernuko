@@ -205,6 +205,9 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
 
     public bool CanManage => Shell?.Has(Permission.AppointmentsManage) ?? true;
 
+    /// <summary>The header button: hidden while the form is open (it is the new-appointment form, and the space is short).</summary>
+    public bool ShowNewAppointmentButton => CanManage && !IsEditorOpen;
+
     // Quick-action tiles only for pages this user has (a tile for a missing page did nothing).
     public bool CanGoCustomers => Shell?.HasPage("customers") ?? true;
 
@@ -220,6 +223,7 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
         await LoadFiltersAsync();
         _loaded = true;
         OnPropertyChanged(nameof(CanManage));
+        OnPropertyChanged(nameof(ShowNewAppointmentButton));
         OnPropertyChanged(nameof(CanGoCustomers));
         OnPropertyChanged(nameof(CanGoPackages));
         OnPropertyChanged(nameof(CanGoPayments));
@@ -242,7 +246,11 @@ public sealed partial class AppointmentsViewModel : PageViewModel, IShellAware
 
     partial void OnSelectedServiceChanged(Option<Guid?>? value) => _ = ReloadAsync();
 
-    partial void OnEditorChanged(AppointmentEditorViewModel? value) => OnPropertyChanged(nameof(IsEditorOpen));
+    partial void OnEditorChanged(AppointmentEditorViewModel? value)
+    {
+        OnPropertyChanged(nameof(IsEditorOpen));
+        OnPropertyChanged(nameof(ShowNewAppointmentButton));
+    }
 
     [RelayCommand]
     private void PreviousPeriod() => SelectedDate = View switch
