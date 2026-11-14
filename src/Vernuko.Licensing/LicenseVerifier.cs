@@ -12,11 +12,14 @@ namespace Vernuko.Licensing;
 public sealed class LicenseVerifier
 {
     private readonly IReadOnlyDictionary<string, byte[]> _publicKeys;
+    private readonly string _product;
 
     /// <param name="publicKeys">Key id → SubjectPublicKeyInfo (DER) bytes.</param>
-    public LicenseVerifier(IReadOnlyDictionary<string, byte[]> publicKeys)
+    /// <param name="product">The program this app is: a license signed for another Vernuko program is refused.</param>
+    public LicenseVerifier(IReadOnlyDictionary<string, byte[]> publicKeys, string product = LicenseProducts.Randevu)
     {
         _publicKeys = publicKeys;
+        _product = product;
     }
 
     public Result<LicenseDocument> Verify(string signedLicenseJson)
@@ -64,7 +67,13 @@ public sealed class LicenseVerifier
         try
         {
             var doc = JsonSerializer.Deserialize<LicenseDocument>(payloadBytes);
-            return doc is null || doc.FormatVersion != 1 ? LicenseErrors.Malformed : doc;
+            if (doc is null || doc.FormatVersion != 1)
+            {
+                return LicenseErrors.Malformed;
+            }
+
+            // Signed and valid, but for another program (a Vernuko Stok key typed into Vernuko Randevu).
+            return string.Equals(doc.Product, _product, StringComparison.Ordinal) ? doc : LicenseErrors.WrongProduct(doc.Product, _product);
         }
         catch (JsonException)
         {
@@ -105,4 +114,28 @@ public static class LicenseErrors
     public static readonly Error Malformed = new("license.malformed", "Lisans dosyası okunamadı.");
     public static readonly Error UnknownKey = new("license.unknown_key", "Lisans dosyası tanınmayan bir anahtarla imzalanmış.");
     public static readonly Error BadSignature = new("license.bad_signature", "Lisans dosyasının imzası geçersiz. Dosya değiştirilmiş olabilir.");
+
+    public static Error WrongProduct(string licenseProduct, string appProduct) =>
+        new("license.wrong_product", $"Bu lisans {LicenseProducts.Name(licenseProduct)} içindir; {LicenseProducts.Name(appProduct)} için kullanılamaz.");
+}
+
+/// <summary>
+/// Vernuko programs, as written in the signed license ("prd"). The license server sells each license for one program
+/// and every program accepts only its own. <see cref="Randevu"/> keeps the first program's id: licenses sold and apps
+/// installed before there were other programs carry it.
+/// </summary>
+public static class LicenseProducts
+{
+    public const string Randevu = "vernuko-desktop";
+    public const string Stok = "vernuko-stok";
+    public const string TeknikServis = "vernuko-teknik-servis";
+
+    public static string Name(string? product) => product switch
+    {
+        Randevu => "Vernuko Randevu",
+        Stok => "Vernuko Stok",
+        TeknikServis => "Vernuko Teknik Servis",
+        null or "" => "bilinmeyen bir program",
+        _ => product,
+    };
 }

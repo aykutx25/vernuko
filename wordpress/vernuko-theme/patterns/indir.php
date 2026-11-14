@@ -7,7 +7,7 @@
  */
 ?>
 <!-- wp:heading {"level":1} -->
-<h1 class="wp-block-heading">Vernuko'yu indirin</h1>
+<h1 class="wp-block-heading">Vernuko Randevu'yu indirin</h1>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"style":{"typography":{"fontSize":"1.25rem"}}} -->
@@ -39,3 +39,13 @@
 <!-- wp:paragraph {"style":{"spacing":{"margin":{"top":"2rem"}}}} -->
 <p style="margin-top:2rem">Başka bir bilgisayardan geçiyorsanız kurulumun ilk ekranında <strong>Yedekten geri yükle</strong>'yi seçin.</p>
 <!-- /wp:paragraph -->
+
+<!-- wp:heading {"style":{"spacing":{"margin":{"top":"3rem"}}}} -->
+<h2 class="wp-block-heading" style="margin-top:3rem">Diğer Vernuko programları</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Her programın deneme sürümü ve lisansı ayrıdır; satıştaki programlar kendi sayfalarından indirilir.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:vernuko/urunler {"haric":"vernuko-desktop"} /-->

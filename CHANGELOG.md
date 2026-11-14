@@ -2,9 +2,40 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
-## [Yayınlanmadı] — Satış sitesi teması
+## [0.14.0] — 2026-11-14 — Programlar: her lisans bir programın; satış teması
 
-Bu bölüm satış sitesiyle ilgili. Masaüstü programında yalnızca bir test kararlılığı düzeltmesi var (aşağıda).
+Vernuko Stok ve Vernuko Teknik Servis için lisans sistemi ve satış sitesi hazırlandı. Bu iki program henüz yok: sitede "geliştiriliyor" görünürler ve satılmazlar.
+
+### Eklendi — lisans programa bağlı (masaüstü 0.14.0 + eklenti 1.4.0)
+- **Lisans belgesi programı taşır (`prd`).** Masaüstü programı yalnızca kendi programının belgesini kabul eder.
+  - Bir Vernuko Stok anahtarı Vernuko Randevu'da şu mesajla reddedilir: "Bu lisans Vernuko Stok içindir; Vernuko Randevu için kullanılamaz."
+  - Önceden belgedeki program hiç kontrol edilmiyordu.
+- Masaüstü, etkinleştirme, yenileme ve deneme isteklerinde kendi programını gönderir.
+- **Eklenti:** lisans, paket, WooCommerce ürünü ve dış satış bir program seçer.
+  - Sunucu anahtarı başka programda etkinleştirmez. Reddedilen deneme koltuk tutmaz.
+  - Yenileme yalnızca aynı programın lisansını uzatır.
+  - Deneme her programda ayrıdır.
+  - Kurulum ve güncelleme dosyaları programın klasöründen verilir.
+  - E-posta, sipariş sonucu, Lisanslarım ve yönetim listesi programın adını gösterir.
+  - Lisanslarım'daki "Yenile" o programın yenileme paketini açar.
+- **Geriye uyum:**
+  - Randevu'nun kimliği değişmedi (`vernuko-desktop`).
+  - Var olan lisanslar ve paketler Randevu sayılır.
+  - Program göndermeyen eski masaüstü sürümleri Randevu sayılır.
+  - 1.3.0 veritabanı yükseltmede `product` sütununu alır.
+- `[vernuko_satin_al]` paket listesi programlara göre gruplanır. Satın alma formu ve fiş süreyi "1 yıl" diye yazar ("365 gün" yerine).
+
+### Eklendi — satış teması 1.1.0
+- Ana sayfada "Vernuko programları" bölümü: her program bir defter satırı, durumu (Satışta / Geliştiriliyor) eklentiden.
+- Stok ve Teknik Servis program sayfaları ("Geniş sayfa" şablonu):
+  - programın kendi gün ekranı: stok hareketleri ve servis fişleri, işletme türüyle değişir, internetsiz çalışır,
+  - planlanan özellikler,
+  - satış bölümü.
+- **Satış bölümü:** paket tanımlanınca kendiliğinden fiş ve indirme düğmesine döner. O zamana kadar "geliştiriliyor" notu gösterir: tarih vermez, e-posta toplamaz.
+- Fiş programa göre: başlıkta programın adı; komisyon ve sınır satırları programın diliyle.
+- Bloklarda program seçimi (düzenleyicide). Üst menüde "Programlar", alt bölümde program bağlantıları. İndirme sayfasında diğer programlar.
+
+### Önceki değişiklikler — satış teması 1.0.0 ve eklenti 1.3.0
 
 ### Düzeltildi — testler
 - **Mesaj gönderme kilidi:** Kilit, işlemin tamamında tek bir kopyaydı; artık her uygulama örneğinin kendi kilidi var.

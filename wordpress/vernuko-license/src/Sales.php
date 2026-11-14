@@ -55,7 +55,7 @@ final class Validate
     }
 }
 
-/** A plan sold on the site: price in kuruş (TRY). */
+/** A plan sold on the site: price in kuruş (TRY), for one Vernuko program (plans saved before 1.4.0: Randevu). */
 final class Plan
 {
     public function __construct(
@@ -66,19 +66,49 @@ final class Plan
         public readonly string $edition = 'Standart',
         public readonly int $devices = 1,
         public readonly int $days = 365,
+        public readonly string $product = Products::RANDEVU,
     ) {
     }
 
     /** @param array<string,mixed> $a */
     public static function fromArray(string $id, array $a): self
     {
+        $product = is_string($a['product'] ?? null) && Products::valid($a['product']) ? $a['product'] : Products::RANDEVU;
         return new self($id, (string) ($a['name'] ?? $id), max(0, (int) ($a['price_kurus'] ?? 0)), ($a['kind'] ?? 'new') === 'renewal' ? 'renewal' : 'new',
-            (string) ($a['edition'] ?? 'Standart') ?: 'Standart', max(1, min(50, (int) ($a['devices'] ?? 1))), max(1, (int) ($a['days'] ?? 365)));
+            (string) ($a['edition'] ?? 'Standart') ?: 'Standart', max(1, min(50, (int) ($a['devices'] ?? 1))), max(1, (int) ($a['days'] ?? 365)), $product);
     }
 
     public function toArray(): array
     {
-        return ['name' => $this->name, 'price_kurus' => $this->priceKurus, 'kind' => $this->kind, 'edition' => $this->edition, 'devices' => $this->devices, 'days' => $this->days];
+        return ['name' => $this->name, 'price_kurus' => $this->priceKurus, 'kind' => $this->kind, 'edition' => $this->edition, 'devices' => $this->devices, 'days' => $this->days, 'product' => $this->product];
+    }
+
+    public function productName(): string
+    {
+        return Products::name($this->product);
+    }
+
+    /** "1 yıl", "6 ay", "45 gün" (a no-break space keeps them together). */
+    public function durationText(): string
+    {
+        return self::duration($this->days);
+    }
+
+    public static function duration(int $days): string
+    {
+        if ($days % 365 === 0) {
+            return ($days / 365) . "\u{00A0}yıl";
+        }
+        if ($days % 30 === 0) {
+            return ($days / 30) . "\u{00A0}ay";
+        }
+        return $days . "\u{00A0}gün";
+    }
+
+    /** "1 bilgisayar, 1 yıl" — the same words on the price receipt, the checkout form and the e-mail. */
+    public function summary(): string
+    {
+        return $this->devices . ' bilgisayar, ' . $this->durationText();
     }
 
     public function priceText(): string
@@ -146,9 +176,11 @@ final class Orders
         $renewId = null;
         if ($plan->kind === 'renewal') {
             $normalized = Keys::normalize($renewLicenseKey);
-            $license = $normalized === null ? null : ($this->db->rows('SELECT id, status FROM {licenses} WHERE key_hash = ?', [Keys::hash($normalized)])[0] ?? null);
+            $license = $normalized === null ? null : ($this->db->rows('SELECT id, status, product FROM {licenses} WHERE key_hash = ?', [Keys::hash($normalized)])[0] ?? null);
             if ($license === null) {
                 $errors[] = 'Yenilenecek lisans anahtarı bulunamadı.';
+            } elseif (($license['product'] ?? Products::RANDEVU) !== $plan->product) {
+                $errors[] = 'Bu anahtar ' . Products::name($license['product']) . ' içindir; bu paket ' . $plan->productName() . ' yenilemesidir.';
             } else {
                 $renewId = $license['id'];
             }
@@ -218,7 +250,7 @@ final class Orders
                 $this->db->execute("UPDATE {orders} SET status = 'paid', provider_ref = ?, paid_at = ? WHERE id = ?", [$providerRef, $this->issuer->now(), $id]);
             }
             $name = $order['company'] ?: $order['customer_name'];
-            $granted = $this->issuer->grant("own:$id", "own:$id", null, $order['kind'], $plan->edition, $plan->devices, $plan->days, 1, $order['renew_license_id'], $name, $order['email'], null, 'own') !== null;
+            $granted = $this->issuer->grant("own:$id", "own:$id", null, $order['kind'], $plan->edition, $plan->devices, $plan->days, 1, $order['renew_license_id'], $name, $order['email'], null, 'own', $plan->product) !== null;
             return $this->find($id) + ['_granted' => $granted];
         });
 
@@ -301,7 +333,8 @@ final class Orders
 
 /**
  * Another sales system (your own site/app) tells the license server about sales:
- *   POST …/v1/sales          {"saleId","kind":"new"|"renewal","customerName","email","edition","devices","days","licenseKey"?}
+ *   POST …/v1/sales          {"saleId","kind":"new"|"renewal","customerName","email","edition","devices","days","licenseKey"?,"product"?}
+ *     product: "vernuko-desktop" (Randevu, varsayılan), "vernuko-stok", "vernuko-teknik-servis"
  *   POST …/v1/sales/revoke   {"saleId"}
  * Header X-Vernuko-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256(secret, t + "." + raw body)>; ±5 minutes.
  * The same saleId is processed once (retries are safe). The secret never leaves the two servers.
@@ -349,6 +382,7 @@ final class ExternalSales
                 return [404, ['code' => 'request.unknown', 'message' => 'Bilinmeyen işlem.']];
             }
             $kind = ($body['kind'] ?? 'new') === 'renewal' ? 'renewal' : 'new';
+            $product = Products::requested(is_string($body['product'] ?? null) ? $body['product'] : null);
             $renewId = null;
             if ($kind === 'renewal') {
                 $normalized = Keys::normalize(is_string($body['licenseKey'] ?? null) ? $body['licenseKey'] : null);
@@ -359,13 +393,13 @@ final class ExternalSales
             }
             $email = is_string($body['email'] ?? null) && Validate::email($body['email']) ? strtolower($body['email']) : null;
             $this->issuer->grant("ext:$saleId", "ext:$saleId", null, $kind, (string) ($body['edition'] ?? 'Standart') ?: 'Standart', (int) ($body['devices'] ?? 1),
-                (int) ($body['days'] ?? 365), 1, $renewId, (string) ($body['customerName'] ?? ''), $email, null, 'external');
+                (int) ($body['days'] ?? 365), 1, $renewId, (string) ($body['customerName'] ?? ''), $email, null, 'external', $product);
             $licenses = $kind === 'renewal' ? $this->issuer->orderRenewals("ext:$saleId") : $this->issuer->orderLicenses("ext:$saleId");
             if (!$licenses) {
                 return [409, ['code' => 'sales.revoked', 'message' => 'Bu satış daha önce iade edilmiş.']];
             }
             $l = $licenses[0];
-            return [200, ['saleId' => $saleId, 'licenseId' => $l['id'], 'licenseKey' => $this->issuer->keyFor($l['id']), 'paidUntilUtc' => Issuer::iso((int) $l['paid_until']), 'devices' => (int) $l['max_devices']]];
+            return [200, ['saleId' => $saleId, 'licenseId' => $l['id'], 'licenseKey' => $this->issuer->keyFor($l['id']), 'paidUntilUtc' => Issuer::iso((int) $l['paid_until']), 'devices' => (int) $l['max_devices'], 'product' => (string) ($l['product'] ?? Products::RANDEVU)]];
         } catch (Error $e) {
             return [$e->status, ['code' => $e->errorCode, 'message' => $e->getMessage()]];
         }

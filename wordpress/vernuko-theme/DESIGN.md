@@ -98,3 +98,19 @@ Tek aile: **Schibsted Grotesk** (OFL, değişken 400–900, italik). Türkçe ha
 | Krem zemin | Yapay zekâ kalıbı #1 (ve Rezzim) | Soğuk "defter" beyazı `#F1F4F8` + uygulama laciverti |
 | Sarı vurguyu başlıkta tek kelimeye vermek | Tek kelime vurgusu kalıbı | Sarı yalnızca "şimdi" anlamında, metinde hiç |
 | Bölüm üstü küçük büyük harf etiketler | Şablon süsü | Yok; başlık doğrudan |
+
+## 4. Program ailesi (1.1.0)
+
+Vernuko Stok ve Vernuko Teknik Servis için hazırlık. İlk akla gelen, ana sayfaya üç eş kartlı bir "Ürünlerimiz" ızgarası koymaktı. Bu kart kitinin ta kendisi; reddedildi.
+
+| İlk aklıma gelen | Neden varsayılan | Yerine |
+|---|---|---|
+| Üç eş kart, her birinde ikon + "Daha fazla" | SaaS kart kiti | Tek bir defter: her program bir satır (ad, ne tuttuğu, kimin için, durum). Satırın tamamı bağlantı. Ana sayfadaki meslek tablosuyla aynı dil. |
+| "Yakında!" rozeti + e-posta bırakma formu | Bekleme listesi kalıbı; veri toplar | "Geliştiriliyor" durumu ve kesik çizgili bir not: henüz yok, tarih yok, çıkınca burada fiyat ve indirme belirir. E-posta toplanmaz. |
+| Her ürün sayfasına ayrı bir illüstrasyon | Süs | Her programın kendi gün ekranı, aynı bileşenle: hareketler (Stok) ve servis fişleri (Teknik Servis) de saat çizgisine ve "şimdi" çizgisine oturur. Altyazı "planlanan tasarım" der. |
+| Ürün sayfasında ayrı fiyat tablosu | Tekrar | Aynı fiş; satır adları programa göre değişir: "Satış başına komisyon", "Servis fişi başına komisyon". |
+
+İlkeler aynı kalır:
+- **Uygulamada olmayan özellik yazılmaz.** Satışta olmayan programın her şeyi "planlanan" diye etiketlidir.
+- **Durumu eklenti söyler.** Paket tanımlanınca sayfa kendiliğinden satışa geçer; tema sayfalarına elle "artık satışta" yazmak gerekmez.
+- **Kesik çizgi = henüz çizim.** "Kayıtlarınız nerede durur?" bandında kesik çizgi "sizin değil" demekti. Burada "henüz yapılmadı" der. İkisi de "elle tutulur değil" anlamına gelir.

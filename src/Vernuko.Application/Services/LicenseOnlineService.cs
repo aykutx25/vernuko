@@ -85,7 +85,7 @@ public sealed class LicenseOnlineService(LicenseService license, LicensingOption
             return new Error("license.offline", reason);
         }
 
-        var response = await PostAsync<LicenseReply>("v1/activate", new { licenseKey, deviceHash = device.DeviceHash }, ct);
+        var response = await PostAsync<LicenseReply>("v1/activate", new { licenseKey, deviceHash = device.DeviceHash, product = options.Product }, ct);
         return response.IsFailure ? response.Error : await license.StoreFromServerAsync(response.Value.License, activation: true, ct);
     }
 
@@ -103,7 +103,7 @@ public sealed class LicenseOnlineService(LicenseService license, LicensingOption
             return license.Current;
         }
 
-        var response = await PostAsync<LicenseReply>("v1/refresh", new { activationId = doc.ActivationId, deviceHash = device.DeviceHash }, ct);
+        var response = await PostAsync<LicenseReply>("v1/refresh", new { activationId = doc.ActivationId, deviceHash = device.DeviceHash, product = options.Product }, ct);
         return response.IsFailure ? response.Error : await license.StoreFromServerAsync(response.Value.License, activation: false, ct);
     }
 
@@ -172,7 +172,7 @@ public sealed class LicenseOnlineService(LicenseService license, LicensingOption
             return new Error("license.offline", reason);
         }
 
-        var response = await PostAsync<TrialReply>("v1/trial", new { deviceHash = device.DeviceHash }, ct);
+        var response = await PostAsync<TrialReply>("v1/trial", new { deviceHash = device.DeviceHash, product = options.Product }, ct);
         return response.IsFailure ? response.Error : await license.AdoptServerTrialStartAsync(response.Value.StartedAtUtc, ct);
     }
 

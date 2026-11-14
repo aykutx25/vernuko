@@ -34,7 +34,7 @@ $body = json_decode(file_get_contents('php://input') ?: '[]', true) ?: [];
 
 // Yalnızca testler: lisans oluşturma (sitede bu, WooCommerce siparişi veya yönetici ekranıdır).
 if ($route === 'test/create') {
-    echo json_encode($issuer->createLicense($body['name'] ?? 'Test', $body['email'] ?? null, null, 'Standart', (int) ($body['devices'] ?? 1), (int) ($body['days'] ?? 365), 'test'));
+    echo json_encode($issuer->createLicense($body['name'] ?? 'Test', $body['email'] ?? null, null, 'Standart', (int) ($body['devices'] ?? 1), (int) ($body['days'] ?? 365), 'test', null, [], null, (string) ($body['product'] ?? 'vernuko-desktop')));
     return;
 }
 

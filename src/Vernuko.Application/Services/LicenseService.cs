@@ -18,6 +18,9 @@ public sealed class LicensingOptions
     /// licenses are loaded from a file.
     /// </summary>
     public Uri? ServerUrl { get; init; }
+
+    /// <summary>Which Vernuko program this is; sent to the license server and checked in every license document.</summary>
+    public string Product { get; init; } = LicenseProducts.Randevu;
 }
 
 /// <summary>
@@ -26,7 +29,7 @@ public sealed class LicensingOptions
 /// </summary>
 public sealed class LicenseService(IDbContextFactory<VernukoDbContext> factory, TimeProvider time, IDeviceIdentity device, LicensingOptions options, UserSession session, AuditWriter audit) : ILicenseGate, ILicenseService
 {
-    private readonly LicenseVerifier _verifier = new(options.PublicKeys);
+    private readonly LicenseVerifier _verifier = new(options.PublicKeys, options.Product);
 
     public LicenseStatus Current { get; private set; } =
         new(LicenseState.Trial, AccessMode.Full, null, LicenseEvaluator.TrialDays, false, "Deneme sürümü.");

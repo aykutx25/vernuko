@@ -1,4 +1,4 @@
-/* The home page's day board: switch business type, switch the internet off. No dependencies, no network. */
+/* A program's day screen: switch business type, switch the internet off. No dependencies, no network. */
 (function () {
 	'use strict';
 
@@ -47,9 +47,10 @@
 		function ciz() {
 			var m = veri.meslekler[secili];
 			var satirlar = m.satirlar.slice();
-			// Offline: a walk-in is still booked — the program writes to this computer's database.
-			if (internet && !internet.checked) {
-				satirlar.push(['12:15', 'Kapıdan gelen ' + m.kisi, 'İnternetsiz kaydedildi', '', m.satirlar[0][4], m.satirlar[0][5], 'onay', true]);
+			// Offline: the work is still recorded — the program writes to this computer's database.
+			var c = veri.cevrimdisi;
+			if (internet && !internet.checked && c) {
+				satirlar.push([c.saat, c.baslik.replace('{kisi}', m.kisi || ''), c.alt, '', c.personel || m.satirlar[0][4], c.kaynak || m.satirlar[0][5], c.durum, true]);
 				satirlar.sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; });
 			}
 			liste.textContent = '';
@@ -62,7 +63,7 @@
 			});
 			if (!cizildi) { liste.appendChild(simdi(veri.simdi)); }
 			isletme.textContent = m.isletme;
-			sayi.textContent = satirlar.length + ' randevu';
+			sayi.textContent = satirlar.length + ' ' + (veri.birim || 'randevu');
 		}
 
 		Array.prototype.forEach.call(dugmeler, function (b) {
@@ -76,9 +77,7 @@
 		if (internet) {
 			internet.addEventListener('change', function () {
 				pano.classList.toggle('is-cevrimdisi', !internet.checked);
-				metin.textContent = internet.checked
-					? 'Yerel veritabanı — internetsiz çalışır'
-					: 'İnternet yok. Randevu, kasa ve yedek bu bilgisayarda çalışmaya devam ediyor.';
+				metin.textContent = internet.checked ? veri.acik : veri.kapali;
 				ciz();
 			});
 		}

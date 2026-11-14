@@ -1,8 +1,11 @@
 <?php
 /**
- * [vernuko_pano] — the home page's live day board: the app's day screen drawn in HTML. Switching the business type
- * changes the words, services and rooms exactly as the program does (BusinessProfileCatalog); switching the internet
- * off keeps it working. People and businesses are invented. Without JavaScript the first business type is shown.
+ * [vernuko_pano ekran="randevu|stok|servis"] / vernuko/pano — a program's day screen drawn in HTML. Switching the
+ * business type changes the words, items and places; switching the internet off keeps it working. People, goods and
+ * businesses are invented. Without JavaScript the first business type is shown.
+ *
+ * "randevu" is Vernuko Randevu's real day screen (BusinessProfileCatalog). "stok" and "servis" are the planned screens
+ * of programs that do not exist yet; their caption says so.
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
@@ -88,20 +91,139 @@ function vernuko_pano_meslekler(): array
     ];
 }
 
+/**
+ * The app's status names, as tones: tamam (green) | islemde (blue) | geldi (navy) | onay (grey) | bekliyor (amber).
+ * Each screen gives the tones its own words.
+ */
 function vernuko_pano_durumlar(): array
 {
     return ['tamam' => 'Tamamlandı', 'islemde' => 'İşlemde', 'geldi' => 'Geldi', 'onay' => 'Onaylandı', 'bekliyor' => 'Onay bekliyor'];
 }
 
+/** @return array<string, array<string, mixed>> */
+function vernuko_pano_stok_isletmeleri(): array
+{
+    // Rows: [time, item, movement, note, who/where, place, tone]. After the "now" line: what is expected today.
+    return [
+        'hirdavat' => [
+            'etiket' => 'Hırdavat',
+            'isletme' => 'Yıldız Hırdavat',
+            'satirlar' => [
+                ['08:45', 'Matkap ucu seti, 13 parça', 'Satış, 2 adet', 'Kalan 4; kritik seviye 5', 'Kasa 1', 'Raf A-03', 'bekliyor'],
+                ['09:20', 'Silikon, şeffaf', 'Mal kabul, 48 adet', 'Ece Yapı, irsaliye 4471', 'Depo', 'Raf C-11', 'geldi'],
+                ['09:55', 'Vida 4×40, 100\'lü kutu', 'Satış, 6 kutu', 'Usta Elektrik carisine, 30 gün vadeli', 'Kasa 1', 'Raf B-07', 'tamam'],
+                ['10:30', 'Boya rulosu, 25 cm', 'Sayım', 'Kayıtta 18, rafta 17: fark kaydedildi', 'Depo', 'Raf D-02', 'islemde'],
+                ['14:00', 'Su terazisi, 60 cm', 'Beklenen mal, 10 adet', 'Kritik seviyeden sipariş önerisi', 'Satın alma', 'Raf A-09', 'onay'],
+            ],
+        ],
+        'kirtasiye' => [
+            'etiket' => 'Kırtasiye',
+            'isletme' => 'Kalem Kırtasiye',
+            'satirlar' => [
+                ['09:05', 'A4 fotokopi kâğıdı', 'Satış, 5 paket', 'Okul siparişi, faturalı', 'Kasa', 'Depo 1', 'tamam'],
+                ['09:40', 'Kurşun kalem, 12\'li', 'Satış, 20 kutu', 'Kalan 3; kritik seviye 10', 'Kasa', 'Raf 2', 'bekliyor'],
+                ['10:15', 'Dosya, şeffaf', 'Mal kabul, 200 adet', 'Barkodla tek tek okutuldu', 'Depo', 'Raf 5', 'geldi'],
+                ['13:30', 'Defter, 80 yaprak', 'Hazırlanacak sipariş, 60 adet', 'Ata İlkokulu, teslim yarın', 'Depo', 'Raf 1', 'onay'],
+            ],
+        ],
+        'parca' => [
+            'etiket' => 'Yedek parça',
+            'isletme' => 'Kaya Oto Yedek Parça',
+            'satirlar' => [
+                ['08:30', 'Fren balatası, ön', 'Satış, 1 takım', 'Usta Oto Servis carisine', 'Tezgâh', 'Raf F-12', 'tamam'],
+                ['09:10', 'Yağ filtresi', 'Mal kabul, 30 adet', 'Lot 2611; fatura eşleşti', 'Depo', 'Raf Y-04', 'geldi'],
+                ['10:05', 'Silecek, 55 cm', 'Sayım', 'Kayıtla raf aynı: 14', 'Depo', 'Raf S-01', 'islemde'],
+                ['10:20', 'Ampul H7', 'Satış, 4 adet', 'Kalan 2; kritik seviye 6', 'Tezgâh', 'Raf E-08', 'bekliyor'],
+                ['15:00', 'Triger seti', 'Beklenen mal, 3 takım', 'Tedarikçi siparişi verildi', 'Satın alma', 'Raf T-02', 'onay'],
+            ],
+        ],
+    ];
+}
+
+/** @return array<string, array<string, mixed>> */
+function vernuko_pano_servis_isletmeleri(): array
+{
+    // Rows: [time, customer, device and fault, note, technician, ticket, tone].
+    return [
+        'telefon' => [
+            'etiket' => 'Telefon ve tablet',
+            'isletme' => 'Sinyal Teknik Servis',
+            'satirlar' => [
+                ['09:05', 'Serdar Aksoy', 'Telefon, ekran kırık', 'Fiyat SMS ile onaylandı', 'Okan', 'Fiş 1124', 'islemde'],
+                ['09:30', 'Gizem Er', 'Tablet, şarj soketi', 'Parça siparişte, 2 gün', 'Okan', 'Fiş 1125', 'bekliyor'],
+                ['10:10', 'Burak Tan', 'Telefon, batarya değişimi', 'Garanti 6 ay; teslimde imza', 'Elif', 'Fiş 1126', 'tamam'],
+                ['10:35', 'Melis Kara', 'Telefon, sıvı teması', 'Arıza tespiti ücretli, onay bekleniyor', 'Elif', 'Fiş 1127', 'onay'],
+                ['14:00', 'Kaan Uslu', 'Teslim randevusu', 'Ödeme teslimde, kartla', 'Elif', 'Fiş 1119', 'tamam'],
+            ],
+        ],
+        'beyaz' => [
+            'etiket' => 'Beyaz eşya',
+            'isletme' => 'Usta Beyaz Eşya Servisi',
+            'satirlar' => [
+                ['08:30', 'Ayten Duru', 'Çamaşır makinesi, su almıyor', 'Adreste; pompa değişti', 'Hasan', 'Fiş 2210', 'tamam'],
+                ['09:45', 'Fikret Oral', 'Buzdolabı, soğutmuyor', 'Gaz kaçağı; parça bekleniyor', 'Hasan', 'Fiş 2211', 'bekliyor'],
+                ['10:20', 'Nalan Yüce', 'Bulaşık makinesi', 'Atölyeye alındı', 'Cem', 'Fiş 2212', 'geldi'],
+                ['13:00', 'Sevgi Can', 'Fırın, ısıtmıyor', 'Adres ziyareti, ilçe dışı', 'Cem', 'Fiş 2213', 'onay'],
+            ],
+        ],
+        'bilgisayar' => [
+            'etiket' => 'Bilgisayar',
+            'isletme' => 'Bit Bilgisayar',
+            'satirlar' => [
+                ['09:00', 'Ece Muhasebe', 'Dizüstü, açılmıyor', 'Firma cari; 3 cihaz aynı fişte', 'Tolga', 'Fiş 3301', 'islemde'],
+                ['09:50', 'Arda Şen', 'Masaüstü, veri kurtarma', 'Disk müşterinin onayıyla kopyalandı', 'Tolga', 'Fiş 3302', 'tamam'],
+                ['10:25', 'İpek Yalın', 'Dizüstü, klavye', 'Parça siparişte', 'Sena', 'Fiş 3303', 'bekliyor'],
+                ['15:30', 'Mert Avcı', 'Teslim alınacak cihaz', 'Kurye ile gelecek', 'Sena', 'Fiş 3304', 'geldi'],
+            ],
+        ],
+    ];
+}
+
+/**
+ * Screens: the status words, what a row is called, what the offline row says, the connection lines and the caption.
+ * @return array<string, array<string, mixed>>
+ */
+function vernuko_pano_ekranlar(): array
+{
+    return [
+        'randevu' => [
+            'profiller' => vernuko_pano_meslekler(),
+            'durumlar' => vernuko_pano_durumlar(),
+            'birim' => 'randevu',
+            'cevrimdisi' => ['saat' => '12:15', 'baslik' => 'Kapıdan gelen {kisi}', 'alt' => 'İnternetsiz kaydedildi', 'durum' => 'onay'],
+            'acik' => 'Yerel veritabanı — internetsiz çalışır',
+            'kapali' => 'İnternet yok. Randevu, kasa ve yedek bu bilgisayarda çalışmaya devam ediyor.',
+            'altyazi' => 'Vernuko Randevu\'nun gün ekranından bir örnek. Kişiler ve işletmeler hayal ürünüdür. İnterneti kapatıp deneyin.',
+        ],
+        'stok' => [
+            'profiller' => vernuko_pano_stok_isletmeleri(),
+            'durumlar' => ['tamam' => 'Satıldı', 'geldi' => 'Mal kabul', 'islemde' => 'Sayımda', 'onay' => 'Bekleniyor', 'bekliyor' => 'Kritik seviye'],
+            'birim' => 'hareket',
+            'cevrimdisi' => ['saat' => '10:41', 'baslik' => 'Kasadan satış', 'alt' => 'İnternetsiz kaydedildi; stok düştü', 'durum' => 'tamam'],
+            'acik' => 'Yerel veritabanı — internetsiz çalışır',
+            'kapali' => 'İnternet yok. Satış, stok ve yedek bu bilgisayarda çalışmaya devam ediyor.',
+            'altyazi' => 'Vernuko Stok geliştiriliyor: bu ekran planlanan tasarımdır, program henüz satışta değil. Ürünler ve işletmeler hayal ürünüdür.',
+        ],
+        'servis' => [
+            'profiller' => vernuko_pano_servis_isletmeleri(),
+            'durumlar' => ['tamam' => 'Hazır', 'geldi' => 'Teslim alındı', 'islemde' => 'Onarımda', 'onay' => 'Onay bekliyor', 'bekliyor' => 'Parça bekliyor'],
+            'birim' => 'servis fişi',
+            'cevrimdisi' => ['saat' => '10:41', 'baslik' => 'Kapıdan gelen cihaz', 'alt' => 'İnternetsiz servis fişi açıldı', 'durum' => 'geldi', 'kaynak' => 'Yeni fiş'],
+            'acik' => 'Yerel veritabanı — internetsiz çalışır',
+            'kapali' => 'İnternet yok. Servis fişi, kasa ve yedek bu bilgisayarda çalışmaya devam ediyor.',
+            'altyazi' => 'Vernuko Teknik Servis geliştiriliyor: bu ekran planlanan tasarımdır, program henüz satışta değil. Kişiler ve işletmeler hayal ürünüdür.',
+        ],
+    ];
+}
+
 /** The time the "now" line marks (the app draws it at the current time; the demo freezes it mid-morning). */
 const VERNUKO_PANO_SIMDI = '10:42';
 
-function vernuko_pano_satirlar_html(array $meslek): string
+function vernuko_pano_satirlar_html(array $profil, array $durumlar): string
 {
-    $durumlar = vernuko_pano_durumlar();
     $html = '';
     $simdiCizildi = false;
-    foreach ($meslek['satirlar'] as [$saat, $kisi, $hizmet, $not, $personel, $kaynak, $durum]) {
+    foreach ($profil['satirlar'] as [$saat, $kisi, $hizmet, $not, $personel, $kaynak, $durum]) {
         if (!$simdiCizildi && strcmp($saat, VERNUKO_PANO_SIMDI) > 0) {
             $html .= vernuko_pano_simdi_html();
             $simdiCizildi = true;
@@ -122,41 +244,41 @@ function vernuko_pano_simdi_html(): string
     return '<li class="vk-simdi"><span>' . esc_html(VERNUKO_PANO_SIMDI) . '</span></li>';
 }
 
-/** [vernuko_pano] */
-function vernuko_pano_shortcode(): string
+/** [vernuko_pano ekran="stok"] */
+function vernuko_pano_shortcode($atts = []): string
 {
-    $meslekler = vernuko_pano_meslekler();
-    $ilk = array_key_first($meslekler);
-    $m = $meslekler[$ilk];
+    $atts = shortcode_atts(['ekran' => 'randevu'], is_array($atts) ? $atts : [], 'vernuko_pano');
+    $ekranlar = vernuko_pano_ekranlar();
+    $ad = isset($ekranlar[$atts['ekran']]) ? (string) $atts['ekran'] : 'randevu';
+    $e = $ekranlar[$ad];
+    $ilk = array_key_first($e['profiller']);
+    $m = $e['profiller'][$ilk];
 
     $dugmeler = '';
-    foreach ($meslekler as $anahtar => $x) {
+    foreach ($e['profiller'] as $anahtar => $x) {
         $dugmeler .= '<button type="button" data-meslek="' . esc_attr($anahtar) . '" aria-pressed="' . ($anahtar === $ilk ? 'true' : 'false') . '">' . esc_html($x['etiket']) . '</button>';
-    }
-
-    // Data for the switch (JavaScript builds the rows with textContent; nothing here is HTML).
-    $veri = [];
-    foreach ($meslekler as $anahtar => $x) {
-        $veri[$anahtar] = $x;
     }
 
     wp_enqueue_script('vernuko-pano');
 
-    return '<figure class="vk-pano" data-vk-pano>'
+    // Data for the switch (JavaScript builds the rows with textContent; nothing here is HTML).
+    $veri = ['meslekler' => $e['profiller'], 'durumlar' => $e['durumlar'], 'simdi' => VERNUKO_PANO_SIMDI, 'birim' => $e['birim'], 'cevrimdisi' => $e['cevrimdisi'], 'acik' => $e['acik'], 'kapali' => $e['kapali']];
+
+    return '<figure class="vk-pano" data-vk-pano data-ekran="' . esc_attr($ad) . '">'
         . '<div class="vk-pano__meslekler" role="group" aria-label="İşletme türünü seçin">' . $dugmeler . '</div>'
         . '<div class="vk-pano__ekran">'
         . '<div class="vk-pano__ust">'
         . '<span class="vk-pano__isletme">' . esc_html($m['isletme']) . '</span>'
         . '<span class="vk-pano__tarih">Çarşamba, 25 Kasım</span>'
-        . '<span class="vk-pano__sayi">' . count($m['satirlar']) . ' randevu</span>'
+        . '<span class="vk-pano__sayi">' . count($m['satirlar']) . ' ' . esc_html($e['birim']) . '</span>'
         . '</div>'
-        . '<ol class="vk-pano__liste" aria-live="polite">' . vernuko_pano_satirlar_html($m) . '</ol>'
+        . '<ol class="vk-pano__liste" aria-live="polite">' . vernuko_pano_satirlar_html($m, $e['durumlar']) . '</ol>'
         . '<div class="vk-pano__alt">'
-        . '<span class="vk-pano__baglanti"><span class="vk-isik" aria-hidden="true"></span><span class="vk-pano__baglanti-metin">Yerel veritabanı — internetsiz çalışır</span></span>'
+        . '<span class="vk-pano__baglanti"><span class="vk-isik" aria-hidden="true"></span><span class="vk-pano__baglanti-metin">' . esc_html($e['acik']) . '</span></span>'
         . '<label class="vk-anahtar"><input type="checkbox" role="switch" checked data-vk-internet> <span>İnternet</span></label>'
         . '</div>'
         . '</div>'
-        . '<figcaption>Vernuko\'nun gün ekranından bir örnek. Kişiler ve işletmeler hayal ürünüdür. İnterneti kapatıp deneyin.</figcaption>'
-        . '<script type="application/json" class="vk-pano__veri">' . wp_json_encode(['meslekler' => $veri, 'durumlar' => vernuko_pano_durumlar(), 'simdi' => VERNUKO_PANO_SIMDI], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) . '</script>'
+        . '<figcaption>' . esc_html($e['altyazi']) . '</figcaption>'
+        . '<script type="application/json" class="vk-pano__veri">' . wp_json_encode($veri, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) . '</script>'
         . '</figure>';
 }

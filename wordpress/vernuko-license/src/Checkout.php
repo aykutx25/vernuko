@@ -154,8 +154,9 @@ final class Checkout
         if (is_array($state) && isset($state['error'])) {
             $html .= '<div class="vernuko-error" role="alert">' . esc_html($state['error']) . '</div>';
         }
+        $html .= '<p class="vernuko-product">' . esc_html($plan->productName()) . ($plan->kind === 'renewal' ? ', yenileme' : '') . '</p>';
         $html .= '<h3>' . esc_html($plan->name) . ' — ' . esc_html($plan->priceText()) . '</h3>';
-        $html .= '<p>' . esc_html($plan->edition) . ' · ' . $plan->devices . ' bilgisayar · ' . $plan->days . ' gün</p>';
+        $html .= '<p>' . esc_html($plan->summary() . ($plan->edition !== 'Standart' ? ', ' . $plan->edition : '')) . '</p>';
         $html .= self::nonceField('vernuko_checkout_' . $plan->id) . '<input type="hidden" name="vernuko_plan" value="' . esc_attr($plan->id) . '">';
         if ($plan->kind === 'renewal') {
             $html .= self::field('license_key', 'Yenilenecek lisans anahtarı', $v('license_key'), 'VRNK-XXXXX-XXXXX-XXXXX-XXXXX', true);
@@ -183,29 +184,38 @@ final class Checkout
     private static function planList(array $plans): string
     {
         self::styles();
-        $sorted = array_values($plans);
-        usort($sorted, static fn (Plan $a, Plan $b) => [$a->kind === 'renewal', $a->priceKurus] <=> [$b->kind === 'renewal', $b->priceKurus]);
-        $items = '';
-        foreach ($sorted as $p) {
-            if ($p->priceKurus <= 0) {
-                continue;
-            }
-            $detail = ($p->kind === 'renewal' ? 'Yenileme, ' : '') . $p->priceText() . ', ' . $p->devices . ' bilgisayar, ' . $p->days . ' gün';
-            $items .= '<li><a href="' . esc_url(add_query_arg('paket', $p->id, remove_query_arg(['paket', 'vernuko_order', 'durum', 'vk_n'], self::currentUrl()))) . '"><b>' . esc_html($p->name) . '</b><span>' . esc_html($detail) . '</span></a></li>';
+        $order = array_flip(array_keys(Products::all()));
+        $sorted = array_values(array_filter($plans, static fn (Plan $p) => $p->priceKurus > 0));
+        usort($sorted, static fn (Plan $a, Plan $b) => [$order[$a->product] ?? 99, $a->kind === 'renewal', $a->priceKurus] <=> [$order[$b->product] ?? 99, $b->kind === 'renewal', $b->priceKurus]);
+        if (!$sorted) {
+            return '<p>Satışta paket yok.</p>';
         }
-        return $items === '' ? '<p>Satışta paket yok.</p>' : '<p>Bir paket seçin:</p><ul class="vernuko-plan-list">' . $items . '</ul>';
+        // One program: a plain list (as before). Several: one list per program, under its name.
+        $grouped = count(array_unique(array_map(static fn (Plan $p) => $p->product, $sorted))) > 1;
+        $html = '<p>Bir paket seçin:</p>';
+        $current = null;
+        foreach ($sorted as $p) {
+            if ($p->product !== $current) {
+                $html .= ($current === null ? '' : '</ul>') . ($grouped ? '<h3 class="vernuko-plan-group">' . esc_html($p->productName()) . '</h3>' : '') . '<ul class="vernuko-plan-list">';
+                $current = $p->product;
+            }
+            $detail = ($p->kind === 'renewal' ? 'Yenileme, ' : '') . $p->priceText() . ', ' . $p->summary();
+            $html .= '<li><a href="' . esc_url(add_query_arg('paket', $p->id, remove_query_arg(['paket', 'vernuko_order', 'durum', 'vk_n'], self::currentUrl()))) . '"><b>' . esc_html($p->name) . '</b><span>' . esc_html($detail) . '</span></a></li>';
+        }
+        return $html . '</ul>';
     }
 
     /**
-     * The newest installer in VERNUKO_LICENSE_RELEASES_DIR (the Velopack output folder that also feeds updates).
+     * The newest installer of a program in VERNUKO_LICENSE_RELEASES_DIR (the Velopack output folder that also feeds
+     * updates; Randevu in the folder itself, the other programs in a sub-folder named after them).
      * @return array{path:string,name:string,size:int,version:?string}|null
      */
-    public static function installer(): ?array
+    public static function installer(string $product = Products::RANDEVU): ?array
     {
-        if (!defined('VERNUKO_LICENSE_RELEASES_DIR')) {
+        if (!defined('VERNUKO_LICENSE_RELEASES_DIR') || !Products::valid($product)) {
             return null;
         }
-        $dir = rtrim((string) VERNUKO_LICENSE_RELEASES_DIR, '/\\');
+        $dir = Products::releaseDir((string) VERNUKO_LICENSE_RELEASES_DIR, $product);
         $files = glob($dir . '/*-Setup.exe') ?: [];
         if (!$files) {
             return null;
@@ -224,26 +234,34 @@ final class Checkout
         return ['path' => $files[0], 'name' => basename($files[0]), 'size' => (int) filesize($files[0]), 'version' => $version];
     }
 
-    /** [vernuko_indir] — the trial download button (the installer is public; the update feed stays license-gated). */
-    public static function downloadShortcode(): string
+    /** [vernuko_indir urun="vernuko-stok"] — the trial download button (the installer is public; updates stay license-gated). */
+    public static function downloadShortcode($atts = []): string
     {
         self::styles();
-        $i = self::installer();
+        $atts = shortcode_atts(['urun' => Products::RANDEVU], $atts, 'vernuko_indir');
+        $product = Products::valid((string) $atts['urun']) ? (string) $atts['urun'] : Products::RANDEVU;
+        $i = self::installer($product);
         if ($i === null) {
+            $folder = $product === Products::RANDEVU ? 'o klasöre' : 'o klasördeki <code>' . esc_html($product) . '/</code> alt klasörüne';
             return current_user_can('manage_options')
-                ? '<p class="vernuko-note">İndirme düğmesi için wp-config.php\'de <code>VERNUKO_LICENSE_RELEASES_DIR</code> sabitini tanımlayın ve o klasöre kurulum dosyasını (<code>…-Setup.exe</code>) koyun.</p>'
-                : '<p>Kurulum dosyası çok yakında burada.</p>';
+                ? '<p class="vernuko-note">' . esc_html(Products::name($product)) . ' indirme düğmesi için wp-config.php\'de <code>VERNUKO_LICENSE_RELEASES_DIR</code> sabitini tanımlayın ve ' . $folder . ' kurulum dosyasını (<code>…-Setup.exe</code>) koyun.</p>'
+                : '<p>' . esc_html(Products::name($product)) . ' kurulum dosyası henüz yayınlanmadı.</p>';
         }
         $mb = $i['size'] / 1048576;
         $size = number_format($mb, $mb < 10 ? 1 : 0, ',', '.') . ' MB';
-        return '<div class="vernuko-indir"><a class="wp-element-button vernuko-button" href="' . esc_url(rest_url(Plugin::REST_NAMESPACE . '/indir')) . '">Windows için indir</a>'
-            . '<small>' . esc_html(($i['version'] !== null ? 'Sürüm ' . $i['version'] . ', ' : '') . $size) . '</small></div>';
+        $url = rest_url(Plugin::REST_NAMESPACE . '/indir');
+        if ($product !== Products::RANDEVU) {
+            $url = add_query_arg('urun', $product, $url);
+        }
+        return '<div class="vernuko-indir"><a class="wp-element-button vernuko-button" href="' . esc_url($url) . '">Windows için indir</a>'
+            . '<small>' . esc_html(Products::name($product) . ', ' . ($i['version'] !== null ? 'sürüm ' . $i['version'] . ', ' : '') . $size) . '</small></div>';
     }
 
-    /** GET /wp-json/vernuko/v1/indir — streams the newest installer. */
-    public static function downloadInstaller()
+    /** GET /wp-json/vernuko/v1/indir[?urun=vernuko-stok] — streams the newest installer of that program. */
+    public static function downloadInstaller(\WP_REST_Request $request)
     {
-        $i = self::installer();
+        $product = sanitize_key((string) ($request->get_param('urun') ?? ''));
+        $i = Products::valid($product) || $product === '' ? self::installer($product === '' ? Products::RANDEVU : $product) : null;
         if ($i === null) {
             return new \WP_REST_Response(['code' => 'download.not_found', 'message' => 'Kurulum dosyası yayınlanmadı.'], 404);
         }
@@ -297,6 +315,8 @@ final class Checkout
 .vernuko-card code{font-size:1.1em;word-break:break-all}
 .vernuko-device{display:flex;flex-wrap:wrap;gap:.5em;align-items:center;margin:4px 0}
 .vernuko-device button{padding:.35em .9em}
+.vernuko-product{margin:0 0 .2em;font-size:.9em;font-weight:600;opacity:.8}
+.vernuko-plan-group{margin:1.4em 0 .5em;font-size:1.1em}
 ');
     }
 
@@ -400,13 +420,13 @@ final class Checkout
             // The key is shown only in the browser that placed the order; it is always e-mailed too.
             if (self::isMyOrder($orderId)) {
                 foreach ($issuer->orderLicenses("own:$orderId") as $l) {
-                    $html .= '<p>Lisans anahtarınız: <code style="font-size:1.2em">' . esc_html($issuer->keyFor($l['id'])) . '</code></p>';
+                    $html .= '<p>' . esc_html(Products::name($l['product'] ?? null)) . ' lisans anahtarınız: <code style="font-size:1.2em">' . esc_html($issuer->keyFor($l['id'])) . '</code></p>';
                 }
                 foreach ($issuer->orderRenewals("own:$orderId") as $l) {
-                    $html .= '<p>Lisansınız ' . esc_html(wp_date('d.m.Y', (int) $l['paid_until'])) . ' tarihine kadar uzatıldı. Program bir sonraki çevrim içi kontrolde (veya Ayarlar › Lisans › Şimdi doğrula) yeni tarihi alır.</p>';
+                    $html .= '<p>' . esc_html(Products::name($l['product'] ?? null)) . ' lisansınız ' . esc_html(wp_date('d.m.Y', (int) $l['paid_until'])) . ' tarihine kadar uzatıldı. Program bir sonraki çevrim içi kontrolde (veya Ayarlar › Lisans › Şimdi doğrula) yeni tarihi alır.</p>';
                 }
             }
-            return $html . '<p>Anahtar ve bilgiler <strong>' . esc_html($order['email']) . '</strong> adresine e-postayla gönderildi. Vernuko\'da Ayarlar › Lisans › "Lisans anahtarı" alanına girip Etkinleştir\'e basın.</p></div>';
+            return $html . '<p>Anahtar ve bilgiler <strong>' . esc_html($order['email']) . '</strong> adresine e-postayla gönderildi. Programda Ayarlar › Lisans › "Lisans anahtarı" alanına girip Etkinleştir\'e basın.</p></div>';
         }
         if (in_array($order['status'], ['failed', 'mismatch'], true) || ($_GET['durum'] ?? '') === 'hata') {
             return '<p>Ödeme tamamlanamadı. Kartınızdan para çekildiyse bizimle iletişime geçin (sipariş no: ' . esc_html($orderId) . ').</p>';
@@ -529,20 +549,26 @@ final class Checkout
         $issuer = Plugin::issuer();
         $order = $result['order'];
         $lines = ["Merhaba {$order['customer_name']},", '', 'Vernuko siparişiniz için teşekkürler (sipariş no: ' . $order['id'] . ').', ''];
+        $programs = [];
         foreach ($result['licenses'] as $l) {
+            $programs[] = Products::name($l['product'] ?? null);
+            $lines[] = 'Program: ' . Products::name($l['product'] ?? null);
             $lines[] = 'Lisans anahtarınız: ' . $issuer->keyFor($l['id']);
-            $lines[] = 'Geçerlilik: ' . wp_date('d.m.Y', (int) $l['paid_until']) . ' · ' . (int) $l['max_devices'] . ' bilgisayar';
+            $lines[] = 'Geçerlilik: ' . wp_date('d.m.Y', (int) $l['paid_until']) . ', ' . (int) $l['max_devices'] . ' bilgisayar';
+            $lines[] = '';
         }
         foreach ($result['renewed'] as $l) {
-            $lines[] = 'Lisansınız ' . wp_date('d.m.Y', (int) $l['paid_until']) . ' tarihine kadar uzatıldı.';
+            $programs[] = Products::name($l['product'] ?? null);
+            $lines[] = Products::name($l['product'] ?? null) . ' lisansınız ' . wp_date('d.m.Y', (int) $l['paid_until']) . ' tarihine kadar uzatıldı.';
+            $lines[] = '';
         }
-        $lines[] = '';
-        $lines[] = "Etkinleştirme: Vernuko'da Ayarlar › Lisans › \"Lisans anahtarı\" alanına girip Etkinleştir'e basın.";
+        $lines[] = "Etkinleştirme: programda Ayarlar › Lisans › \"Lisans anahtarı\" alanına girip Etkinleştir'e basın. Anahtar yalnızca satın aldığınız programda çalışır.";
         $s = self::settings();
         if ($s['licenses_url']) {
             $lines[] = 'Lisanslarınızı görmek ve bilgisayar değiştirmek için: ' . $s['licenses_url'];
         }
-        wp_mail($order['email'], 'Vernuko lisansınız', implode("\n", $lines));
+        $programs = array_values(array_unique($programs));
+        wp_mail($order['email'], (count($programs) === 1 ? $programs[0] : 'Vernuko') . ' lisansınız', implode("\n", $lines));
     }
 
     private static function externalSale(string $route, \WP_REST_Request $request): \WP_REST_Response
@@ -585,8 +611,8 @@ final class Checkout
         foreach ($licenses as $l) {
             $key = $issuer->keyFor($l['id']);
             $active = $issuer->effectiveEnd($l) > time();
-            $html .= '<div class="vernuko-card"><p><code>' . esc_html($key) . '</code></p>';
-            $html .= '<p>' . esc_html($l['edition']) . ' · ' . (int) $l['max_devices'] . ' bilgisayar · ' . ($active ? 'Geçerlilik: ' : '<strong>Süresi doldu:</strong> ') . esc_html(wp_date('d.m.Y', (int) $l['paid_until'])) . ($l['status'] === 'cancelled' ? ' · İptal' : '') . '</p>';
+            $html .= '<div class="vernuko-card"><p class="vernuko-product">' . esc_html(Products::name($l['product'] ?? null)) . '</p><p><code>' . esc_html($key) . '</code></p>';
+            $html .= '<p>' . (int) $l['max_devices'] . ' bilgisayar, ' . ($active ? 'geçerlilik ' : '<strong>süresi doldu:</strong> ') . esc_html(wp_date('d.m.Y', (int) $l['paid_until'])) . ($l['status'] === 'cancelled' ? ', iptal edildi' : '') . '</p>';
             foreach ($issuer->activations($l['id']) as $a) {
                 if ($a['deactivated_at'] !== null) {
                     continue;
@@ -594,12 +620,27 @@ final class Checkout
                 $html .= '<form method="post" class="vernuko-device">' . self::nonceField('vernuko_device') . '<input type="hidden" name="vernuko_remove_device" value="' . esc_attr($a['id']) . '">'
                     . '<span>' . esc_html($a['machine_label'] ?: 'Bilgisayar') . ' — son görülme ' . esc_html(wp_date('d.m.Y', (int) $a['last_seen'])) . '</span> <button type="submit" onclick="return confirm(\'Bu bilgisayardaki lisans kaldırılsın mı? Oradaki veriler silinmez; program salt-okunur olur.\')">Kaldır</button></form>';
             }
-            if ($s['renew_url'] && $l['status'] !== 'cancelled') {
-                $html .= '<p><a class="wp-element-button vernuko-button" href="' . esc_url(add_query_arg('anahtar', $key, $s['renew_url'])) . '">Yenile</a></p>';
+            if ($l['status'] !== 'cancelled' && ($renew = self::renewUrl((string) ($l['product'] ?? Products::RANDEVU))) !== null) {
+                $html .= '<p><a class="wp-element-button vernuko-button" href="' . esc_url(add_query_arg('anahtar', $key, $renew)) . '">Yenile</a></p>';
             }
             $html .= '</div>';
         }
         return $html . '</div>';
+    }
+
+    /**
+     * Where a license of that program is renewed: the program's renewal plan on the buy page; without one (or without
+     * a buy page), the older single "Yenileme" page setting — for Randevu only, since it renews whatever plan it shows.
+     */
+    private static function renewUrl(string $product): ?string
+    {
+        $s = self::settings();
+        foreach (self::plans() as $p) {
+            if ($p->kind === 'renewal' && $p->product === $product && $p->priceKurus > 0 && $s['buy_url'] !== '') {
+                return add_query_arg('paket', $p->id, $s['buy_url']);
+            }
+        }
+        return $product === Products::RANDEVU && $s['renew_url'] !== '' ? $s['renew_url'] : null;
     }
 
     private static function sendSignInLink(): void
@@ -762,21 +803,26 @@ final class Checkout
         echo '<p>PayTR mağaza panelinde Bildirim URL: <code>' . esc_html(rest_url('vernuko/v1/pay/paytr')) . '</code></p>';
         echo '<p>Dış satış sistemi: <code>' . esc_html(rest_url('vernuko/v1/sales')) . '</code> ' . (defined('VERNUKO_LICENSE_SALES_SECRET') ? '(açık)' : '(kapalı — VERNUKO_LICENSE_SALES_SECRET tanımlı değil)') . '</p>';
         $form = '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">' . wp_nonce_field('vernuko_sales', '_wpnonce', true, false) . '<input type="hidden" name="action" value="vernuko_sales"><input type="hidden" name="op" value="save">';
-        $form .= '<table class="widefat striped"><thead><tr><th>Kısa ad (kod)</th><th>Ad</th><th>Fiyat (TL, KDV dahil)</th><th>Tür</th><th>Paket</th><th>Bilgisayar</th><th>Gün</th></tr></thead><tbody>';
+        $form .= '<table class="widefat striped"><thead><tr><th>Kısa ad (kod)</th><th>Program</th><th>Ad</th><th>Fiyat (TL, KDV dahil)</th><th>Tür</th><th>Paket</th><th>Bilgisayar</th><th>Gün</th></tr></thead><tbody>';
         $rows = self::plans() + ['' => null];
         $i = 0;
         foreach ($rows as $id => $p) {
             $row = $i + 1;
-            $form .= '<tr><td><input name="plans[' . $i . '][id]" value="' . esc_attr((string) $id) . '" placeholder="yillik" aria-label="Satır ' . $row . ': kısa ad"></td><td><input name="plans[' . $i . '][name]" value="' . esc_attr($p?->name ?? '') . '" aria-label="Satır ' . $row . ': ad"></td>'
+            $programs = '';
+            foreach (Products::all() as $pid => $label) {
+                $programs .= '<option value="' . esc_attr($pid) . '"' . (($p?->product ?? Products::RANDEVU) === $pid ? ' selected' : '') . '>' . esc_html($label) . '</option>';
+            }
+            $form .= '<tr><td><input name="plans[' . $i . '][id]" value="' . esc_attr((string) $id) . '" placeholder="yillik" aria-label="Satır ' . $row . ': kısa ad"></td>'
+                . '<td><select name="plans[' . $i . '][product]" aria-label="Satır ' . $row . ': program">' . $programs . '</select></td><td><input name="plans[' . $i . '][name]" value="' . esc_attr($p?->name ?? '') . '" aria-label="Satır ' . $row . ': ad"></td>'
                 . '<td><input name="plans[' . $i . '][price]" value="' . esc_attr($p ? number_format($p->priceKurus / 100, 2, ',', '.') : '') . '" placeholder="4.990,00" style="width:100px" aria-label="Satır ' . $row . ': fiyat (TL)"></td>'
                 . '<td><select name="plans[' . $i . '][kind]" aria-label="Satır ' . $row . ': tür"><option value="new">Yeni lisans</option><option value="renewal"' . ($p?->kind === 'renewal' ? ' selected' : '') . '>Yenileme</option></select></td>'
                 . '<td><input name="plans[' . $i . '][edition]" value="' . esc_attr($p?->edition ?? 'Standart') . '" style="width:100px" aria-label="Satır ' . $row . ': paket"></td><td><input type="number" min="1" max="50" name="plans[' . $i . '][devices]" value="' . esc_attr((string) ($p?->devices ?? 1)) . '" style="width:60px" aria-label="Satır ' . $row . ': bilgisayar sayısı"></td>'
                 . '<td><input type="number" min="1" name="plans[' . $i . '][days]" value="' . esc_attr((string) ($p?->days ?? 365)) . '" style="width:70px" aria-label="Satır ' . $row . ': gün"></td></tr>';
             $i++;
         }
-        $form .= '</tbody></table><p>Kısa adı boşaltılan satır silinir. Tek paket sayfası: <code>[vernuko_satin_al plan="yillik"]</code>. Tüm paketler için tek sayfa: <code>[vernuko_satin_al]</code> (adres <code>?paket=yillik</code> ile gelirse o paket açılır). Lisanslarım: <code>[vernuko_lisanslarim]</code>. Deneme indirme düğmesi: <code>[vernuko_indir]</code>.</p>';
+        $form .= '</tbody></table><p>Kısa adı boşaltılan satır silinir. Tek paket sayfası: <code>[vernuko_satin_al plan="yillik"]</code>. Tüm paketler için tek sayfa: <code>[vernuko_satin_al]</code> (adres <code>?paket=yillik</code> ile gelirse o paket açılır). Lisanslarım: <code>[vernuko_lisanslarim]</code>. Deneme indirme düğmesi: <code>[vernuko_indir]</code> (başka program için <code>[vernuko_indir urun="vernuko-stok"]</code>). Her paket tek bir programın lisansını verir; anahtar yalnızca o programda etkinleşir. Lisanslarım\'daki "Yenile" düğmesi, lisansın programına ait "Yenileme" paketini satın alma sayfasında açar.</p>';
         $form .= '<h2>Bağlantılar</h2><table class="form-table">';
-        foreach (['terms_url' => 'Mesafeli satış sözleşmesi + ön bilgilendirme sayfası', 'privacy_url' => 'KVKK aydınlatma metni sayfası', 'licenses_url' => '[vernuko_lisanslarim] sayfası', 'renew_url' => 'Yenileme paketinin [vernuko_satin_al] sayfası', 'buy_url' => 'Satın alma sayfası (plan yazılmadan [vernuko_satin_al]; temadaki fiyat fişi buraya gönderir)'] as $k => $label) {
+        foreach (['terms_url' => 'Mesafeli satış sözleşmesi + ön bilgilendirme sayfası', 'privacy_url' => 'KVKK aydınlatma metni sayfası', 'licenses_url' => '[vernuko_lisanslarim] sayfası', 'renew_url' => 'Eski ayar: yenileme paketinin sayfası (satın alma sayfası ve programın Yenileme paketi tanımlıysa gerekmez)', 'buy_url' => 'Satın alma sayfası (plan yazılmadan [vernuko_satin_al]; temadaki fiyat fişi buraya gönderir)'] as $k => $label) {
             $form .= '<tr><th><label for="vernuko-' . esc_attr($k) . '">' . esc_html($label) . '</label></th><td><input type="url" id="vernuko-' . esc_attr($k) . '" name="settings[' . $k . ']" value="' . esc_attr($s[$k]) . '" class="regular-text"></td></tr>';
         }
         echo $form . '</table><p><button class="button button-primary">Kaydet</button></p></form></div>';
@@ -811,7 +857,7 @@ final class Checkout
                         $price = $old[$id]->priceKurus;
                     }
                     $plans[$id] = Plan::fromArray($id, ['name' => sanitize_text_field(wp_unslash($row['name'] ?? $id)), 'price_kurus' => $price, 'kind' => sanitize_key($row['kind'] ?? 'new'),
-                        'edition' => sanitize_text_field(wp_unslash($row['edition'] ?? 'Standart')), 'devices' => absint($row['devices'] ?? 1), 'days' => absint($row['days'] ?? 365)])->toArray();
+                        'edition' => sanitize_text_field(wp_unslash($row['edition'] ?? 'Standart')), 'devices' => absint($row['devices'] ?? 1), 'days' => absint($row['days'] ?? 365), 'product' => sanitize_key(wp_unslash($row['product'] ?? ''))])->toArray();
                 }
                 update_option(self::OPT_PLANS, $plans, false);
                 $settings = [];

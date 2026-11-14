@@ -14,7 +14,7 @@
 
 <!-- wp:group {"style":{"spacing":{"blockGap":"1.75rem"}},"layout":{"type":"flex","flexWrap":"nowrap","justifyContent":"right"}} -->
 <div class="wp-block-group"><!-- wp:navigation {"overlayMenu":"mobile","icon":"menu","overlayBackgroundColor":"defter","overlayTextColor":"murekkep","layout":{"type":"flex","justifyContent":"right"},"style":{"spacing":{"blockGap":"1.5rem"}}} -->
-<!-- wp:navigation-link {"label":"Nasıl çalışır","url":"<?php echo esc_url(home_url('/#nasil-calisir')); ?>","kind":"custom","isTopLevelLink":true} /-->
+<!-- wp:navigation-link {"label":"Programlar","url":"<?php echo esc_url(home_url('/#programlar')); ?>","kind":"custom","isTopLevelLink":true} /-->
 <!-- wp:navigation-link {"label":"İşletmeler","url":"<?php echo esc_url(home_url('/#isletmeler')); ?>","kind":"custom","isTopLevelLink":true} /-->
 <!-- wp:navigation-link {"label":"Fiyat","url":"<?php echo esc_url(home_url('/#fiyat')); ?>","kind":"custom","isTopLevelLink":true} /-->
 <!-- wp:navigation-link {"label":"Sorular","url":"<?php echo esc_url(home_url('/#sorular')); ?>","kind":"custom","isTopLevelLink":true} /-->

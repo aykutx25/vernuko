@@ -7,10 +7,11 @@
 
 defined('ABSPATH') || exit;
 
+require_once __DIR__ . '/inc/urunler.php';
 require_once __DIR__ . '/inc/pano.php';
 require_once __DIR__ . '/inc/fis.php';
 
-const VERNUKO_TEMA_SURUM = '1.0.0';
+const VERNUKO_TEMA_SURUM = '1.1.0';
 
 add_action('after_setup_theme', static function (): void {
     add_theme_support('editor-styles');
@@ -19,7 +20,7 @@ add_action('after_setup_theme', static function (): void {
 });
 
 add_action('init', static function (): void {
-    wp_register_script('vernuko-bloklar', get_template_directory_uri() . '/assets/js/bloklar.js', ['wp-blocks', 'wp-element', 'wp-server-side-render', 'wp-block-editor'], (string) filemtime(get_template_directory() . '/assets/js/bloklar.js'), true);
+    wp_register_script('vernuko-bloklar', get_template_directory_uri() . '/assets/js/bloklar.js', ['wp-blocks', 'wp-element', 'wp-server-side-render', 'wp-block-editor', 'wp-components'], (string) filemtime(get_template_directory() . '/assets/js/bloklar.js'), true);
 }, 5);
 
 add_action('wp_enqueue_scripts', static function (): void {
@@ -33,13 +34,16 @@ add_action('wp_enqueue_scripts', static function (): void {
 add_action('init', static function (): void {
     add_shortcode('vernuko_pano', 'vernuko_pano_shortcode');
     add_shortcode('vernuko_fis', 'vernuko_fis_shortcode');
-    // The same two as blocks: templates expand patterns after shortcodes, so a shortcode inside a template pattern
-    // would print as text. Server-rendered; the editor shows a live preview (assets/js/bloklar.js).
+    add_shortcode('vernuko_urunler', static fn ($a = []) => vernuko_urunler_html((string) (is_array($a) ? ($a['haric'] ?? '') : '')));
+    // The same as blocks: templates expand patterns after shortcodes, so a shortcode inside a template pattern
+    // would print as text. Server-rendered; the editor shows a live preview and a program picker (assets/js/bloklar.js).
+    $urun = ['type' => 'string', 'default' => VERNUKO_RANDEVU];
     register_block_type('vernuko/pano', [
         'api_version' => 3,
         'title' => 'Vernuko gün ekranı',
         'category' => 'widgets',
-        'render_callback' => static fn (): string => vernuko_pano_shortcode(),
+        'attributes' => ['ekran' => ['type' => 'string', 'default' => 'randevu']],
+        'render_callback' => static fn (array $a = []): string => vernuko_pano_shortcode(['ekran' => (string) ($a['ekran'] ?? 'randevu')]),
         'editor_script_handles' => ['vernuko-bloklar'],
         'supports' => ['html' => false, 'align' => ['wide', 'full']],
     ]);
@@ -47,13 +51,38 @@ add_action('init', static function (): void {
         'api_version' => 3,
         'title' => 'Vernuko fiyat fişi',
         'category' => 'widgets',
-        'render_callback' => static fn (): string => vernuko_fis_shortcode(),
+        'attributes' => ['urun' => $urun],
+        'render_callback' => static fn (array $a = []): string => vernuko_fis_shortcode(['urun' => (string) ($a['urun'] ?? VERNUKO_RANDEVU)]),
         'editor_script_handles' => ['vernuko-bloklar'],
         'supports' => ['html' => false],
+    ]);
+    register_block_type('vernuko/urunler', [
+        'api_version' => 3,
+        'title' => 'Vernuko programları',
+        'category' => 'widgets',
+        'attributes' => ['haric' => ['type' => 'string', 'default' => '']],
+        'render_callback' => static fn (array $a = []): string => vernuko_blok_sar(vernuko_urunler_html((string) ($a['haric'] ?? ''))),
+        'editor_script_handles' => ['vernuko-bloklar'],
+        'supports' => ['html' => false, 'align' => ['wide']],
+    ]);
+    register_block_type('vernuko/urun-satis', [
+        'api_version' => 3,
+        'title' => 'Vernuko program satışı (fiyat ve indirme ya da "geliştiriliyor")',
+        'category' => 'widgets',
+        'attributes' => ['urun' => $urun],
+        'render_callback' => static fn (array $a = []): string => vernuko_blok_sar(vernuko_urun_satis_html((string) ($a['urun'] ?? VERNUKO_RANDEVU))),
+        'editor_script_handles' => ['vernuko-bloklar'],
+        'supports' => ['html' => false, 'align' => ['wide']],
     ]);
     register_block_pattern_category('vernuko', ['label' => 'Vernuko']);
     register_block_style('core/button', ['name' => 'vk-metin', 'label' => 'Metin bağlantısı']);
 });
+
+/** A block's wrapper (alignment and the editor's own classes) around a server-rendered part; nothing when it is empty. */
+function vernuko_blok_sar(string $html): string
+{
+    return $html === '' ? '' : '<div ' . get_block_wrapper_attributes() . '>' . $html . '</div>';
+}
 
 /*
  * The site keeps the promise the program makes: nothing about the visitor goes to a third party.

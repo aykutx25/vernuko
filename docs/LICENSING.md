@@ -41,11 +41,15 @@ Vernuko'nun kaynak kodu **AGPL-3.0-only** ile açılır (`LICENSE`). Sahibin kar
 `src/Vernuko.Licensing/LicenseDocument.cs`:
 ```
 { "kid": "2026-01", "alg": "ES256",
-  "payload": base64url({ "v":1, "lid":…, "prd":"vernuko-desktop", "ed":"Standart", "feat":[…], "aid":…,
+  "payload": base64url({ "v":1, "lid":…, "prd":<program>, "ed":"Standart", "feat":[…], "aid":…,
                          "dev": <cihaz özeti>, "max":1, "iat":…, "exp": <abonelik sonu>,
                          "rfr": <yenileme zamanı>, "grace": 14 }),
   "sig": base64url(ECDSA-P256-SHA256(payload)) }
 ```
+- **Program (`prd`):** `vernuko-desktop` (Vernuko Randevu), `vernuko-stok`, `vernuko-teknik-servis`.
+  - Her program yalnızca kendi kimliğini taşıyan belgeyi kabul eder (`LicenseVerifier`, `LicenseProducts`). Başka programın belgesi "Bu lisans Vernuko Stok içindir…" hatasıyla reddedilir.
+  - İstemci etkinleştirme, yenileme ve denemede kendi programını gönderir.
+  - Randevu'nun kimliği değişmez: satılmış lisanslar ve kurulu programlar onu taşır.
 - **Cihaz kimliği:** Windows `MachineGuid` + tuz → SHA-256 özeti (ham donanım bilgisi gönderilmez). RAM/disk/ekran kartı değişiminde değişmez; yalnızca Windows yeniden kurulumunda değişir → yeniden etkinleştirme (müşteri kilitlenmez, salt-okunur moda geçer).
 - **Çevrimdışı çalışma:** `rfr` zamanına kadar tam erişim; sonrasında `grace` gün daha tam erişim ("Lisans X gün içinde çevrim içi doğrulanmalı" uyarısı); sonra salt-okunur.
 - **Saat geri alma:** Gözlenen en yüksek zaman (`license.high_water_mark_utc`) saklanır; etkin zaman = max(sistem saati, yüksek su işareti). Saati geri almak lisansı uzatamaz, ama tek başına kilitlemez de (48 saatlik tolerans; yanlış pozitif yok).

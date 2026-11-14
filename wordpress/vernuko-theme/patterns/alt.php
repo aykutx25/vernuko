@@ -8,14 +8,28 @@
 ?>
 <!-- wp:group {"tagName":"footer","className":"vk-alt","style":{"spacing":{"padding":{"top":"var:preset|spacing|50","bottom":"var:preset|spacing|50"}}},"layout":{"type":"constrained"}} -->
 <footer class="wp-block-group vk-alt" style="padding-top:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--50)"><!-- wp:columns {"align":"wide","style":{"spacing":{"blockGap":{"top":"2rem","left":"2.5rem"}}}} -->
-<div class="wp-block-columns alignwide"><!-- wp:column {"width":"34%"} -->
-<div class="wp-block-column" style="flex-basis:34%"><!-- wp:html -->
+<div class="wp-block-columns alignwide"><!-- wp:column {"width":"30%"} -->
+<div class="wp-block-column" style="flex-basis:30%"><!-- wp:html -->
 <a class="vk-logo" href="<?php echo esc_url(home_url('/')); ?>"><img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/vernuko.png'); ?>" alt="" width="34" height="34"><span>Vernuko</span></a>
 <!-- /wp:html -->
 
 <!-- wp:paragraph {"className":"vk-alt__iz"} -->
 <p class="vk-alt__iz">Bu site sizi izlemez: analiz, reklam ve dış yazı tipi yok. Yalnızca satın alma ve Lisanslarım için gereken çerezler kullanılır.</p>
 <!-- /wp:paragraph --></div>
+<!-- /wp:column -->
+
+<!-- wp:column -->
+<div class="wp-block-column"><!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">Programlar</h2>
+<!-- /wp:heading -->
+
+<!-- wp:html -->
+<ul>
+<?php foreach (vernuko_urunler() as $vk_urun) : ?>
+	<li><a href="<?php echo esc_url(home_url($vk_urun['sayfa'])); ?>"><?php echo esc_html($vk_urun['ad']); ?></a></li>
+<?php endforeach; ?>
+</ul>
+<!-- /wp:html --></div>
 <!-- /wp:column -->
 
 <!-- wp:column -->
@@ -48,8 +62,8 @@
 <!-- /wp:html --></div>
 <!-- /wp:column -->
 
-<!-- wp:column {"width":"28%"} -->
-<div class="wp-block-column" style="flex-basis:28%"><!-- wp:heading {"level":2} -->
+<!-- wp:column {"width":"22%"} -->
+<div class="wp-block-column" style="flex-basis:22%"><!-- wp:heading {"level":2} -->
 <h2 class="wp-block-heading">Satıcı</h2>
 <!-- /wp:heading -->
 

@@ -40,6 +40,22 @@ public class LicensingAndMessagingTests
     }
 
     [Fact]
+    public void A_license_for_another_vernuko_program_is_refused_with_its_name()
+    {
+        using var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var keys = new Dictionary<string, byte[]> { ["k1"] = key.ExportSubjectPublicKeyInfo() };
+        var stok = LicenseVerifier.Sign(Doc(Now.AddDays(30), Now.AddDays(7)) with { Product = LicenseProducts.Stok }, key, "k1");
+
+        var randevu = new LicenseVerifier(keys).Verify(stok);
+        Assert.Equal("license.wrong_product", randevu.Error.Code);
+        Assert.Contains("Vernuko Stok", randevu.Error.Message, StringComparison.Ordinal);
+        Assert.Contains("Vernuko Randevu", randevu.Error.Message, StringComparison.Ordinal);
+
+        Assert.True(new LicenseVerifier(keys, LicenseProducts.Stok).Verify(stok).IsSuccess);
+        Assert.Equal("vernuko-desktop", LicenseProducts.Randevu); // sold licenses and installed apps carry this id
+    }
+
+    [Fact]
     public void Offline_use_works_until_grace_ends_then_read_only()
     {
         var local = new LicenseLocalState(Now.AddDays(-100), Now, "signed");

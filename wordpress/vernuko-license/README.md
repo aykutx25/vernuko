@@ -20,6 +20,31 @@ Vernuko masaüstü uygulamasının lisans sunucusu, WordPress sitenizin içinde.
 
 Ödeme yöntemi WooCommerce'in kendisinindir: iyzico, PayTR ve havale/EFT eklentilerinin hepsiyle çalışır. Havalede siparişi "Tamamlandı" yaptığınızda lisans oluşur.
 
+## Programlar (1.4.0)
+Aynı site birden fazla Vernuko programının lisansını satar. Tanımlı programlar:
+
+| Kimlik | Program |
+|---|---|
+| `vernuko-desktop` | Vernuko Randevu (ilk programın kimliği; satılmış lisanslar ve kurulu programlar bunu taşıdığı için değişmez) |
+| `vernuko-stok` | Vernuko Stok |
+| `vernuko-teknik-servis` | Vernuko Teknik Servis |
+
+- **Her lisans tek bir programındır.** Program, imzalı lisans belgesine (`prd`) yazılır.
+  - Sunucu, anahtarı başka programda etkinleştirmez. Mesajı açıktır: "Bu lisans anahtarı Vernuko Stok içindir; Vernuko Randevu için kullanılamaz."
+  - Masaüstü programı da başka programın belgesini kabul etmez (Vernuko 0.14.0 ve sonrası).
+  - Program bilgisi göndermeyen eski Randevu sürümleri Randevu sayılır; reddedilen deneme koltuk tutmaz.
+- **Paket, WooCommerce ürünü ve dış satış:** her biri bir program seçer.
+  - Seçilmezse Randevu sayılır; 1.4.0 öncesi kayıtlar da böyledir.
+  - Yenileme yalnızca aynı programın lisansına uygulanır.
+- **Deneme:** her programda ayrıdır. Randevu'yu denemiş bilgisayar Stok'u da 30 gün dener.
+- **Kurulum ve güncelleme dosyaları:** `VERNUKO_LICENSE_RELEASES_DIR` içinde Randevu'nunkiler klasörün kendisinde durur (eskisi gibi). Diğer programlarınkiler alt klasördedir: `vernuko-stok/`, `vernuko-teknik-servis/`.
+  - Güncelleme beslemesi, etkinleştirmenin programına göre doğru klasörü verir.
+- **Satış ekranları:** satın alma sayfası, e-posta, sipariş sonucu, Lisanslarım ve yönetim listesi programın adını gösterir.
+  - Paket listesi programlara göre gruplanır.
+  - Lisanslarım'daki "Yenile" düğmesi, lisansın programına ait "Yenileme" paketini açar.
+- **Yeni program eklemek:** `vernuko_license_products` süzgeci (kimlik → ad). Kimlik bir kez satışa çıktıktan sonra değiştirilmemeli.
+- **Yükseltme:** 1.4.0'a geçişte `licenses` tablosuna `product` sütunu eklenir. Var olan bütün lisanslar Randevu olur.
+
 ## Kurulum
 1. `vernuko-license.zip` dosyasını yükleyin: Eklentiler › Yeni ekle › Eklenti yükle. Sonra etkinleştirin. ZIP, GitHub Actions'ta "vernuko-license-wordpress-plugin" adıyla üretilir; isterseniz `wordpress/vernuko-license` klasörünü `wp-content/plugins/` altına kopyalayın.
 2. Ayarlar › Kalıcı bağlantılar: **"Yazı adı"** seçili olmalı. "Düz" seçiliyse REST adresleri çalışmaz.
@@ -48,15 +73,15 @@ Vernuko masaüstü uygulamasının lisans sunucusu, WordPress sitenizin içinde.
    define('VERNUKO_PAYTR_TEST', true);       // test ödemesi; canlıda false
    ```
 2. **PayTR:** Mağaza paneli › Destek & Kurulum › Ayarlar › Bildirim URL'ye eklentinin gösterdiği adresi yazın: `https://siteniz.com/wp-json/vernuko/v1/pay/paytr`. Siteniz SSL'liyse https seçin.
-3. Vernuko Lisans › **Paketler ve satış**: paketleri girin. Her pakette kısa ad, fiyat (KDV dahil TL), tür (yeni ya da yenileme), bilgisayar sayısı ve gün olur. Aynı sayfadan şu sayfaların adreslerini de verin:
+3. Vernuko Lisans › **Paketler ve satış**: paketleri girin. Her pakette kısa ad, program, fiyat (KDV dahil TL), tür (yeni ya da yenileme), bilgisayar sayısı ve gün olur. Aynı sayfadan şu sayfaların adreslerini de verin:
    - mesafeli satış sözleşmesi ve ön bilgilendirme formu,
    - KVKK aydınlatma metni,
    - Lisanslarım sayfası,
-   - yenileme sayfası.
+   - satın alma sayfası (Lisanslarım'daki "Yenile" düğmesi, lisansın programına ait Yenileme paketini burada açar; eski "yenileme sayfası" ayarı yalnızca Randevu için ve bu yoksa kullanılır).
 4. Sayfalar (temanızın içine istediğiniz yere):
    - Satın alma, tek paket: `[vernuko_satin_al plan="yillik"]`
    - Satın alma, tüm paketler tek sayfada: `[vernuko_satin_al]`. Adres `?paket=yillik` ile gelirse o paket açılır, gelmezse paket listesi görünür. Bu sayfanın adresini Paketler ve satış'ta "Satın alma sayfası" alanına yazın; Vernuko temasındaki fiyat fişi buraya gönderir.
-   - Deneme indirme: `[vernuko_indir]`. `wp-config.php`'de `VERNUKO_LICENSE_RELEASES_DIR` (Velopack çıktı klasörü) tanımlıysa en yeni `…-Setup.exe` dosyası `/wp-json/vernuko/v1/indir` adresinden herkese açık indirilir; düğmenin altında sürüm ve boyut yazar. Güncelleme beslemesi lisanslı kurulumlara kapalı kalır.
+   - Deneme indirme: `[vernuko_indir]` (başka program: `[vernuko_indir urun="vernuko-stok"]`, adres `/wp-json/vernuko/v1/indir?urun=vernuko-stok`). `wp-config.php`'de `VERNUKO_LICENSE_RELEASES_DIR` (Velopack çıktı klasörü) tanımlıysa en yeni `…-Setup.exe` dosyası `/wp-json/vernuko/v1/indir` adresinden herkese açık indirilir; düğmenin altında sürüm ve boyut yazar. Güncelleme beslemesi lisanslı kurulumlara kapalı kalır.
    - Yenileme: `[vernuko_satin_al plan="yenileme"]`. Lisanslarım'daki "Yenile" düğmesi bu sayfayı anahtarı doldurulmuş olarak açar.
    - Lisanslarım: `[vernuko_lisanslarim]`. Müşteri e-postasını yazar, 30 dakika geçerli bir giriş bağlantısı alır (parola yok). Bu sayfada anahtarını, bilgisayarlarını ve bitiş tarihini görür; bozulan bilgisayarı kaldırabilir.
 
@@ -86,8 +111,8 @@ Satış WordPress dışında olduğunda o sistem lisans sunucusuna haber verir. 
 ```
 POST https://siteniz.com/wp-json/vernuko/v1/sales
 X-Vernuko-Signature: t=<unix saniye>,v1=<hex HMAC-SHA256(sır, t + "." + gövde)>
-{"saleId":"SIPARIS-1001","kind":"new","customerName":"…","email":"…","edition":"Standart","devices":2,"days":365}
-→ {"saleId":"SIPARIS-1001","licenseId":"lic_…","licenseKey":"VRNK-…","paidUntilUtc":"…","devices":2}
+{"saleId":"SIPARIS-1001","kind":"new","customerName":"…","email":"…","edition":"Standart","devices":2,"days":365,"product":"vernuko-desktop"}
+→ {"saleId":"SIPARIS-1001","licenseId":"lic_…","licenseKey":"VRNK-…","paidUntilUtc":"…","devices":2,"product":"vernuko-desktop"}
 
 Yenileme:  {"saleId":"SIPARIS-1002","kind":"renewal","licenseKey":"VRNK-…","days":365}
 İade:      POST …/v1/sales/revoke  {"saleId":"SIPARIS-1001"}
@@ -96,6 +121,7 @@ Yenileme:  {"saleId":"SIPARIS-1002","kind":"renewal","licenseKey":"VRNK-…","da
   - İmza 5 dakikadan eskiyse reddedilir.
   - Aynı `saleId` ikinci kez gelirse aynı lisans döner, yeni lisans açılmaz. Yeniden denemek güvenlidir.
   - İade edilmiş satış tekrar lisans açmaz.
+  - `product` yazılmazsa Randevu (`vernuko-desktop`). Bilinmeyen program 400 döner.
 - **Örnek imza (PHP):** `"t=$t,v1=" . hash_hmac('sha256', "$t.$body", $secret)`
 
 ## Yönetim
@@ -128,6 +154,14 @@ Gerçek WordPress'te, gerçek HTTP istekleriyle denendi. iyzico ve PayTR yerine,
   - Paketsiz satın alma sayfası paket listesini gösteriyor; `?paket=` ile doğru form açılıyor.
   - Temadaki fiyat fişinden gelen bağlantı doğru paketi açıyor.
   - `[vernuko_indir]` sürümü ve boyutu gösteriyor; `/wp-json/vernuko/v1/indir` dosyayı indiriyor (deneme dosyasıyla).
+- **1.4.0 (2026-11-14):** aynı sitede, 1.3.0 veritabanının üstüne kurularak denendi.
+  - Yükseltmede var olan lisanslar Randevu oldu.
+  - Stok paketleri tanımlanınca Stok iyzico (sahte sunucu) ile satın alındı. Sipariş sayfası, e-posta ("Vernuko Stok lisansınız") ve Lisanslarım programı gösterdi.
+  - "Yenile" düğmesi Stok yenilemesini açtı.
+  - Stok anahtarı program bilgisi göndermeyen istemcide 409 ile reddedildi, `product: vernuko-stok` ile etkinleşti.
+  - Stok kurulum dosyası `vernuko-stok/` klasöründen indirildi.
+  - Masaüstü istemcisi PHP sunucusunda Stok anahtarını açık mesajla reddetti (`WordPressPluginTests`).
+  - PHP testleri: `core-test.php` 53, `sales-test.php` 61 kontrol.
 
 ## Neler denendi (WooCommerce)
 - Çekirdek: `php tests/core-test.php` (33 kontrol).

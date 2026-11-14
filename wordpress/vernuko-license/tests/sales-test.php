@@ -5,7 +5,7 @@ require __DIR__ . '/../src/Core.php';
 require __DIR__ . '/../src/Sales.php';
 require __DIR__ . '/../src/Payments.php';
 
-use Vernuko\License\{Error, ExternalSales, Http, Iyzico, Issuer, Keys, MagicLink, Orders, Paytr, PdoDb, Plan, Signer, Validate};
+use Vernuko\License\{Error, ExternalSales, Http, Iyzico, Issuer, Keys, MagicLink, Orders, Paytr, PdoDb, Plan, Products, Signer, Validate};
 
 $failures = 0;
 $count = 0;
@@ -217,6 +217,35 @@ $owned = $issuer->createLicense('Hesap Sahibi', 'sahip@example.com', 77, 'Standa
 $issuer->createLicense('Misafir', 'misafir@example.com', null, 'Standart', 1, 365, 'manual');
 $mine = $issuer->licenses(null, 77);
 check(count($mine) === 1 && $mine[0]['customer_email'] === 'sahip@example.com', 'hesap yalnızca kendi lisanslarını görür (e-postayla eşleşme yok)');
+
+// ---------------- Programlar (1.4.0)
+$stokPlan = new Plan('stok-yillik', 'Stok yıllık', 299000, 'new', 'Standart', 1, 365, Products::STOK);
+check(Plan::fromArray('x', ['name' => 'Eski paket', 'price_kurus' => 100])->product === Products::RANDEVU, '1.4.0 öncesi paket Randevu');
+check(Plan::fromArray('x', ['product' => 'vernuko-yok'])->product === Products::RANDEVU, 'bilinmeyen program Randevu sayılır');
+check(Plan::fromArray('x', $stokPlan->toArray())->product === Products::STOK, 'paketin programı kaydedilip geri okunur');
+check($stokPlan->summary() === "1 bilgisayar, 1\u{00A0}yıl" && Plan::duration(180) === "6\u{00A0}ay" && Plan::duration(45) === "45\u{00A0}gün", 'süre metni');
+$so = $orders->create($stokPlan, 'paytr', $form, null, '81.2.3.4');
+$sp = $orders->paid($so['id'], 'paytr', 'paytr:' . $so['id'], 299000, 'TRY', Orders::planFor($so, []));
+check($sp['licenses'][0]['product'] === Products::STOK, 'Stok paketi Stok lisansı üretir (sipariş anındaki paketten)');
+$stokKey = $issuer->keyFor($sp['licenses'][0]['id']);
+try {
+    $orders->create($renewal, 'paytr', $form, $stokKey, '81.2.3.4');
+    check(false, 'Randevu yenilemesi Stok anahtarıyla alınamamalı');
+} catch (Error $e) {
+    check(str_contains($e->getMessage(), 'Vernuko Stok içindir'), 'yanlış programın yenilemesi: açık mesaj');
+}
+$stokRenewal = new Plan('stok-yenileme', 'Stok yenileme', 199000, 'renewal', 'Standart', 1, 365, Products::STOK);
+$sr = $orders->create($stokRenewal, 'paytr', $form, $stokKey, '81.2.3.4');
+check($sr['renew_license_id'] === $sp['licenses'][0]['id'], 'Stok yenilemesi Stok anahtarıyla alınır');
+$extBody = json_encode(['saleId' => 'shop-2001', 'customerName' => 'Servis', 'product' => Products::SERVIS]);
+[$st, $x] = $ext->handle('v1/sales', ExternalSales::sign($secret, $extBody, $now), $extBody);
+check($st === 200 && $x['product'] === Products::SERVIS && $issuer->license($x['licenseId'])['product'] === Products::SERVIS, 'dış satış programı seçer');
+$extBad = json_encode(['saleId' => 'shop-2002', 'customerName' => 'X', 'product' => 'vernuko-yok']);
+[$st, $x] = $ext->handle('v1/sales', ExternalSales::sign($secret, $extBad, $now), $extBad);
+check($st === 400 && $x['code'] === 'license.product', 'dış satış: bilinmeyen program 400');
+$extDefault = json_encode(['saleId' => 'shop-2003', 'customerName' => 'Y']);
+[, $x] = $ext->handle('v1/sales', ExternalSales::sign($secret, $extDefault, $now), $extDefault);
+check($x['product'] === Products::RANDEVU, 'dış satış: program yazılmazsa Randevu (eski entegrasyonlar)');
 
 // ---------------- Lisanslarım bağlantısı
 $secretKey = 'gizli-anahtar-xxxxxxxxxxxxxxxxxxxxxxxx';

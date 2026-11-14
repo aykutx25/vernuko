@@ -21,7 +21,7 @@ public sealed record UpdatePermission(bool Allowed, string Message);
 /// </summary>
 public sealed class LicenseIssuer(LicenseServerDb db, ServerSecrets secrets, LicenseServerOptions options, TimeProvider time)
 {
-    public const string Product = "vernuko-desktop";
+    public const string Product = LicenseProducts.Randevu;
 
     /// <summary>
     /// Seat check and the new activation are one step: two activations at the same moment on a one-seat license

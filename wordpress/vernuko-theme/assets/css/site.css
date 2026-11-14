@@ -88,6 +88,9 @@
 .vk-giris__not { font-size: var(--wp--preset--font-size--kucuk); color: var(--vk-gri); max-width: 34ch; }
 .vk-giris .wp-block-buttons { gap: 0.75rem 1.25rem; align-items: center; }
 @media (max-width: 781px) { .vk-giris h1.vk-giris__baslik br { display: none; } }
+/* A program page: the program's name above a slightly smaller statement (the lines are longer). */
+.vk-giris p.vk-urun-adi { font-size: var(--wp--preset--font-size--giris); font-weight: 700; color: var(--vk-gri); margin: 0 0 0.75rem; }
+.vk-giris h1.vk-giris__baslik--urun { font-size: clamp(2rem, 0.8rem + 4.4vw, 4.75rem); margin-top: 0; }
 
 /* ---------- the day board (the app's day screen) ---------- */
 .vk-pano { margin: 0; container: vk-pano / inline-size; }
@@ -253,6 +256,9 @@
 	.vk-durum { justify-self: end; }
 	.vk-satir__kaynak { grid-column: 3; grid-row: 2; flex-direction: row; gap: 0.4rem; color: var(--vk-gri); }
 	.vk-satir__kaynak span + span::before { content: "/ "; }
+	/* narrow: long names (a stock item, a device) wrap instead of being cut */
+	.vk-satir__kisi b, .vk-satir__kaynak span { white-space: normal; }
+	.vk-satir__kaynak { flex-wrap: wrap; }
 	.vk-durum { grid-column: 4; grid-row: 1 / span 2; }
 	.vk-satir::before { grid-row: 1 / span 2; }
 	.vk-satir__saat { grid-row: 1 / span 2; }
@@ -381,7 +387,54 @@
 .vk-alt ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
 .vk-alt__iz { border-left: 4px solid var(--vk-simdi); padding-left: 0.9rem; color: var(--vk-murekkep); max-width: 46ch; }
 
+/* ---------- the Vernuko programs, as rows of one ledger ---------- */
+p.vk-aile__giris { font-size: 1.25rem; max-width: 58ch; }
+/* wide (lines up with the heading) but never longer than ~60 characters a line */
+p.vk-aile__giris.alignwide { padding-right: max(0px, calc(100% - 60ch)); }
+.vk-aile { list-style: none; margin: 2rem 0 0; padding: 0; border-top: 2px solid var(--vk-murekkep); }
+.vk-aile__satir {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(12rem, 1fr) minmax(0, 1.3fr) minmax(0, 1.1fr) 8.5rem;
+	gap: 0.35rem 2rem;
+	align-items: baseline;
+	padding: 1.35rem 0.5rem;
+	border-bottom: 1px solid var(--vk-cizgi);
+}
+.vk-aile__satir:hover { background: var(--vk-beyaz); }
+.vk-aile__ad { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.015em; color: var(--vk-murekkep); text-decoration: none; }
+.vk-aile__ad::after { content: ""; position: absolute; inset: 0; } /* the whole row is the link */
+.vk-aile__satir:hover .vk-aile__ad { text-decoration: underline; text-underline-offset: 0.2em; }
+.vk-aile__ozet { color: var(--vk-murekkep); }
+.vk-aile__kimler { color: var(--vk-gri); font-size: 0.9375rem; }
+.vk-aile__durum { justify-self: end; font-size: 0.8125rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 999px; background: var(--vk-notr-acik); color: var(--vk-gri); white-space: nowrap; }
+.vk-aile__satir[data-durum="satista"] .vk-aile__durum { background: var(--vk-yesil-acik); color: var(--vk-yesil); }
+@media (max-width: 760px) {
+	.vk-aile__satir { grid-template-columns: minmax(0, 1fr) auto; }
+	.vk-aile__ozet, .vk-aile__kimler { grid-column: 1 / -1; }
+	.vk-aile__durum { grid-row: 1; grid-column: 2; }
+}
+
+/* ---------- a program's buying section: on sale, or honestly not yet ---------- */
+.vk-urun-satis { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); gap: 3rem clamp(2rem, 6vw, 6rem); align-items: start; }
+.vk-urun-satis__indir h3 { font-size: var(--wp--preset--font-size--bolum); margin: 0 0 0.75rem; }
+.vk-urun-satis__indir p { font-size: 1.125rem; max-width: 38ch; }
+@media (max-width: 781px) { .vk-urun-satis { grid-template-columns: 1fr; } }
+.vk-yakinda {
+	max-width: 44rem;
+	padding: 1.5rem 1.75rem;
+	border: 2px dashed #A6AFBF; /* dashed: drawn, not built yet */
+	border-radius: 10px;
+	background: var(--vk-beyaz);
+}
+.vk-yakinda p { margin: 0.6rem 0 0; }
+.vk-yakinda p.vk-yakinda__durum { margin: 0; font-size: 1.375rem; font-weight: 800; letter-spacing: -0.01em; display: flex; align-items: center; gap: 0.6rem; }
+.vk-yakinda__durum::before { content: ""; width: 0.7rem; height: 0.7rem; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--vk-gri); flex: none; }
+.vk-soz--genis { max-width: none; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1.1rem 3rem; margin-top: 2rem; }
+
 /* ---------- the plugin's checkout and Lisanslarım pages, in the theme's voice ---------- */
+body .vernuko-product { color: var(--vk-gri); font-weight: 700; opacity: 1; }
+body .vernuko-plan-group { font-size: var(--wp--preset--font-size--ara); margin: 2rem 0 0.6rem; }
 body .vernuko-checkout, body .vernuko-licenses { max-width: 40rem; }
 body .vernuko-checkout h3 { font-size: var(--wp--preset--font-size--ara); margin-top: 0; }
 body .vernuko-checkout input[type=text], body .vernuko-checkout input[type=email], body .vernuko-checkout input[type=tel], body .vernuko-licenses input[type=email] {

@@ -246,7 +246,7 @@ final class Schema
     public static function sqlite(): array
     {
         return [
-            'CREATE TABLE IF NOT EXISTS {licenses} (id TEXT PRIMARY KEY, key_hash TEXT NOT NULL UNIQUE, customer_name TEXT NOT NULL, customer_email TEXT, user_id INTEGER, edition TEXT NOT NULL, features TEXT NOT NULL, max_devices INTEGER NOT NULL, paid_until INTEGER NOT NULL, status TEXT NOT NULL, source TEXT NOT NULL, order_id INTEGER, note TEXT, created_at INTEGER NOT NULL)',
+            'CREATE TABLE IF NOT EXISTS {licenses} (id TEXT PRIMARY KEY, key_hash TEXT NOT NULL UNIQUE, customer_name TEXT NOT NULL, customer_email TEXT, user_id INTEGER, edition TEXT NOT NULL, features TEXT NOT NULL, max_devices INTEGER NOT NULL, paid_until INTEGER NOT NULL, status TEXT NOT NULL, source TEXT NOT NULL, order_id INTEGER, note TEXT, created_at INTEGER NOT NULL, product TEXT NOT NULL DEFAULT \'vernuko-desktop\')',
             'CREATE TABLE IF NOT EXISTS {activations} (id TEXT PRIMARY KEY, license_id TEXT NOT NULL, device_hash TEXT NOT NULL, machine_label TEXT, created_at INTEGER NOT NULL, last_seen INTEGER NOT NULL, deactivated_at INTEGER)',
             'CREATE TABLE IF NOT EXISTS {trials} (device_hash TEXT PRIMARY KEY, started_at INTEGER NOT NULL)',
             'CREATE TABLE IF NOT EXISTS {audit} (id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, action TEXT NOT NULL, license_id TEXT, detail TEXT NOT NULL)',
@@ -256,13 +256,13 @@ final class Schema
     }
 
     /**
-     * Columns added after a table first shipped (1.2.0): [table, column, SQLite type]. WordPress gets them through
-     * dbDelta; the SQLite test database through ALTER TABLE.
+     * Columns added after a table first shipped (1.2.0 orders, 1.4.0 product): [table, column, SQLite type]. WordPress
+     * gets them through dbDelta; the SQLite test database through ALTER TABLE. Licenses sold before 1.4.0 are Randevu.
      * @return array<int,array{0:string,1:string,2:string}>
      */
     public static function addedColumns(): array
     {
-        return [['orders', 'plan_snapshot', 'TEXT'], ['orders', 'provider_token', 'TEXT']];
+        return [['orders', 'plan_snapshot', 'TEXT'], ['orders', 'provider_token', 'TEXT'], ['licenses', 'product', "TEXT NOT NULL DEFAULT 'vernuko-desktop'"]];
     }
 
     /** WordPress dbDelta biçimi (MySQL/MariaDB). */
@@ -285,6 +285,7 @@ final class Schema
   order_id bigint(20) unsigned DEFAULT NULL,
   note text,
   created_at bigint(20) NOT NULL,
+  product varchar(40) NOT NULL DEFAULT 'vernuko-desktop',
   PRIMARY KEY  (id),
   UNIQUE KEY key_hash (key_hash),
   KEY user_id (user_id),
@@ -358,6 +359,67 @@ final class Schema
     }
 }
 
+/**
+ * Vernuko programları. Kimlik imzalı lisans belgesine ("prd") yazılır; her program yalnızca kendi kimliğini taşıyan
+ * belgeyi kabul eder, sunucu da anahtarı başka programda etkinleştirmez: Stok anahtarı Randevu'yu açmaz.
+ * "vernuko-desktop" ilk programın (Vernuko Randevu) kimliğidir. Satılmış lisanslar ve kurulu programlar onu
+ * kullandığı için değişmez. Yeni program eklemek için: "vernuko_license_products" süzgeci (kimlik → ad).
+ */
+final class Products
+{
+    public const RANDEVU = 'vernuko-desktop';
+    public const STOK = 'vernuko-stok';
+    public const SERVIS = 'vernuko-teknik-servis';
+
+    /** @return array<string,string> kimlik → görünen ad */
+    public static function all(): array
+    {
+        $list = [self::RANDEVU => 'Vernuko Randevu', self::STOK => 'Vernuko Stok', self::SERVIS => 'Vernuko Teknik Servis'];
+        if (function_exists('apply_filters')) {
+            $filtered = apply_filters('vernuko_license_products', $list);
+            if (is_array($filtered)) {
+                $list = [];
+                foreach ($filtered as $id => $name) {
+                    if (is_string($id) && preg_match('/^[a-z0-9-]{3,40}$/', $id) === 1 && is_string($name) && trim($name) !== '') {
+                        $list[$id] = trim($name);
+                    }
+                }
+                $list += [self::RANDEVU => 'Vernuko Randevu']; // sold licenses must keep working
+            }
+        }
+        return $list;
+    }
+
+    public static function name(?string $id): string
+    {
+        return self::all()[$id ?? self::RANDEVU] ?? (string) $id;
+    }
+
+    public static function valid(?string $id): bool
+    {
+        return is_string($id) && isset(self::all()[$id]);
+    }
+
+    /** The product an app asked for: none given = Vernuko Randevu (versions before 0.14 send nothing). */
+    public static function requested(?string $id): string
+    {
+        if ($id === null || $id === '') {
+            return self::RANDEVU;
+        }
+        if (!self::valid($id)) {
+            throw new Error(400, 'license.product', 'Bilinmeyen program.');
+        }
+        return $id;
+    }
+
+    /** Installers and update files of a product: Randevu in the root (as before), the others in a sub-folder. */
+    public static function releaseDir(string $root, string $id): string
+    {
+        $root = rtrim($root, '/\\');
+        return $id === self::RANDEVU ? $root : $root . DIRECTORY_SEPARATOR . $id;
+    }
+}
+
 final class Settings
 {
     public function __construct(
@@ -376,7 +438,8 @@ final class Settings
  */
 final class Issuer
 {
-    public const PRODUCT = 'vernuko-desktop';
+    /** @deprecated 1.4.0: each license carries its own product; see Products. */
+    public const PRODUCT = Products::RANDEVU;
 
     /** @param callable():int $clock */
     public function __construct(
@@ -394,15 +457,16 @@ final class Issuer
         return ($this->clock)();
     }
 
-    public function activate(?string $licenseKey, ?string $deviceHash, ?string $machineLabel = null): array
+    public function activate(?string $licenseKey, ?string $deviceHash, ?string $machineLabel = null, ?string $product = null): array
     {
         $this->requireDevice($deviceHash);
+        $product = Products::requested($product);
         $normalized = Keys::normalize($licenseKey);
         if ($normalized === null) {
             throw new Error(400, 'license.key_format', 'Lisans anahtarı VRNK-XXXXX-XXXXX-XXXXX-XXXXX biçiminde olmalı.');
         }
 
-        return $this->db->transaction(function () use ($normalized, $deviceHash, $machineLabel) {
+        return $this->db->transaction(function () use ($normalized, $deviceHash, $machineLabel, $product) {
             // Takes the license row's write lock first (InnoDB row lock / SQLite write lock) so that two activations
             // at the same moment are handled one after the other: both counted a free seat on a one-seat license.
             $this->db->execute('UPDATE {licenses} SET status = status WHERE key_hash = ?', [Keys::hash($normalized)]);
@@ -410,6 +474,7 @@ final class Issuer
             if ($license === null) {
                 throw new Error(404, 'license.not_found', 'Bu lisans anahtarı bulunamadı. Anahtarı kontrol edin.');
             }
+            $this->requireProduct($license, $product);
             if ($this->effectiveEnd($license) <= $this->now()) {
                 throw new Error(403, 'license.ended', $this->endedMessage($license));
             }
@@ -438,9 +503,12 @@ final class Issuer
         });
     }
 
-    public function refresh(?string $activationId, ?string $deviceHash): array
+    public function refresh(?string $activationId, ?string $deviceHash, ?string $product = null): array
     {
         [$license, $activation] = $this->findActivation($activationId, $deviceHash);
+        if ($product !== null && $product !== '') {
+            $this->requireProduct($license, Products::requested($product));
+        }
         if ($this->effectiveEnd($license) <= $this->now()) {
             throw new Error(403, 'license.ended', $this->endedMessage($license));
         }
@@ -457,13 +525,19 @@ final class Issuer
         return ['message' => 'Lisans bu bilgisayardan kaldırıldı.'];
     }
 
-    /** Cihazın ilk deneme başlangıcı (tekrar çağrılınca aynı tarih). */
-    public function trial(?string $deviceHash): array
+    /**
+     * Cihazın o programdaki ilk deneme başlangıcı (tekrar çağrılınca aynı tarih). Her programın denemesi ayrıdır:
+     * Randevu'yu deneyen bilgisayar Stok'u da 30 gün dener. Randevu satırı eskisi gibi cihaz özetiyle, diğerleri
+     * program + cihaz özetinin SHA-256'sıyla tutulur (tablo değişmeden).
+     */
+    public function trial(?string $deviceHash, ?string $product = null): array
     {
         $this->requireDevice($deviceHash);
-        $row = $this->db->rows('SELECT started_at FROM {trials} WHERE device_hash = ?', [$deviceHash])[0] ?? null;
+        $product = Products::requested($product);
+        $key = $product === Products::RANDEVU ? $deviceHash : hash('sha256', $product . '|' . $deviceHash);
+        $row = $this->db->rows('SELECT started_at FROM {trials} WHERE device_hash = ?', [$key])[0] ?? null;
         if ($row === null) {
-            $this->db->execute('INSERT INTO {trials} (device_hash, started_at) VALUES (?, ?)', [$deviceHash, $this->now()]);
+            $this->db->execute('INSERT INTO {trials} (device_hash, started_at) VALUES (?, ?)', [$key, $this->now()]);
             $started = $this->now();
         } else {
             $started = (int) $row['started_at'];
@@ -478,26 +552,30 @@ final class Issuer
         } catch (Error $e) {
             return ['allowed' => false, 'message' => $e->getMessage()];
         }
+        $product = (string) ($license['product'] ?? Products::RANDEVU);
         return $this->effectiveEnd($license) > $this->now()
-            ? ['allowed' => true, 'message' => 'Güncellemeler açık.']
-            : ['allowed' => false, 'message' => 'Güncellemeler etkin bir abonelikle alınır. Mevcut sürüm ve verileriniz çalışmaya devam eder.'];
+            ? ['allowed' => true, 'message' => 'Güncellemeler açık.', 'product' => $product]
+            : ['allowed' => false, 'message' => 'Güncellemeler etkin bir abonelikle alınır. Mevcut sürüm ve verileriniz çalışmaya devam eder.', 'product' => $product];
     }
 
     // ---------- Satış ve yönetim ----------
 
     /** @return array{id:string,key:string} */
-    public function createLicense(string $customerName, ?string $email, ?int $userId, string $edition, int $maxDevices, int $days, string $source, ?int $orderId = null, array $features = [], ?string $note = null): array
+    public function createLicense(string $customerName, ?string $email, ?int $userId, string $edition, int $maxDevices, int $days, string $source, ?int $orderId = null, array $features = [], ?string $note = null, string $product = Products::RANDEVU): array
     {
         if (trim($customerName) === '' || $maxDevices < 1 || $maxDevices > 50 || $days < 1) {
             throw new Error(400, 'request.invalid', 'Müşteri adı, 1–50 cihaz ve en az 1 gün gerekli.');
         }
+        if (!Products::valid($product)) {
+            throw new Error(400, 'license.product', 'Bilinmeyen program.');
+        }
         $id = Keys::newLicenseId();
         $key = Keys::derive($this->keySecret, $id);
-        $this->db->execute('INSERT INTO {licenses} (id, key_hash, customer_name, customer_email, user_id, edition, features, max_devices, paid_until, status, source, order_id, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+        $this->db->execute('INSERT INTO {licenses} (id, key_hash, customer_name, customer_email, user_id, edition, features, max_devices, paid_until, status, source, order_id, note, created_at, product) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             $id, Keys::hash(Keys::normalize($key)), trim($customerName), $email, $userId, $edition, implode(',', $features), $maxDevices,
-            $this->now() + $days * 86400, 'active', $source, $orderId, $note, $this->now(),
+            $this->now() + $days * 86400, 'active', $source, $orderId, $note, $this->now(), $product,
         ]);
-        $this->audit('license.created', $id, "$source: $customerName, $edition, $maxDevices cihaz, $days gün" . ($orderId ? ", sipariş #$orderId" : ''));
+        $this->audit('license.created', $id, "$source: " . Products::name($product) . ", $customerName, $edition, $maxDevices cihaz, $days gün" . ($orderId ? ", sipariş #$orderId" : ''));
         return ['id' => $id, 'key' => $key];
     }
 
@@ -549,9 +627,9 @@ final class Issuer
      * $grantKey identifies the sale line ("wc:item:12", "own:ord_…", "ext:<id>"); $orderRef groups lines of one
      * order for refunds ("wc:5", "own:ord_…", "ext:<id>"). $orderId is the WooCommerce order id when there is one.
      */
-    public function grant(string $grantKey, string $orderRef, ?int $orderId, string $kind, string $edition, int $devices, int $days, int $qty, ?string $renewLicenseId, string $name, ?string $email, ?int $userId, string $source = 'woocommerce'): ?string
+    public function grant(string $grantKey, string $orderRef, ?int $orderId, string $kind, string $edition, int $devices, int $days, int $qty, ?string $renewLicenseId, string $name, ?string $email, ?int $userId, string $source = 'woocommerce', string $product = Products::RANDEVU): ?string
     {
-        return $this->db->transaction(function () use ($grantKey, $orderRef, $orderId, $kind, $edition, $devices, $days, $qty, $renewLicenseId, $name, $email, $userId, $source) {
+        return $this->db->transaction(function () use ($grantKey, $orderRef, $orderId, $kind, $edition, $devices, $days, $qty, $renewLicenseId, $name, $email, $userId, $source, $product) {
             if ($this->db->rows('SELECT grant_key FROM {grants} WHERE grant_key = ?', [$grantKey])) {
                 return null;
             }
@@ -560,13 +638,15 @@ final class Issuer
                 if ($renewLicenseId === null || $renewLicenseId === '') {
                     throw new Error(400, 'grant.no_license', 'Yenilenecek lisans seçilmemiş.');
                 }
+                // A Stok renewal must not lengthen a Randevu license (and the other way round).
+                $this->requireProduct($this->license($renewLicenseId), $product, 'grant.wrong_product');
                 $this->extend($renewLicenseId, $days * $qty, "Satış $orderRef");
                 $ids = [$renewLicenseId];
                 $note = 'Vernuko: lisans yenilendi (+' . ($days * $qty) . ' gün).';
             } else {
                 $ids = [];
                 for ($i = 0; $i < $qty; $i++) {
-                    $ids[] = $this->createLicense($name, $email, $userId, $edition, $devices, $days, $source, $orderId)['id'];
+                    $ids[] = $this->createLicense($name, $email, $userId, $edition, $devices, $days, $source, $orderId, [], null, $product)['id'];
                 }
                 $note = 'Vernuko: ' . count($ids) . ' lisans oluşturuldu.';
             }
@@ -684,7 +764,7 @@ final class Issuer
         return $this->signer->sign([
             'v' => 1,
             'lid' => $license['id'],
-            'prd' => self::PRODUCT,
+            'prd' => (string) ($license['product'] ?? Products::RANDEVU),
             'ed' => $license['edition'],
             'feat' => array_values(array_filter(array_map('trim', explode(',', (string) $license['features'])))),
             'aid' => $activationId,
@@ -718,6 +798,15 @@ final class Issuer
         return 'Lisansın süresi ' . gmdate('d.m.Y', (int) $license['paid_until']) . ' tarihinde doldu. Verileriniz silinmez; yenileme sonrası devam edebilirsiniz.';
     }
 
+    /** The key belongs to another Vernuko program: say which, so the customer picks the right key or program. */
+    public function requireProduct(array $license, string $product, string $code = 'license.wrong_product'): void
+    {
+        $own = (string) ($license['product'] ?? Products::RANDEVU);
+        if ($own !== $product) {
+            throw new Error(409, $code, 'Bu lisans anahtarı ' . Products::name($own) . ' içindir; ' . Products::name($product) . ' için kullanılamaz.');
+        }
+    }
+
     private function requireDevice(?string $deviceHash): void
     {
         if (!$this->validDevice($deviceHash)) {
@@ -746,10 +835,10 @@ final class Api
     {
         try {
             $result = match ($route) {
-                'v1/activate' => $this->issuer->activate(self::str($body, 'licenseKey'), self::str($body, 'deviceHash'), self::str($body, 'machineLabel')),
-                'v1/refresh' => $this->issuer->refresh(self::str($body, 'activationId'), self::str($body, 'deviceHash')),
+                'v1/activate' => $this->issuer->activate(self::str($body, 'licenseKey'), self::str($body, 'deviceHash'), self::str($body, 'machineLabel'), self::str($body, 'product')),
+                'v1/refresh' => $this->issuer->refresh(self::str($body, 'activationId'), self::str($body, 'deviceHash'), self::str($body, 'product')),
                 'v1/deactivate' => $this->issuer->deactivate(self::str($body, 'activationId'), self::str($body, 'deviceHash')),
-                'v1/trial' => $this->issuer->trial(self::str($body, 'deviceHash')),
+                'v1/trial' => $this->issuer->trial(self::str($body, 'deviceHash'), self::str($body, 'product')),
                 'v1/updates/permission' => $this->issuer->updatePermission(self::str($body, 'activationId'), self::str($body, 'deviceHash')),
                 default => throw new Error(404, 'request.unknown', 'Bilinmeyen işlem.'),
             };

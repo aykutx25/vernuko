@@ -15,10 +15,43 @@ Tasarımın nereden geldiği (pazar araştırması, renkler, yazı tipi, neden b
   - Sitenin vaadi programın vaadiyle aynıdır: ziyaretçinin bilgisi üçüncü bir şirkete gitmez.
 - **Yazı tipi:** Schibsted Grotesk, temanın içinde. SIL Open Font License 1.1: `assets/fonts/OFL.txt`.
 
+## Vernuko programları (1.1.0)
+
+Tema üç programı tanır: Vernuko Randevu (satışta), Vernuko Stok ve Vernuko Teknik Servis (geliştiriliyor).
+
+- **Ana sayfa:** "Vernuko programları" bölümü hepsini tek bir defter satırı gibi listeler: ne tuttuğu, kimin için, durumu.
+- **Program sayfaları:** `/stok/` ve `/teknik-servis/`. Her birinde şunlar var:
+  - programın kendi gün ekranı: hırdavat, kırtasiye, yedek parça; telefon, beyaz eşya, bilgisayar servisi,
+  - planlanan özellikler,
+  - satış bölümü,
+  - diğer programlar.
+- **Durum kendiliğinden değişir.** Bir program, eklentide ona ait fiyatı olan bir "Yeni lisans" paketi tanımlandığı an "Satışta" olur. O andan itibaren:
+  - program sayfasındaki "geliştiriliyor" notu yerine fiyat fişi ve indirme düğmesi çıkar,
+  - ana sayfadaki liste "Satışta" yazar.
+
+  Sayfaları elle değiştirmek gerekmez.
+- **Dürüstlük:** satışta olmayan programların ekranı ve özellik listesi "planlanan tasarım" olarak etiketlidir. Tarih verilmez; e-posta toplanmaz.
+- **Bloklar:** düzenleyicide her bloğun ayarında program seçilir.
+  - `vernuko/pano`: ekran (randevu, stok veya servis).
+  - `vernuko/fis`: program.
+  - `vernuko/urun-satis`: program.
+  - `vernuko/urunler`: listede gösterilmeyecek program.
+- **Kısa kodlar:** `[vernuko_pano ekran="stok"]`, `[vernuko_fis urun="vernuko-stok"]`, `[vernuko_urunler haric="vernuko-desktop"]`.
+
+**Yeni bir programı satışa çıkarmak:**
+1. Eklentide **Paketler ve satış** sayfasında programı seçerek "Yeni lisans" ve "Yenileme" paketlerini girin.
+2. Kurulum dosyasını `VERNUKO_LICENSE_RELEASES_DIR/<program kimliği>/` klasörüne koyun. Örnek: `vernuko-stok/`.
+3. Program sayfasındaki "Planlananlar" metnini, artık gerçek olan özelliklerle güncelleyin. Ekranın altındaki "planlanan tasarım" yazısı da `inc/pano.php` dosyasındadır.
+
+Dördüncü bir program için:
+- tema tarafında `vernuko_tema_urunler` süzgeci (ad, sayfa, özet, kimler için, fiş satırları),
+- eklenti tarafında `vernuko_license_products` süzgeci,
+- program sayfası için yeni bir desen.
+
 ## Gerekenler
 
 - WordPress 6.6 veya üstü (WordPress 7.1.4'te denendi), PHP 8.1 veya üstü.
-- Vernuko Lisans eklentisi 1.3.0 veya üstü. Eklenti yoksa tema yine açılır; fiyat fişinin yerinde yöneticiye bir uyarı görünür.
+- Vernuko Lisans eklentisi 1.4.0 veya üstü (programlar için; 1.3.0 ile yalnızca Randevu çalışır). Eklenti yoksa tema yine açılır; fiyat fişinin yerinde yöneticiye bir uyarı görünür.
 
 ## Kurulum
 
@@ -41,9 +74,16 @@ Tasarımın nereden geldiği (pazar araştırması, renkler, yazı tipi, neden b
    | `/kvkk-aydinlatma-metni/` | KVKK aydınlatma metni | Yasal taslak: KVKK aydınlatma metni (satış sitesi) |
    | `/cerez-politikasi/` | Çerez politikası | Yasal taslak: çerez politikası |
 
+   Program sayfaları için şablon olarak **Geniş sayfa (program sayfaları)** seçin:
+
+   | Adres | Başlık | Desen |
+   |---|---|---|
+   | `/stok/` | Vernuko Stok | Program sayfası: Vernuko Stok |
+   | `/teknik-servis/` | Vernuko Teknik Servis | Program sayfası: Vernuko Teknik Servis |
+
    Üst menü ve alt bölüm bu adreslere bağlantı verir. Adresleri değiştirirseniz bağlantıları **Görünüm › Düzenleyici** içinden güncelleyin.
 5. **Vernuko Lisans › Paketler ve satış** sayfasında şunları yapın:
-   - En az bir "Yeni lisans" paketi tanımlayın. Fiyat KDV dahil girilir; fiş "Toplam, KDV dahil" yazar.
+   - En az bir "Yeni lisans" paketi tanımlayın ve programını seçin. Fiyat KDV dahil girilir; fiş "Toplam, KDV dahil" yazar.
    - **Satın alma sayfası:** `/satin-al/` adresini girin. Fişteki düğme buraya `?paket=…` ile gider.
    - **Lisanslarım**, **ön bilgilendirme** ve **KVKK** sayfalarının adreslerini girin. Satın alma formundaki onay kutuları bunlara bağlanır.
 6. İndirme düğmesi için `wp-config.php` dosyasında `VERNUKO_LICENSE_RELEASES_DIR` sabitini tanımlayın.
@@ -73,10 +113,11 @@ Tasarımın nereden geldiği (pazar araştırması, renkler, yazı tipi, neden b
 | Yol | Ne |
 |---|---|
 | `theme.json` | Renkler, yazı tipi, boyutlar, boşluklar, düğme ve bağlantı stilleri |
-| `templates/`, `parts/` | Ana sayfa, sayfa, sade sayfa, yazı, arşiv, arama, 404; üst ve alt bölüm |
+| `templates/`, `parts/` | Ana sayfa, sayfa, sade sayfa, geniş sayfa (program sayfaları), yazı, arşiv, arama, 404; üst ve alt bölüm |
 | `patterns/` | Ana sayfanın bölümleri, satın alma/indirme/Lisanslarım sayfaları, yasal taslaklar |
-| `inc/pano.php` | Gün ekranı: `vernuko/pano` bloğu ve `[vernuko_pano]` kısa kodu |
-| `inc/fis.php` | Fiyat fişi: `vernuko/fis` bloğu ve `[vernuko_fis]` kısa kodu |
+| `inc/urunler.php` | Programlar: tanıtım bilgileri, satış durumu, `vernuko/urunler` ve `vernuko/urun-satis` blokları |
+| `inc/pano.php` | Gün ekranları (Randevu, Stok, Teknik Servis): `vernuko/pano` bloğu ve `[vernuko_pano]` kısa kodu |
+| `inc/fis.php` | Fiyat fişi (programa göre): `vernuko/fis` bloğu ve `[vernuko_fis]` kısa kodu |
 | `assets/css/site.css` | Temanın tüm stilleri; eklentinin satın alma ve Lisanslarım çıktısına uyum dahil |
 | `assets/js/` | Gün ekranı ve fişin küçük betikleri (bağımlılık yok), düzenleyicideki blok önizlemesi |
 
@@ -93,6 +134,13 @@ Tasarımın nereden geldiği (pazar araştırması, renkler, yazı tipi, neden b
   - Bağlantı, satın alma sayfasında doğru paketin formunu açıyor.
 - **İndirme:** Düğme sürüm ve boyutu gösteriyor; dosya indiriliyor (deneme dosyasıyla).
 - **Telefon menüsü:** Açılıyor, bağlantıya basınca kapanıp ilgili bölüme gidiyor.
+
+**1.1.0 (2026-11-14):** aynı sitede, eklenti 1.4.0 ile denendi.
+- Stok ve Teknik Servis sayfaları masaüstünde ve telefonda açıldı. Dış istek, konsol hatası ve yatay kaydırma yok.
+- Stok ve Servis gün ekranlarında internet kapatılınca "Kasadan satış" ve "Kapıdan gelen cihaz" satırları ekleniyor.
+- **Satışa çıkış:** Stok paketleri ve kurulum dosyası eklenince Stok sayfası kendiliğinden satış bölümüne geçti. Fiş "Satış başına komisyon" ve "Ürün ve cari sınırı" satırlarıyla göründü. Ana sayfa listesi "Satışta" yazdı.
+- Fişten satın alma sayfasına gidildi, sahte iyzico ile ödendi, Stok anahtarı alındı.
+- Blok düzenleyicide program sayfası hatasız açıldı; bloklar önizlemeyle görünüyor.
 
 **Denenmedi:**
 - MySQL/MariaDB üzerinde gerçek bir barındırma hizmeti.

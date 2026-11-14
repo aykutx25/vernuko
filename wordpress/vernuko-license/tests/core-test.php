@@ -8,6 +8,7 @@ use Vernuko\License\Error;
 use Vernuko\License\Issuer;
 use Vernuko\License\Keys;
 use Vernuko\License\PdoDb;
+use Vernuko\License\Products;
 use Vernuko\License\Signer;
 
 $failures = 0;
@@ -134,6 +135,58 @@ check($issuer->revokeOrder('wc:101', 'iade') === 0, 'iade ikinci kez uygulanmaz'
 $issuer->revokeOrder('wc:100', 'iade');
 check($issuer->orderLicenses('wc:100') === [] && $issuer->license($sold['id'])['status'] === 'cancelled', 'satış iadesi lisansları bitirir');
 expectError(fn () => $issuer->grant('wc:item:503', 'wc:102', 102, 'renewal', '', 1, 365, 1, null, '', null, null), 'grant.no_license', 'lisanssız yenileme');
+
+// Programlar (1.4.0): her lisans tek bir programındır; anahtar başka programı açmaz.
+$payload = static fn (array $reply): array => json_decode(base64_decode(strtr(json_decode($reply['license'], true)['payload'], '-_', '+/')), true);
+$stok = $issuer->createLicense('Hırdavat Deposu', 'depo@example.com', null, 'Standart', 1, 365, 'manual', null, [], null, Products::STOK);
+[$st, $e] = $api->handle('v1/activate', ['licenseKey' => $stok['key'], 'deviceHash' => $devB]);
+check($st === 409 && $e['code'] === 'license.wrong_product' && str_contains($e['message'], 'Vernuko Stok'), 'Stok anahtarı ürün söylemeyen (eski) Randevu sürümünde etkinleşmez');
+[$st, $e] = $api->handle('v1/activate', ['licenseKey' => $stok['key'], 'deviceHash' => $devB, 'product' => Products::SERVIS]);
+check($st === 409 && $e['code'] === 'license.wrong_product', 'Stok anahtarı Teknik Servis\'te etkinleşmez');
+check($issuer->activations($stok['id']) === [], 'reddedilen etkinleştirme koltuk tutmaz');
+[$st, $ok] = $api->handle('v1/activate', ['licenseKey' => $stok['key'], 'deviceHash' => $devB, 'product' => Products::STOK]);
+check($st === 200 && $payload($ok)['prd'] === Products::STOK, 'Stok programında etkinleşir; belgede prd = vernuko-stok');
+[$st, $e] = $api->handle('v1/refresh', ['activationId' => $ok['activationId'], 'deviceHash' => $devB, 'product' => Products::RANDEVU]);
+check($st === 409, 'başka programdan yenileme isteği reddedilir');
+[$st, $r] = $api->handle('v1/refresh', ['activationId' => $ok['activationId'], 'deviceHash' => $devB]);
+check($st === 200 && $payload($r)['prd'] === Products::STOK, 'ürün söylemeyen yenileme lisansın kendi ürününü imzalar');
+[$st, $e] = $api->handle('v1/activate', ['licenseKey' => $stok['key'], 'deviceHash' => $devB, 'product' => 'vernuko-yok']);
+check($st === 400 && $e['code'] === 'license.product', 'bilinmeyen program 400');
+$randevu = $issuer->createLicense('Kuaför', null, null, 'Standart', 1, 365, 'manual');
+check($issuer->license($randevu['id'])['product'] === Products::RANDEVU, 'program belirtilmeyen lisans Randevu');
+[$st, $rv] = $api->handle('v1/activate', ['licenseKey' => $randevu['key'], 'deviceHash' => $devB, 'product' => Products::RANDEVU]);
+check($st === 200 && $payload($rv)['prd'] === 'vernuko-desktop', 'Randevu belgesi eski kimliği taşır (kurulu programlar onu bekler)');
+check($issuer->updatePermission($ok['activationId'], $devB)['product'] === Products::STOK, 'güncelleme izni programı söyler');
+expectError(fn () => $issuer->createLicense('X', null, null, 'Standart', 1, 365, 'manual', null, [], null, 'vernuko-yok'), 'license.product', 'bilinmeyen programa lisans yok');
+
+// Deneme her program için ayrı; Randevu denemesi eski kayıtla aynı kalır
+$now += 86400;
+[$st, $t1] = $api->handle('v1/trial', ['deviceHash' => $devA]);
+[, $t2] = $api->handle('v1/trial', ['deviceHash' => $devA, 'product' => Products::RANDEVU]);
+check($st === 200 && $t1['startedAtUtc'] === $t2['startedAtUtc'], 'Randevu denemesi: ürün söylense de söylenmese de aynı başlangıç');
+$now += 86400;
+[, $t3] = $api->handle('v1/trial', ['deviceHash' => $devA, 'product' => Products::STOK]);
+check($t3['startedAtUtc'] === Issuer::iso($now) && $t3['startedAtUtc'] !== $t1['startedAtUtc'], 'Stok denemesi Randevu denemesinden bağımsız başlar');
+$now += 86400;
+[, $t4] = $api->handle('v1/trial', ['deviceHash' => $devA, 'product' => Products::STOK]);
+check($t4['startedAtUtc'] === $t3['startedAtUtc'], 'Stok denemesi tekrar sorulunca aynı tarih');
+
+// Yenileme başka programın lisansına uygulanmaz
+$untilStok = (int) $issuer->license($stok['id'])['paid_until'];
+expectError(fn () => $issuer->grant('wc:item:601', 'wc:200', 200, 'renewal', '', 1, 365, 1, $stok['id'], '', null, null), 'grant.wrong_product', 'Randevu yenilemesi Stok lisansını uzatmaz');
+check((int) $issuer->license($stok['id'])['paid_until'] === $untilStok, 'reddedilen yenileme süreyi değiştirmez');
+check($issuer->grant('wc:item:602', 'wc:201', 201, 'renewal', '', 1, 365, 1, $stok['id'], '', null, null, 'woocommerce', Products::STOK) !== null
+    && (int) $issuer->license($stok['id'])['paid_until'] === $untilStok + 365 * 86400, 'Stok yenilemesi Stok lisansını uzatır');
+$issuer->grant('wc:item:603', 'wc:202', 202, 'new', 'Standart', 1, 365, 1, null, 'Servis', 'servis@example.com', null, 'woocommerce', Products::SERVIS);
+check($issuer->orderLicenses('wc:202')[0]['product'] === Products::SERVIS, 'satış programın lisansını üretir');
+check(Products::releaseDir('/r', Products::RANDEVU) === '/r' && Products::releaseDir('/r/', Products::STOK) === '/r' . DIRECTORY_SEPARATOR . 'vernuko-stok', 'kurulum klasörleri');
+
+// 1.3.0 veritabanı: product sütunu eklenir, eski lisanslar Randevu olur
+$old = new PDO('sqlite::memory:');
+$old->exec("CREATE TABLE vk_vernuko_licenses (id TEXT PRIMARY KEY, key_hash TEXT NOT NULL UNIQUE, customer_name TEXT NOT NULL, customer_email TEXT, user_id INTEGER, edition TEXT NOT NULL, features TEXT NOT NULL, max_devices INTEGER NOT NULL, paid_until INTEGER NOT NULL, status TEXT NOT NULL, source TEXT NOT NULL, order_id INTEGER, note TEXT, created_at INTEGER NOT NULL)");
+$old->exec("INSERT INTO vk_vernuko_licenses VALUES ('lic_old', 'h', 'Eski', NULL, NULL, 'Standart', '', 1, 0, 'active', 'manual', NULL, NULL, 0)");
+(new PdoDb($old))->createSchema();
+check($old->query("SELECT product FROM vk_vernuko_licenses WHERE id = 'lic_old'")->fetchColumn() === 'vernuko-desktop', 'eski lisans yükseltmede Randevu olur');
 
 echo $failures === 0 ? "OK ($count kontrol)\n" : "$failures/$count BAŞARISIZ\n";
 exit($failures === 0 ? 0 : 1);

@@ -4,7 +4,9 @@
  *   VERNUKO_LICENSE_SIGNING_KEY   özel imzalama anahtarı (PEM, ECDSA P-256)
  *   VERNUKO_LICENSE_KEY_ID        anahtar kimliği (ör. "2026-11"); masaüstü açık anahtarı bununla bulur
  *   VERNUKO_LICENSE_KEY_SECRET    lisans anahtarlarını türetme sırrı (base64, 32 bayt)
- *   VERNUKO_LICENSE_RELEASES_DIR  (isteğe bağlı) güncelleme dosyaları klasörü, web kökünün DIŞINDA
+ *   VERNUKO_LICENSE_RELEASES_DIR  (isteğe bağlı) kurulum ve güncelleme dosyaları klasörü, web kökünün DIŞINDA.
+ *                                 Vernuko Randevu dosyaları klasörün kendisinde, diğer programlar alt klasörde
+ *                                 (vernuko-stok/, vernuko-teknik-servis/).
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
@@ -21,7 +23,7 @@ final class Plugin
     private static string $file = '';
 
     /** Database layout version; a different stored value runs upgrade() once (updates never run the activation hook). */
-    public const DB_VERSION = '1.2.0';
+    public const DB_VERSION = '1.4.0';
 
     public static function boot(string $file): void
     {
@@ -170,7 +172,8 @@ final class Plugin
         if (!$permission['allowed']) {
             return new \WP_REST_Response(['code' => 'updates.not_allowed', 'message' => $permission['message']], 403);
         }
-        $file = Api::safeReleaseFile((string) VERNUKO_LICENSE_RELEASES_DIR, (string) $request['file']);
+        // Each program's update files are in its own folder (Randevu: the folder itself, as before 1.4.0).
+        $file = Api::safeReleaseFile(Products::releaseDir((string) VERNUKO_LICENSE_RELEASES_DIR, (string) ($permission['product'] ?? Products::RANDEVU)), (string) $request['file']);
         if ($file === null) {
             return new \WP_REST_Response(['code' => 'updates.not_found', 'message' => 'Dosya yok.'], 404);
         }
@@ -190,6 +193,7 @@ final class Plugin
     {
         echo '<div class="options_group">';
         woocommerce_wp_checkbox(['id' => '_vernuko_license', 'label' => 'Vernuko lisansı', 'description' => 'Ödeme tamamlanınca lisans anahtarı oluşturulur ve müşteriye e-postayla gönderilir.']);
+        woocommerce_wp_select(['id' => '_vernuko_product', 'label' => 'Program', 'options' => Products::all(), 'description' => 'Anahtar yalnızca bu programda etkinleşir.']);
         woocommerce_wp_select(['id' => '_vernuko_kind', 'label' => 'Tür', 'options' => ['new' => 'Yeni lisans', 'renewal' => 'Yenileme (Hesabım › Lisanslarım\'dan alınır)']]);
         woocommerce_wp_text_input(['id' => '_vernuko_edition', 'label' => 'Paket adı', 'placeholder' => 'Standart']);
         woocommerce_wp_text_input(['id' => '_vernuko_devices', 'label' => 'Bilgisayar sayısı', 'type' => 'number', 'placeholder' => '1', 'custom_attributes' => ['min' => '1', 'max' => '50'], 'description' => 'Ana bilgisayar + bağlı bilgisayarlar toplamı.']);
@@ -200,6 +204,8 @@ final class Plugin
     public static function saveProductFields(int $productId): void
     {
         update_post_meta($productId, '_vernuko_license', isset($_POST['_vernuko_license']) ? 'yes' : 'no');
+        $program = sanitize_key(wp_unslash($_POST['_vernuko_product'] ?? ''));
+        update_post_meta($productId, '_vernuko_product', Products::valid($program) ? $program : Products::RANDEVU);
         $kind = sanitize_text_field(wp_unslash($_POST['_vernuko_kind'] ?? 'new'));
         update_post_meta($productId, '_vernuko_kind', $kind === 'renewal' ? 'renewal' : 'new');
         update_post_meta($productId, '_vernuko_edition', sanitize_text_field(wp_unslash($_POST['_vernuko_edition'] ?? '')));
@@ -207,7 +213,7 @@ final class Plugin
         update_post_meta($productId, '_vernuko_days', max(1, absint($_POST['_vernuko_days'] ?? 365)));
     }
 
-    /** @return array{kind:string,edition:string,devices:int,days:int}|null */
+    /** @return array{kind:string,edition:string,devices:int,days:int,product:string}|null */
     private static function plan(int $productId): ?array
     {
         $product = wc_get_product($productId);
@@ -223,7 +229,15 @@ final class Plugin
             'edition' => (string) (get_post_meta($id, '_vernuko_edition', true) ?: 'Standart'),
             'devices' => max(1, (int) (get_post_meta($id, '_vernuko_devices', true) ?: 1)),
             'days' => max(1, (int) (get_post_meta($id, '_vernuko_days', true) ?: 365)),
+            'product' => self::wcProduct($id),
         ];
+    }
+
+    /** The Vernuko program a WooCommerce product sells (products saved before 1.4.0: Randevu). */
+    private static function wcProduct(int $postId): string
+    {
+        $program = (string) get_post_meta($postId, '_vernuko_product', true);
+        return Products::valid($program) ? $program : Products::RANDEVU;
     }
 
     // ---------------------------------------------------------------- WooCommerce: renewals in the cart
@@ -234,8 +248,13 @@ final class Plugin
         if ($plan === null || $plan['kind'] !== 'renewal') {
             return $valid;
         }
-        if (self::ownedLicense(sanitize_text_field(wp_unslash($_REQUEST['vernuko_renew'] ?? ''))) === null) {
+        $license = self::ownedLicense(sanitize_text_field(wp_unslash($_REQUEST['vernuko_renew'] ?? '')));
+        if ($license === null) {
             wc_add_notice('Yenileme, Hesabım › Lisanslarım sayfasındaki "Yenile" düğmesiyle sepete eklenir.', 'error');
+            return false;
+        }
+        if (($license['product'] ?? Products::RANDEVU) !== $plan['product']) {
+            wc_add_notice('Bu yenileme ' . Products::name($plan['product']) . ' içindir; seçtiğiniz lisans ' . Products::name($license['product']) . ' lisansı.', 'error');
             return false;
         }
         return $valid;
@@ -291,7 +310,7 @@ final class Plugin
             }
             try {
                 $note = $issuer->grant("wc:item:$itemId", "wc:$orderId", $orderId, $plan['kind'], $plan['edition'], $plan['devices'], $plan['days'],
-                    (int) $item->get_quantity(), (string) $item->get_meta('_vernuko_renew_license') ?: null, $name, $email, $userId);
+                    (int) $item->get_quantity(), (string) $item->get_meta('_vernuko_renew_license') ?: null, $name, $email, $userId, 'woocommerce', $plan['product']);
                 if ($note !== null) {
                     $order->add_order_note($note);
                 }
@@ -327,7 +346,7 @@ final class Plugin
         if ($issuer === null || $order->has_status(['refunded', 'cancelled', 'failed'])) {
             return [];
         }
-        return array_map(static fn (array $l) => $issuer->keyFor($l['id']), $issuer->orderLicenses('wc:' . $order->get_id()));
+        return array_map(static fn (array $l) => ['key' => $issuer->keyFor($l['id']), 'product' => Products::name($l['product'] ?? null)], $issuer->orderLicenses('wc:' . $order->get_id()));
     }
 
     public static function orderKeys(\WC_Order $order): void
@@ -337,10 +356,10 @@ final class Plugin
             return;
         }
         echo '<section class="vernuko-license-keys"><h2>Vernuko lisans anahtarınız</h2>';
-        foreach ($keys as $key) {
-            echo '<p><code style="font-size:1.2em">' . esc_html($key) . '</code></p>';
+        foreach ($keys as $k) {
+            echo '<p>' . esc_html($k['product']) . '<br><code style="font-size:1.2em">' . esc_html($k['key']) . '</code></p>';
         }
-        echo '<p>Vernuko\'da Ayarlar › Lisans › "Lisans anahtarı" alanına girip Etkinleştir\'e basın. Anahtarlarınızı her zaman Hesabım › Lisanslarım sayfasında görebilirsiniz.</p></section>';
+        echo '<p>Programda Ayarlar › Lisans › "Lisans anahtarı" alanına girip Etkinleştir\'e basın. Anahtarlarınızı her zaman Hesabım › Lisanslarım sayfasında görebilirsiniz.</p></section>';
     }
 
     public static function emailKeys($order, bool $sentToAdmin, bool $plainText, $email = null): void
@@ -353,14 +372,14 @@ final class Plugin
             return;
         }
         if ($plainText) {
-            echo "\nVernuko lisans anahtarınız:\n" . implode("\n", $keys) . "\nVernuko'da Ayarlar › Lisans › Lisans anahtarı alanına girip Etkinleştir'e basın.\n\n";
+            echo "\nVernuko lisans anahtarınız:\n" . implode("\n", array_map(static fn ($k) => $k['product'] . ': ' . $k['key'], $keys)) . "\nProgramda Ayarlar › Lisans › Lisans anahtarı alanına girip Etkinleştir'e basın.\n\n";
             return;
         }
         echo '<h2>Vernuko lisans anahtarınız</h2>';
-        foreach ($keys as $key) {
-            echo '<p style="font-family:Consolas,monospace;font-size:18px"><strong>' . esc_html($key) . '</strong></p>';
+        foreach ($keys as $k) {
+            echo '<p>' . esc_html($k['product']) . '<br><span style="font-family:Consolas,monospace;font-size:18px"><strong>' . esc_html($k['key']) . '</strong></span></p>';
         }
-        echo '<p>Vernuko\'da Ayarlar › Lisans › "Lisans anahtarı" alanına girip Etkinleştir\'e basın.</p>';
+        echo '<p>Programda Ayarlar › Lisans › "Lisans anahtarı" alanına girip Etkinleştir\'e basın.</p>';
     }
 
     // ---------------------------------------------------------------- My Account › Lisanslarım
@@ -402,12 +421,12 @@ final class Plugin
         if (isset($_GET['vernuko_removed'])) {
             echo '<div class="woocommerce-message">Bilgisayar kaldırıldı; lisansı yeni bilgisayarda etkinleştirebilirsiniz.</div>';
         }
-        $renewal = self::renewalProductId();
         foreach ($licenses as $l) {
+            $renewal = self::renewalProductId((string) ($l['product'] ?? Products::RANDEVU));
             $end = $issuer->effectiveEnd($l);
             $active = $end > time();
             echo '<div class="vernuko-license" style="border:1px solid #ddd;border-radius:6px;padding:14px;margin:0 0 16px">';
-            echo '<p><code style="font-size:1.15em">' . esc_html($issuer->keyFor($l['id'])) . '</code></p>';
+            echo '<p><strong>' . esc_html(Products::name($l['product'] ?? null)) . '</strong><br><code style="font-size:1.15em">' . esc_html($issuer->keyFor($l['id'])) . '</code></p>';
             echo '<p>' . esc_html($l['edition']) . ' · ' . (int) $l['max_devices'] . ' bilgisayar · ' . ($active ? 'Geçerlilik: ' . esc_html(wp_date('d.m.Y', (int) $l['paid_until'])) : '<strong>Süresi doldu</strong> (' . esc_html(wp_date('d.m.Y', (int) $l['paid_until'])) . ')') . ($l['status'] === 'cancelled' ? ' · İptal edildi' : '') . '</p>';
             $devices = array_filter($issuer->activations($l['id']), static fn ($a) => $a['deactivated_at'] === null);
             if ($devices) {
@@ -449,11 +468,17 @@ final class Plugin
         wp_die('Bu bilgisayar size ait bir lisansta değil.', 403);
     }
 
-    private static function renewalProductId(): ?int
+    /** The WooCommerce renewal product of that program, if the shop sells one. */
+    private static function renewalProductId(string $program): ?int
     {
-        $ids = get_posts(['post_type' => 'product', 'post_status' => 'publish', 'numberposts' => 1, 'fields' => 'ids',
+        $ids = get_posts(['post_type' => 'product', 'post_status' => 'publish', 'numberposts' => 50, 'fields' => 'ids',
             'meta_query' => [['key' => '_vernuko_license', 'value' => 'yes'], ['key' => '_vernuko_kind', 'value' => 'renewal']]]);
-        return $ids ? (int) $ids[0] : null;
+        foreach ($ids as $id) {
+            if (self::wcProduct((int) $id) === $program) {
+                return (int) $id;
+            }
+        }
+        return null;
     }
 
     private static function ownedLicense(string $licenseId): ?array
@@ -510,18 +535,23 @@ final class Plugin
         $nonce = wp_nonce_field('vernuko_license', '_wpnonce', true, false);
         echo '<h2>Elle lisans oluştur</h2><p>Havale/EFT veya mağaza dışı satışlar için. WooCommerce siparişleri lisansı kendisi oluşturur.</p>';
         echo '<form method="post" action="' . $action . '">' . $nonce . '<input type="hidden" name="action" value="vernuko_license"><input type="hidden" name="op" value="create">';
+        $programs = '';
+        foreach (Products::all() as $id => $label) {
+            $programs .= '<option value="' . esc_attr($id) . '">' . esc_html($label) . '</option>';
+        }
+        echo '<select name="product" aria-label="Program">' . $programs . '</select> ';
         echo '<input name="name" placeholder="İşletme / müşteri adı" aria-label="İşletme / müşteri adı" required> <input name="email" type="email" placeholder="E-posta" aria-label="E-posta"> <input name="edition" placeholder="Standart" aria-label="Paket"> ';
         echo '<input name="devices" type="number" min="1" max="50" value="1" style="width:70px" title="Bilgisayar" aria-label="Bilgisayar sayısı"> <input name="days" type="number" min="1" value="365" style="width:80px" title="Gün" aria-label="Gün"> ';
         echo '<input name="note" placeholder="Not" aria-label="Not"> <button class="button button-primary">Oluştur</button></form>';
 
         $search = sanitize_text_field(wp_unslash($_GET['s'] ?? ''));
         echo '<h2>Lisanslar</h2><form method="get"><input type="hidden" name="page" value="vernuko-license"><input name="s" value="' . esc_attr($search) . '" placeholder="Ad, e-posta veya lic_…"> <button class="button">Ara</button></form>';
-        echo '<table class="widefat striped" style="margin-top:8px"><thead><tr><th>Müşteri</th><th>Paket</th><th>Bilgisayar</th><th>Dönem sonu</th><th>Durum</th><th>Kaynak</th><th></th></tr></thead><tbody>';
+        echo '<table class="widefat striped" style="margin-top:8px"><thead><tr><th>Müşteri</th><th>Program ve paket</th><th>Bilgisayar</th><th>Dönem sonu</th><th>Durum</th><th>Kaynak</th><th></th></tr></thead><tbody>';
         foreach ($issuer->licenses($search ?: null) as $l) {
             $devices = array_values(array_filter($issuer->activations($l['id']), static fn ($a) => $a['deactivated_at'] === null));
             $source = $l['source'] === 'woocommerce' && $l['order_id'] ? '<a href="' . esc_url(admin_url('post.php?post=' . (int) $l['order_id'] . '&action=edit')) . '">Sipariş #' . (int) $l['order_id'] . '</a>' : esc_html($l['source']);
             echo '<tr><td><strong>' . esc_html($l['customer_name']) . '</strong><br><small>' . esc_html((string) $l['customer_email']) . ' · ' . esc_html($l['id']) . '</small></td>';
-            echo '<td>' . esc_html($l['edition']) . '</td><td>' . count($devices) . ' / ' . (int) $l['max_devices'];
+            echo '<td>' . esc_html(Products::name($l['product'] ?? null)) . '<br><small>' . esc_html($l['edition']) . '</small></td><td>' . count($devices) . ' / ' . (int) $l['max_devices'];
             foreach ($devices as $a) {
                 echo '<br><small>' . esc_html($a['machine_label'] ?: $a['id']) . ' ' . self::adminButton('remove_device', $l['id'], 'Kaldır', $a['id']) . '</small>';
             }
@@ -564,7 +594,7 @@ final class Plugin
             } elseif ($op === 'create') {
                 $created = $issuer->createLicense(sanitize_text_field(wp_unslash($_POST['name'] ?? '')), sanitize_email(wp_unslash($_POST['email'] ?? '')) ?: null, null,
                     sanitize_text_field(wp_unslash($_POST['edition'] ?? '')) ?: 'Standart', absint($_POST['devices'] ?? 1), absint($_POST['days'] ?? 365), 'manual', null, [],
-                    sanitize_text_field(wp_unslash($_POST['note'] ?? '')) ?: null);
+                    sanitize_text_field(wp_unslash($_POST['note'] ?? '')) ?: null, Products::requested(sanitize_key(wp_unslash($_POST['product'] ?? ''))));
                 $notice = 'Lisans oluşturuldu: <code style="font-size:1.2em">' . esc_html($created['key']) . '</code> — müşteriye iletin.';
             } else {
                 $licenseId = sanitize_text_field(wp_unslash($_POST['license'] ?? ''));

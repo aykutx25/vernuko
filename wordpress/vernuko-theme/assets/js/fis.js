@@ -2,7 +2,7 @@
 (function () {
 	'use strict';
 	document.querySelectorAll('[data-vk-fis]').forEach(function (fis) {
-		fis.querySelectorAll('input[name="vk-paket"]').forEach(function (r) {
+		fis.querySelectorAll('.vk-fis__secenek input[type="radio"]').forEach(function (r) {
 			r.addEventListener('change', function () {
 				if (!r.checked) { return; }
 				fis.querySelectorAll('[data-fis="ad"]').forEach(function (e) { e.textContent = r.dataset.ad; });

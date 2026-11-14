@@ -105,10 +105,10 @@ public sealed class PhpPluginServer : IAsyncDisposable
 
     public void SetNow(DateTimeOffset now) => File.WriteAllText(ClockFile, now.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture));
 
-    public async Task<(string Id, string Key)> CreateLicenseAsync(int devices = 1, int days = 365)
+    public async Task<(string Id, string Key)> CreateLicenseAsync(int devices = 1, int days = 365, string product = LicenseProducts.Randevu)
     {
         using var http = new HttpClient();
-        using var r = await http.PostAsJsonAsync(new Uri(BaseUri, "test/create"), new { name = "Işıl Güzellik", devices, days });
+        using var r = await http.PostAsJsonAsync(new Uri(BaseUri, "test/create"), new { name = "Işıl Güzellik", devices, days, product });
         var body = (await r.Content.ReadFromJsonAsync<Dictionary<string, string>>())!;
         return (body["id"], body["key"]);
     }
@@ -221,6 +221,29 @@ public class WordPressPluginTests
         // Errors come through as the plugin's messages.
         var wrong = await online.ActivateAsync("VRNK-00000-00000-00000-00000");
         Assert.Equal("license.not_found", wrong.Error.Code);
+    }
+
+    [Fact]
+    public async Task A_key_sold_for_another_vernuko_program_does_not_activate_this_one()
+    {
+        Assert.SkipWhen(PhpPluginServer.Php is null, "PHP (openssl + pdo_sqlite) yüklü değil");
+        var time = new ManualTimeProvider(TestApp.DefaultNow);
+        await using var php = await PhpPluginServer.StartAsync(time.GetUtcNow());
+        var stok = await php.CreateLicenseAsync(product: LicenseProducts.Stok);
+
+        var options = new LicensingOptions { PublicKeys = new Dictionary<string, byte[]> { ["test-php"] = php.PublicKey }, ServerUrl = php.BaseUri };
+        await using var app = await TestApp.CreateAsync(time: time, device: new TestDevice(DeviceA), licensing: options);
+        await app.SetupBeautyAsync();
+
+        var result = await app.Get<LicenseOnlineService>().ActivateAsync(stok.Key);
+        Assert.Equal("license.wrong_product", result.Error.Code);
+        Assert.Contains("Vernuko Stok", result.Error.Message, StringComparison.Ordinal);
+        Assert.Null(await app.Get<LicenseService>().GetDocumentAsync());
+
+        // The refused attempt took no seat: the key still activates in its own program.
+        using var http = new HttpClient();
+        using var own = await http.PostAsJsonAsync(new Uri(php.BaseUri, "v1/activate"), new { licenseKey = stok.Key, deviceHash = DeviceB, product = LicenseProducts.Stok });
+        Assert.Equal(HttpStatusCode.OK, own.StatusCode);
     }
 
     [Fact]
