@@ -4,7 +4,12 @@ Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [
 
 ## [Yayınlanmadı] — Satış sitesi teması
 
-Masaüstü programında değişiklik yok; bu bölüm satış sitesiyle ilgili.
+Bu bölüm satış sitesiyle ilgili. Masaüstü programında yalnızca bir test kararlılığı düzeltmesi var (aşağıda).
+
+### Düzeltildi — testler
+- **Mesaj gönderme kilidi:** Kilit, işlemin tamamında tek bir kopyaydı; artık her uygulama örneğinin kendi kilidi var.
+  - Program her zaman tek örnekle çalıştığı için davranışı değişmez.
+  - Testlerde iki uygulama paralel çalışınca biri ötekinin gönderimini atlayabiliyordu. Windows CI'de bir testin ara sıra kırmızı olmasının nedeni buydu.
 
 ### Eklendi — WordPress satış teması 1.0.0 (`wordpress/vernuko-theme`)
 - **Blok teması:** Tasarım, Türkiye'deki randevu programlarının sitelerine bakılarak çıkarıldı (bkz. `DESIGN.md`). Ortak kalıplar bilerek kullanılmadı: mor geçişler, telefon görselleri, üç kartlık özellik ızgarası.

@@ -102,9 +102,13 @@ public sealed class AutoMessagingService(
     ISecretProtector protector,
     IMessageTransportFactory transports,
     ILicenseGate license,
-    ILogger<AutoMessagingService> logger) : AppServiceBase(deps), IAutoMessagingService
+    ILogger<AutoMessagingService> logger) : AppServiceBase(deps), IAutoMessagingService, IDisposable
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
+    // One dispatcher run at a time for this database. The service is a singleton per application, so an instance
+    // field is enough; a static one made two applications in one process (parallel tests) skip each other's runs.
+    private readonly SemaphoreSlim _gate = new(1, 1);
+
+    public void Dispose() => _gate.Dispose();
 
     private const string KRemindersEnabled = "messaging.reminders_enabled";
     private const string KChannel = "messaging.reminder_channel";
@@ -348,7 +352,7 @@ public sealed class AutoMessagingService(
     /// <summary>Background: sends due messages, respecting quiet hours, the monthly limit and opt-outs.</summary>
     public async Task<int> DispatchDueAsync(CancellationToken ct = default)
     {
-        if (!await Gate.WaitAsync(0, ct))
+        if (!await _gate.WaitAsync(0, ct))
         {
             return 0;
         }
@@ -446,7 +450,7 @@ public sealed class AutoMessagingService(
         }
         finally
         {
-            Gate.Release();
+            _gate.Release();
         }
     }
 
