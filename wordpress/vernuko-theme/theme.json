@@ -1,0 +1,179 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": true,
+		"useRootPaddingAwareAlignments": true,
+		"color": {
+			"custom": false,
+			"customGradient": false,
+			"defaultPalette": false,
+			"defaultGradients": false,
+			"defaultDuotone": false,
+			"gradients": [],
+			"duotone": [],
+			"palette": [
+				{ "slug": "murekkep", "name": "Mürekkep", "color": "#1B2640" },
+				{ "slug": "lacivert", "name": "Lacivert", "color": "#1F2A44" },
+				{ "slug": "defter", "name": "Defter", "color": "#F1F4F8" },
+				{ "slug": "beyaz", "name": "Beyaz", "color": "#FFFFFF" },
+				{ "slug": "kalem", "name": "Kalem mavisi", "color": "#2F5FC4" },
+				{ "slug": "simdi", "name": "Şimdi sarısı", "color": "#F2C230" },
+				{ "slug": "gri", "name": "Açıklama grisi", "color": "#4F5A70" },
+				{ "slug": "cizgi", "name": "Çizgi", "color": "#D9DEE7" }
+			]
+		},
+		"layout": {
+			"contentSize": "720px",
+			"wideSize": "1200px"
+		},
+		"spacing": {
+			"units": ["px", "rem", "%", "vw"],
+			"defaultSpacingSizes": false,
+			"spacingSizes": [
+				{ "slug": "20", "name": "2XS", "size": "0.5rem" },
+				{ "slug": "30", "name": "XS", "size": "1rem" },
+				{ "slug": "40", "name": "S", "size": "1.5rem" },
+				{ "slug": "50", "name": "M", "size": "clamp(2rem, 4vw, 3rem)" },
+				{ "slug": "60", "name": "L", "size": "clamp(3rem, 7vw, 5.5rem)" },
+				{ "slug": "70", "name": "XL", "size": "clamp(4.5rem, 10vw, 8rem)" }
+			]
+		},
+		"typography": {
+			"defaultFontSizes": false,
+			"fluid": true,
+			"dropCap": false,
+			"fontFamilies": [
+				{
+					"slug": "schibsted",
+					"name": "Schibsted Grotesk",
+					"fontFamily": "\"Schibsted Grotesk\", system-ui, \"Segoe UI\", sans-serif",
+					"fontFace": [
+						{
+							"fontFamily": "Schibsted Grotesk",
+							"fontWeight": "400 900",
+							"fontStyle": "normal",
+							"fontDisplay": "swap",
+							"src": ["file:./assets/fonts/schibsted-grotesk.woff2"]
+						},
+						{
+							"fontFamily": "Schibsted Grotesk",
+							"fontWeight": "400 900",
+							"fontStyle": "italic",
+							"fontDisplay": "swap",
+							"src": ["file:./assets/fonts/schibsted-grotesk-italic.woff2"]
+						}
+					]
+				}
+			],
+			"fontSizes": [
+				{ "slug": "kucuk", "name": "Küçük", "size": "0.9375rem", "fluid": false },
+				{ "slug": "metin", "name": "Metin", "size": "1.125rem", "fluid": false },
+				{ "slug": "giris", "name": "Giriş", "size": "1.375rem", "fluid": { "min": "1.1875rem", "max": "1.375rem" } },
+				{ "slug": "ara", "name": "Ara başlık", "size": "1.75rem", "fluid": { "min": "1.4375rem", "max": "1.75rem" } },
+				{ "slug": "bolum", "name": "Bölüm başlığı", "size": "2.75rem", "fluid": { "min": "2rem", "max": "2.75rem" } },
+				{ "slug": "manset", "name": "Manşet", "size": "4.5rem", "fluid": { "min": "2.625rem", "max": "4.5rem" } }
+			]
+		},
+		"blocks": {
+			"core/button": { "border": { "radius": false } }
+		}
+	},
+	"styles": {
+		"color": {
+			"background": "var(--wp--preset--color--defter)",
+			"text": "var(--wp--preset--color--murekkep)"
+		},
+		"typography": {
+			"fontFamily": "var(--wp--preset--font-family--schibsted)",
+			"fontSize": "var(--wp--preset--font-size--metin)",
+			"lineHeight": "1.55",
+			"fontWeight": "400"
+		},
+		"spacing": {
+			"blockGap": "1.25rem",
+			"padding": {
+				"left": "clamp(1rem, 4vw, 2.5rem)",
+				"right": "clamp(1rem, 4vw, 2.5rem)",
+				"top": "0",
+				"bottom": "0"
+			}
+		},
+		"elements": {
+			"heading": {
+				"typography": {
+					"fontWeight": "800",
+					"lineHeight": "1.06",
+					"letterSpacing": "-0.02em",
+					"textWrap": "balance"
+				},
+				"color": { "text": "var(--wp--preset--color--murekkep)" }
+			},
+			"h1": { "typography": { "fontSize": "var(--wp--preset--font-size--manset)", "letterSpacing": "-0.03em" } },
+			"h2": { "typography": { "fontSize": "var(--wp--preset--font-size--bolum)" } },
+			"h3": { "typography": { "fontSize": "var(--wp--preset--font-size--ara)", "fontWeight": "750", "lineHeight": "1.15" } },
+			"h4": { "typography": { "fontSize": "var(--wp--preset--font-size--giris)", "fontWeight": "700", "lineHeight": "1.25", "letterSpacing": "-0.01em" } },
+			"link": {
+				"color": { "text": "var(--wp--preset--color--kalem)" },
+				"typography": { "textDecoration": "underline" },
+				":hover": { "typography": { "textDecoration": "none" } },
+				":focus": { "typography": { "textDecoration": "none" } }
+			},
+			"button": {
+				"color": {
+					"background": "var(--wp--preset--color--lacivert)",
+					"text": "var(--wp--preset--color--beyaz)"
+				},
+				"typography": { "fontSize": "1.0625rem", "fontWeight": "700", "lineHeight": "1.2" },
+				"border": { "radius": "6px", "width": "0" },
+				"spacing": { "padding": { "top": "0.95rem", "bottom": "0.95rem", "left": "1.4rem", "right": "1.4rem" } },
+				":hover": { "color": { "background": "#2C3A5C" } },
+				":focus": { "color": { "background": "#2C3A5C" } }
+			},
+			"caption": {
+				"typography": { "fontSize": "var(--wp--preset--font-size--kucuk)" },
+				"color": { "text": "var(--wp--preset--color--gri)" }
+			}
+		},
+		"blocks": {
+			"core/navigation": {
+				"typography": { "fontSize": "1rem", "fontWeight": "600" }
+			},
+			"core/site-title": {
+				"typography": { "fontSize": "1.5rem", "fontWeight": "800", "letterSpacing": "-0.02em" },
+				"elements": { "link": { "typography": { "textDecoration": "none" }, "color": { "text": "var(--wp--preset--color--murekkep)" } } }
+			},
+			"core/details": {
+				"border": { "bottom": { "color": "var(--wp--preset--color--cizgi)", "width": "1px", "style": "solid" } },
+				"spacing": { "padding": { "top": "1.1rem", "bottom": "1.1rem" } }
+			},
+			"core/separator": {
+				"color": { "text": "var(--wp--preset--color--cizgi)" },
+				"border": { "width": "1px 0 0 0" }
+			},
+			"core/post-title": {
+				"typography": { "fontSize": "var(--wp--preset--font-size--bolum)" },
+				"elements": { "link": { "typography": { "textDecoration": "none" }, "color": { "text": "var(--wp--preset--color--murekkep)" } } }
+			},
+			"core/post-date": {
+				"typography": { "fontSize": "var(--wp--preset--font-size--kucuk)" },
+				"color": { "text": "var(--wp--preset--color--gri)" }
+			},
+			"core/quote": {
+				"border": { "left": { "color": "var(--wp--preset--color--lacivert)", "width": "4px", "style": "solid" } },
+				"spacing": { "padding": { "left": "1.25rem" } }
+			},
+			"core/code": {
+				"typography": { "fontSize": "0.9375rem" },
+				"color": { "background": "var(--wp--preset--color--beyaz)" }
+			}
+		}
+	},
+	"templateParts": [
+		{ "name": "header", "title": "Üst bölüm", "area": "header" },
+		{ "name": "footer", "title": "Alt bölüm", "area": "footer" }
+	],
+	"customTemplates": [
+		{ "name": "page-sade", "title": "Sade sayfa (satın alma, Lisanslarım, yasal metinler)", "postTypes": ["page"] }
+	]
+}

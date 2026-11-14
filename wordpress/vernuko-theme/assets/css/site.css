@@ -1,0 +1,404 @@
+/* Vernuko satış teması — what theme.json cannot express. Tokens come from theme.json presets. */
+
+:root {
+	--vk-murekkep: var(--wp--preset--color--murekkep, #1B2640);
+	--vk-lacivert: var(--wp--preset--color--lacivert, #1F2A44);
+	--vk-defter: var(--wp--preset--color--defter, #F1F4F8);
+	--vk-beyaz: var(--wp--preset--color--beyaz, #FFFFFF);
+	--vk-kalem: var(--wp--preset--color--kalem, #2F5FC4);
+	--vk-simdi: var(--wp--preset--color--simdi, #F2C230);
+	--vk-gri: var(--wp--preset--color--gri, #4F5A70);
+	--vk-cizgi: var(--wp--preset--color--cizgi, #D9DEE7);
+	/* status colours: the app's own */
+	--vk-yesil: #1F7347;
+	--vk-yesil-acik: #E8F5EE;
+	--vk-mavi: #2F64C8;
+	--vk-mavi-acik: #EAF0FC;
+	--vk-amber: #8A5A0F;
+	--vk-amber-acik: #FCF3E2;
+	--vk-notr-acik: #EEF0F4;
+}
+
+::selection { background: var(--vk-simdi); color: var(--vk-murekkep); }
+
+:where(a, button, input, summary, select, textarea):focus-visible {
+	outline: 3px solid var(--vk-kalem);
+	outline-offset: 2px;
+	border-radius: 3px;
+}
+
+.vk-uyari {
+	border-left: 4px solid var(--vk-amber);
+	background: var(--vk-amber-acik);
+	padding: 0.75rem 1rem;
+	font-size: var(--wp--preset--font-size--kucuk);
+}
+
+/* a button that reads as a plain link (secondary action next to the main one) */
+.wp-block-button.is-style-vk-metin .wp-block-button__link {
+	background: none;
+	color: var(--vk-kalem);
+	padding-left: 0.25rem;
+	padding-right: 0.25rem;
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+.wp-block-button.is-style-vk-metin .wp-block-button__link:hover { text-decoration: none; background: none; }
+
+/* ---------- header ---------- */
+.vk-ust {
+	border-bottom: 1px solid var(--vk-cizgi);
+	background: var(--vk-defter);
+}
+.vk-logo { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--vk-murekkep); }
+.vk-logo img { width: 34px; height: 34px; display: block; }
+.vk-logo span { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+.vk-ust .wp-block-navigation a:where(:not(.wp-element-button)) { text-decoration: none; }
+.vk-ust .wp-block-navigation a:where(:not(.wp-element-button)):hover { text-decoration: underline; text-underline-offset: 0.25em; }
+/* Below this width the hero's own download button sits just below; the header keeps logo and menu on one line. */
+@media (max-width: 960px) { .vk-ust .vk-ust__dugme { display: none; } }
+.vk-ust .wp-block-navigation__container { flex-wrap: nowrap; }
+.vk-ust .wp-block-navigation-item__content { white-space: nowrap; }
+@media (max-width: 720px) { .vk-ust .wp-block-navigation { gap: 1rem; } }
+/* Phone menu: the page's own paper colour (set on the block), links left-aligned, big enough to tap. */
+.vk-ust .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) {
+	--navigation-layout-justification-setting: flex-start;
+	padding: 1rem 1.25rem 2rem;
+}
+.vk-ust .wp-block-navigation .wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__container { width: 100%; gap: 0; }
+.vk-ust .wp-block-navigation .wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item { width: 100%; border-bottom: 1px solid var(--vk-cizgi); }
+.vk-ust .wp-block-navigation .wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation-item__content { display: block; width: 100%; padding: 0.85rem 0; font-size: 1.25rem; font-weight: 700; }
+/* The download link is a button in the header; in the phone menu it is the last item. */
+.vk-ust .wp-block-navigation .vk-menu-indir { display: none; }
+.vk-ust .wp-block-navigation .wp-block-navigation__responsive-container.is-menu-open .vk-menu-indir { display: block; border-bottom: 0; margin-top: 1.25rem; }
+.vk-ust .wp-block-navigation .wp-block-navigation__responsive-container.is-menu-open .vk-menu-indir .wp-block-navigation-item__content { display: inline-block; width: auto; padding: 0.8rem 1.2rem; border-radius: 6px; background: var(--vk-lacivert); color: var(--vk-beyaz); font-size: 1.0625rem; }
+
+/* ---------- hero ---------- */
+/* The headline is the page's typographic statement: two lines across the full width, never a word broken in two. */
+.vk-giris h1.vk-giris__baslik {
+	font-size: clamp(2.125rem, 0.9rem + 5.6vw, 5.5rem);
+	line-height: 0.98;
+	letter-spacing: -0.035em;
+	font-weight: 850;
+	overflow-wrap: normal;
+	hyphens: manual;
+	text-wrap: balance;
+}
+.vk-giris__metin p.vk-giris__alt { font-size: var(--wp--preset--font-size--giris); color: var(--vk-murekkep); max-width: 30ch; line-height: 1.45; }
+.vk-giris__not { font-size: var(--wp--preset--font-size--kucuk); color: var(--vk-gri); max-width: 34ch; }
+.vk-giris .wp-block-buttons { gap: 0.75rem 1.25rem; align-items: center; }
+@media (max-width: 781px) { .vk-giris h1.vk-giris__baslik br { display: none; } }
+
+/* ---------- the day board (the app's day screen) ---------- */
+.vk-pano { margin: 0; container: vk-pano / inline-size; }
+.vk-pano__meslekler {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 1.1rem;
+	margin: 0 0 0.85rem;
+	padding: 0 0.25rem;
+}
+.vk-pano__meslekler button {
+	font: inherit;
+	font-size: 0.9375rem;
+	font-weight: 600;
+	color: var(--vk-gri);
+	background: none;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	padding: 0.3rem 0 0.35rem;
+	cursor: pointer;
+}
+.vk-pano__meslekler button:hover { color: var(--vk-murekkep); }
+.vk-pano__meslekler button[aria-pressed="true"] { color: var(--vk-murekkep); border-bottom-color: var(--vk-murekkep); }
+
+.vk-pano__ekran {
+	background: var(--vk-beyaz);
+	border: 1px solid var(--vk-cizgi);
+	border-radius: 12px;
+	/* the one elevated thing on the page: it is a window on a desk */
+	box-shadow: 0 1px 0 rgba(31, 42, 68, 0.04), 0 28px 60px -28px rgba(31, 42, 68, 0.38);
+	overflow: hidden;
+	font-size: 0.9375rem;
+	line-height: 1.35;
+}
+.vk-pano__ust {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.25rem 0.9rem;
+	padding: 1rem 1.25rem 0.85rem;
+	border-bottom: 1px solid var(--vk-cizgi);
+}
+.vk-pano__isletme { font-weight: 800; font-size: 1.0625rem; letter-spacing: -0.01em; }
+.vk-pano__tarih { color: var(--vk-gri); }
+.vk-pano__sayi { margin-left: auto; color: var(--vk-gri); }
+
+.vk-pano__liste { list-style: none; margin: 0; padding: 0.5rem 0.75rem; }
+.vk-satir {
+	display: grid;
+	grid-template-columns: 3.4rem 3px minmax(0, 1fr) 8.5rem 7.5rem;
+	gap: 0 0.85rem;
+	align-items: center;
+	padding: 0.6rem 0.5rem;
+	border-radius: 8px;
+}
+.vk-satir + .vk-satir { border-top: 1px solid var(--vk-notr-acik); }
+.vk-satir::before {
+	content: "";
+	grid-column: 2;
+	grid-row: 1;
+	align-self: stretch;
+	border-radius: 2px;
+	background: var(--vk-gri);
+}
+.vk-satir__saat { grid-column: 1; grid-row: 1; font-weight: 800; font-size: 1.0625rem; white-space: nowrap; }
+.vk-satir__kisi { grid-column: 3; min-width: 0; display: flex; flex-direction: column; }
+.vk-satir__kisi b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vk-satir__kisi > span { color: var(--vk-gri); font-size: 0.875rem; }
+.vk-satir__not { color: var(--vk-murekkep) !important; font-style: italic; }
+.vk-satir__kaynak { grid-column: 4; min-width: 0; display: flex; flex-direction: column; font-size: 0.875rem; }
+.vk-satir__kaynak span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vk-satir__kaynak span + span { color: var(--vk-gri); }
+.vk-durum {
+	grid-column: 5;
+	justify-self: end;
+	font-size: 0.8125rem;
+	font-weight: 700;
+	padding: 0.2rem 0.6rem;
+	border-radius: 999px;
+	background: var(--vk-notr-acik);
+	color: var(--vk-gri);
+	white-space: nowrap;
+}
+.vk-satir[data-durum="tamam"]::before { background: var(--vk-yesil); }
+.vk-satir[data-durum="tamam"] .vk-durum { background: var(--vk-yesil-acik); color: var(--vk-yesil); }
+.vk-satir[data-durum="islemde"]::before { background: var(--vk-mavi); }
+.vk-satir[data-durum="islemde"] .vk-durum { background: var(--vk-mavi-acik); color: var(--vk-mavi); }
+.vk-satir[data-durum="geldi"]::before { background: var(--vk-lacivert); }
+.vk-satir[data-durum="geldi"] .vk-durum { background: var(--vk-lacivert); color: var(--vk-beyaz); }
+.vk-satir[data-durum="bekliyor"]::before { background: var(--vk-amber); }
+.vk-satir[data-durum="bekliyor"] .vk-durum { background: var(--vk-amber-acik); color: var(--vk-amber); }
+.vk-satir[data-yeni] { background: var(--vk-mavi-acik); }
+@media (prefers-reduced-motion: no-preference) {
+	.vk-satir[data-yeni] { animation: vk-yeni 1.4s ease-out; }
+	@keyframes vk-yeni { from { background: var(--vk-simdi); } to { background: var(--vk-mavi-acik); } }
+}
+
+/* "now": the only place the signal yellow carries meaning */
+.vk-simdi {
+	position: relative;
+	height: 0;
+	margin: 0.15rem 0;
+	border-top: 2px solid var(--vk-simdi);
+}
+.vk-simdi span {
+	position: absolute;
+	left: 0.1rem;
+	top: -0.72rem;
+	background: var(--vk-simdi);
+	color: var(--vk-murekkep);
+	font-weight: 800;
+	font-size: 0.75rem;
+	line-height: 1;
+	padding: 0.25rem 0.4rem;
+	border-radius: 4px;
+}
+
+.vk-pano__alt {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 1rem;
+	padding: 0.65rem 1.25rem;
+	border-top: 1px solid var(--vk-cizgi);
+	background: #F9FAFB;
+	font-size: 0.875rem;
+}
+.vk-pano__baglanti { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--vk-gri); }
+.vk-isik { width: 9px; height: 9px; border-radius: 50%; background: var(--vk-yesil); flex: none; }
+.vk-anahtar { margin-left: auto; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600; }
+.vk-anahtar input {
+	appearance: none;
+	width: 2.4rem;
+	height: 1.35rem;
+	margin: 0;
+	border-radius: 999px;
+	background: var(--vk-cizgi);
+	position: relative;
+	cursor: pointer;
+	transition: background 0.15s;
+}
+.vk-anahtar input::after {
+	content: "";
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: calc(1.35rem - 6px);
+	height: calc(1.35rem - 6px);
+	border-radius: 50%;
+	background: var(--vk-beyaz);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+	transition: transform 0.15s;
+}
+.vk-anahtar input:checked { background: var(--vk-yesil); }
+.vk-anahtar input:checked::after { transform: translateX(1.05rem); }
+.vk-pano.is-cevrimdisi .vk-isik { background: transparent; box-shadow: inset 0 0 0 2px var(--vk-gri); }
+.vk-pano.is-cevrimdisi .vk-pano__baglanti { color: var(--vk-murekkep); font-weight: 600; }
+.vk-pano figcaption { margin-top: 0.75rem; font-size: var(--wp--preset--font-size--kucuk); color: var(--vk-gri); padding: 0 0.25rem; }
+
+/* The board narrows with its column, not with the window. */
+@container vk-pano (max-width: 600px) {
+	.vk-satir { grid-template-columns: 3.3rem 3px minmax(0, 1fr) auto; gap: 0 0.7rem; }
+	.vk-durum { justify-self: end; }
+	.vk-satir__kaynak { grid-column: 3; grid-row: 2; flex-direction: row; gap: 0.4rem; color: var(--vk-gri); }
+	.vk-satir__kaynak span + span::before { content: "/ "; }
+	.vk-durum { grid-column: 4; grid-row: 1 / span 2; }
+	.vk-satir::before { grid-row: 1 / span 2; }
+	.vk-satir__saat { grid-row: 1 / span 2; }
+}
+
+/* ---------- where the data lives (the one dark band) ---------- */
+.vk-veri { color: #E7ECF4; }
+.vk-veri h2, .vk-veri h3 { color: var(--vk-beyaz); }
+.vk-veri p { color: #C9D2E1; }
+.vk-yol { display: grid; gap: 2.5rem; margin-top: 2.5rem; }
+.vk-yol__serit { display: grid; grid-template-columns: minmax(10rem, 14rem) 1fr; gap: 1rem 2rem; align-items: start; }
+.vk-yol__ad { font-weight: 800; font-size: 1.25rem; color: var(--vk-beyaz); margin: 0; line-height: 1.2; }
+.vk-yol__akis { display: flex; flex-wrap: wrap; align-items: stretch; list-style: none; margin: 0; padding: 0; }
+.vk-yol__akis li {
+	position: relative;
+	flex: 1 1 10rem;
+	min-width: 9rem;
+	padding: 0 1.75rem 0 0;
+	margin: 0 0 1rem;
+}
+.vk-yol__akis li > b { display: block; color: var(--vk-beyaz); font-size: 1.0625rem; margin-bottom: 0.2rem; }
+.vk-yol__akis li > span { display: block; font-size: 0.9375rem; color: #AEB9CC; line-height: 1.45; }
+.vk-yol__akis li::before {
+	content: "";
+	display: block;
+	height: 2px;
+	margin: 0 0 0.85rem;
+	background: #8F9BB3;
+}
+.vk-yol--bulut .vk-yol__akis li::before { background: repeating-linear-gradient(90deg, #6C7891 0 6px, transparent 6px 11px); }
+.vk-yol--vernuko .vk-yol__akis li::before { background: var(--vk-beyaz); height: 3px; }
+.vk-yol--vernuko .vk-yol__akis li:first-child::before { box-shadow: inset 14px 0 0 var(--vk-simdi); }
+@media (max-width: 720px) { .vk-yol__serit { grid-template-columns: 1fr; } }
+
+/* ---------- a working day: clock times as the structure ---------- */
+.vk-gun { list-style: none; margin: 2rem 0 0; padding: 0; border-top: 1px solid var(--vk-cizgi); }
+.vk-gun li { display: grid; grid-template-columns: minmax(6.5rem, 9rem) minmax(0, 1fr); gap: 0 2rem; padding: 1.4rem 0; border-bottom: 1px solid var(--vk-cizgi); }
+.vk-gun time { font-weight: 800; font-size: clamp(1.75rem, 3.2vw, 2.5rem); letter-spacing: -0.02em; line-height: 1; }
+.vk-gun h3 { margin: 0 0 0.35rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.01em; }
+.vk-gun p { margin: 0; color: var(--vk-gri); max-width: 60ch; }
+.vk-gun li.vk-gun--kesinti time { box-shadow: inset 0 -0.35em 0 var(--vk-simdi); padding: 0 0.1em; justify-self: start; }
+@media (max-width: 560px) { .vk-gun li { grid-template-columns: 1fr; gap: 0.5rem; } }
+
+/* ---------- every business has its own words ---------- */
+.vk-meslek { width: 100%; border-collapse: collapse; margin-top: 2rem; font-size: 1rem; }
+.vk-meslek th, .vk-meslek td { text-align: left; vertical-align: top; padding: 0.95rem 1rem 0.95rem 0; border-bottom: 1px solid var(--vk-cizgi); }
+.vk-meslek thead th { font-size: var(--wp--preset--font-size--kucuk); color: var(--vk-gri); font-weight: 600; border-bottom: 2px solid var(--vk-murekkep); }
+.vk-meslek tbody th { font-weight: 800; letter-spacing: -0.01em; width: 22%; }
+.vk-meslek td:nth-child(2) { font-weight: 700; white-space: nowrap; }
+.vk-meslek td:last-child { color: var(--vk-gri); }
+@media (max-width: 760px) {
+	.vk-meslek thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+	.vk-meslek, .vk-meslek tbody, .vk-meslek tr, .vk-meslek th, .vk-meslek td { display: block; width: auto; }
+	.vk-meslek tr { padding: 1rem 0; border-bottom: 1px solid var(--vk-cizgi); }
+	.vk-meslek th, .vk-meslek td { border: 0; padding: 0.1rem 0; }
+	.vk-meslek tbody th { width: auto; font-size: 1.125rem; margin-bottom: 0.25rem; }
+	.vk-meslek td::before { content: attr(data-baslik) ": "; color: var(--vk-gri); font-weight: 400; }
+	.vk-meslek td:nth-child(2) { white-space: normal; }
+}
+
+/* ---------- prices as a receipt ---------- */
+.vk-fis { max-width: 26rem; }
+.vk-fis__secim { border: 0; padding: 0; margin: 0 0 1.25rem; display: grid; gap: 0.5rem; }
+.vk-fis__secim legend { font-weight: 700; margin-bottom: 0.5rem; padding: 0; }
+.vk-fis__secenek {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0 0.65rem;
+	align-items: baseline;
+	padding: 0.7rem 0.9rem;
+	border: 1px solid var(--vk-cizgi);
+	border-radius: 8px;
+	background: var(--vk-beyaz);
+	cursor: pointer;
+}
+.vk-fis__secenek:has(input:checked) { border-color: var(--vk-murekkep); box-shadow: inset 0 0 0 1px var(--vk-murekkep); }
+.vk-fis__secenek input { margin: 0; accent-color: var(--vk-lacivert); }
+.vk-fis__secenek-ad { font-weight: 700; }
+.vk-fis__secenek-ayrinti { grid-column: 2; color: var(--vk-gri); font-size: 0.9375rem; }
+.vk-fis__kagit {
+	background: var(--vk-beyaz);
+	padding: 1.5rem 1.5rem 2.1rem;
+	font-size: 0.9875rem;
+	box-shadow: 0 1px 2px rgba(31, 42, 68, 0.08);
+	/* torn till-roll edge at the bottom */
+	-webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - 10px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 16px 10px repeat-x;
+	mask: linear-gradient(#000 0 0) top / 100% calc(100% - 10px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 16px 10px repeat-x;
+}
+.vk-fis__ust { display: flex; justify-content: space-between; margin: 0 0 1rem; padding-bottom: 0.75rem; border-bottom: 1px dashed var(--vk-cizgi); font-size: 0.875rem; color: var(--vk-gri); }
+.vk-fis__ust span:first-child { font-weight: 800; color: var(--vk-murekkep); }
+.vk-fis__kalemler { margin: 0; }
+.vk-fis__kalemler div { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.3rem 0; }
+.vk-fis__kalemler dt { flex: 0 1 auto; }
+.vk-fis__kalemler div::after { content: ""; order: 1; flex: 1 1 1.5rem; border-bottom: 1px dotted #A6AFBF; transform: translateY(-0.25em); }
+.vk-fis__kalemler dd { order: 2; margin: 0; text-align: right; font-weight: 600; white-space: nowrap; }
+.vk-fis__toplam { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin: 0.9rem 0 0; padding-top: 0.75rem; border-top: 3px double var(--vk-murekkep); }
+.vk-fis__toplam strong { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; }
+.vk-fis__dugme { margin: 1.25rem 0 0; }
+@media (max-width: 480px) {
+	.vk-fis__kagit { padding-inline: 1.1rem; font-size: 0.9375rem; }
+	.vk-fis__kalemler div::after { flex-basis: 1rem; }
+}
+.vk-soz { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 0.9rem; max-width: 38rem; }
+.vk-soz li { padding-left: 1.4rem; position: relative; }
+.vk-soz li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 0.6rem; height: 0.6rem; border-radius: 2px; background: var(--vk-lacivert); }
+.vk-soz b { font-weight: 700; }
+
+/* ---------- questions ---------- */
+.wp-block-details summary { font-weight: 700; font-size: 1.1875rem; cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+.wp-block-details summary::-webkit-details-marker { display: none; }
+.wp-block-details summary::after { content: "+"; font-weight: 400; font-size: 1.5rem; line-height: 1; color: var(--vk-gri); }
+.wp-block-details[open] summary::after { content: "−"; }
+.wp-block-details > :not(summary) { color: var(--vk-gri); max-width: 64ch; margin-top: 0.6rem; }
+
+/* ---------- download steps (a real sequence) ---------- */
+.vk-adimlar { list-style: none; counter-reset: adim; padding: 0; margin: 2rem 0 0; display: grid; gap: 1.5rem; }
+.vk-adimlar li { counter-increment: adim; display: grid; grid-template-columns: 2.5rem 1fr; gap: 0 1rem; }
+.vk-adimlar li::before { content: counter(adim); font-weight: 800; font-size: 1.5rem; line-height: 1.2; color: var(--vk-gri); }
+.vk-adimlar b { display: block; }
+.vk-adimlar span { color: var(--vk-gri); }
+
+/* ---------- footer ---------- */
+.vk-alt { border-top: 1px solid var(--vk-cizgi); font-size: var(--wp--preset--font-size--kucuk); color: var(--vk-gri); }
+.vk-alt a { color: var(--vk-murekkep); }
+.vk-alt h2 { font-size: 1rem; font-weight: 700; letter-spacing: 0; margin: 0 0 0.5rem; }
+.vk-alt ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
+.vk-alt__iz { border-left: 4px solid var(--vk-simdi); padding-left: 0.9rem; color: var(--vk-murekkep); max-width: 46ch; }
+
+/* ---------- the plugin's checkout and Lisanslarım pages, in the theme's voice ---------- */
+body .vernuko-checkout, body .vernuko-licenses { max-width: 40rem; }
+body .vernuko-checkout h3 { font-size: var(--wp--preset--font-size--ara); margin-top: 0; }
+body .vernuko-checkout input[type=text], body .vernuko-checkout input[type=email], body .vernuko-checkout input[type=tel], body .vernuko-licenses input[type=email] {
+	border: 1px solid #A6AFBF;
+	border-radius: 6px;
+	padding: 0.75rem 0.85rem;
+	background: var(--vk-beyaz);
+}
+body .vernuko-checkout input:focus, body .vernuko-licenses input:focus { outline: 3px solid var(--vk-kalem); outline-offset: 1px; border-color: var(--vk-kalem); }
+body .vernuko-button, body .vernuko-licenses button:not(.vernuko-button) { border-radius: 6px; }
+body .vernuko-card { border-color: var(--vk-cizgi); background: var(--vk-beyaz); border-radius: 10px; }
+body .vernuko-error { border-color: #B03A3A; color: #8E2B2B; background: #FBEAEA; }
+body .vernuko-note { background: var(--vk-mavi-acik); color: var(--vk-murekkep); }
+body .vernuko-plan-list { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+body .vernuko-plan-list a { display: block; padding: 0.9rem 1rem; border: 1px solid var(--vk-cizgi); border-radius: 8px; background: var(--vk-beyaz); text-decoration: none; color: var(--vk-murekkep); }
+body .vernuko-plan-list a:hover { border-color: var(--vk-murekkep); }
+body .vernuko-plan-list b { display: block; }
+body .vernuko-plan-list span { color: var(--vk-gri); font-size: 0.9375rem; }
+body .vernuko-indir { display: grid; gap: 0.4rem; justify-items: start; }
+body .vernuko-indir small { color: var(--vk-gri); }

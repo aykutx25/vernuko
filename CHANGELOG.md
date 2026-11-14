@@ -2,6 +2,30 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmadı] — Satış sitesi teması
+
+Masaüstü programında değişiklik yok; bu bölüm satış sitesiyle ilgili.
+
+### Eklendi — WordPress satış teması 1.0.0 (`wordpress/vernuko-theme`)
+- **Blok teması:** Tasarım, Türkiye'deki randevu programlarının sitelerine bakılarak çıkarıldı (bkz. `DESIGN.md`). Ortak kalıplar bilerek kullanılmadı: mor geçişler, telefon görselleri, üç kartlık özellik ızgarası.
+- **Ana sayfa:**
+  - Programın gün ekranı çalışır hâlde gösterilir. İşletme türü değiştirilebilir. İnternet kapatılınca kapıdan gelen müşteri yine kaydedilir.
+  - Kayıtların nerede durduğunu bulut programlarıyla yan yana gösteren şerit.
+  - Saat saat bir iş günü; meslek tablosu; sorular.
+- **Fiyat fişi:**
+  - Paketler eklentiden okunur. Kurulum, kullanıcı başı ücret ve komisyon "0,00 TL" olarak açıkça yazılır.
+  - Paket seçince fiş ve satın alma bağlantısı değişir.
+- **Sayfa desenleri:** indirme, satın alma, Lisanslarım. Ön bilgilendirme, mesafeli satış, KVKK ve çerez metinleri için taslaklar var; hukuk danışmanı onayı gerekir.
+- **Dış sunucuya istek yok:** yazı tipi temanın içinde, emoji betiği ve Gravatar kapalı, analiz kodu yok.
+- **CI:** temayı denetler (PHP sözdizimi, `theme.json`) ve `vernuko-theme-wordpress` zip'ini üretir.
+
+### WordPress lisans eklentisi 1.3.0
+- `[vernuko_satin_al]` paket verilmeden kullanılabilir: adresteki `?paket=` okunur, yoksa paket listesi gösterilir. Böylece tek bir satın alma sayfası bütün paketlere yeter.
+- **Satın alma sayfası** ayarı eklendi. Temadaki fiyat fişi bu adrese gider.
+- `[vernuko_indir]` deneme sürümünü indirme düğmesini gösterir:
+  - En yeni `…-Setup.exe` dosyası `VERNUKO_LICENSE_RELEASES_DIR` klasöründen `/wp-json/vernuko/v1/indir` adresiyle verilir.
+  - Sürüm ve boyut düğmenin altında yazar.
+
 ## [0.13.0] — 2026-11-14 — Genel hata ve görünüm denetimi
 
 Dört alanlı kod incelemesi (alan/servisler, arayüz, altyapı, WordPress eklentisi) ve gerçek boyutlu ekran görüntüleriyle yapılan görsel denetimden çıkan hatalar düzeltildi. Her düzeltmenin testi var (C# ve PHP).

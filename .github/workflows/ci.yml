@@ -41,6 +41,19 @@ jobs:
           name: vernuko-license-wordpress-plugin
           path: wp-plugin/vernuko-license.zip
           if-no-files-found: error
+      - name: WordPress sales theme (PHP lint + theme.json)
+        run: |
+          find wordpress/vernuko-theme -name '*.php' -print0 | xargs -0 -n1 php -l
+          php -r 'json_decode(file_get_contents("wordpress/vernuko-theme/theme.json"), false, 512, JSON_THROW_ON_ERROR); echo "theme.json OK\n";'
+      - name: Package WordPress theme
+        run: |
+          mkdir -p wp-theme && cd wordpress && zip -r ../wp-theme/vernuko-theme.zip vernuko-theme
+      - name: Upload WordPress theme
+        uses: actions/upload-artifact@v4
+        with:
+          name: vernuko-theme-wordpress
+          path: wp-theme/vernuko-theme.zip
+          if-no-files-found: error
       - name: Publish license server (linux-x64)
         run: dotnet publish src/Vernuko.LicenseServer/Vernuko.LicenseServer.csproj -c Release -r linux-x64 --self-contained -o license-server
       - name: Upload license server

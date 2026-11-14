@@ -36,6 +36,7 @@ final class Checkout
     {
         add_shortcode('vernuko_satin_al', [self::class, 'checkoutShortcode']);
         add_shortcode('vernuko_lisanslarim', [self::class, 'licensesShortcode']);
+        add_shortcode('vernuko_indir', [self::class, 'downloadShortcode']);
         add_action('template_redirect', [self::class, 'noCache'], 0);
         add_action('template_redirect', [self::class, 'handlePost']);
         add_action('rest_api_init', [self::class, 'routes']);
@@ -59,7 +60,7 @@ final class Checkout
 
     public static function settings(): array
     {
-        return wp_parse_args((array) get_option(self::OPT_SETTINGS, []), ['terms_url' => '', 'privacy_url' => '', 'licenses_url' => '', 'renew_url' => '']);
+        return wp_parse_args((array) get_option(self::OPT_SETTINGS, []), ['terms_url' => '', 'privacy_url' => '', 'licenses_url' => '', 'renew_url' => '', 'buy_url' => '']);
     }
 
     /** @return array<string,string> provider key => label, only the configured ones */
@@ -102,21 +103,29 @@ final class Checkout
 
     // ------------------------------------------------------------ checkout page
 
-    /** [vernuko_satin_al plan="yillik"] */
+    /**
+     * [vernuko_satin_al plan="yillik"] — one plan's checkout. Without plan="…" the page serves every plan: the plan
+     * comes from the address (?paket=yillik, used by the theme's price receipt), and without one a plan list is shown.
+     */
     public static function checkoutShortcode($atts): string
     {
         $atts = shortcode_atts(['plan' => ''], (array) $atts);
         $plans = self::plans();
-        $plan = $plans[$atts['plan']] ?? null;
         $orders = self::orders();
-        if ($plan === null || $orders === null) {
-            return '<p>' . esc_html($orders === null ? 'Satış henüz yapılandırılmadı.' : 'Paket bulunamadı: ' . $atts['plan']) . '</p>';
+        if ($orders === null) {
+            return '<p>Satış henüz yapılandırılmadı.</p>';
         }
 
-        // Returning from the payment page
+        // Returning from the payment page (needs no plan).
         $orderId = sanitize_text_field(wp_unslash($_GET['vernuko_order'] ?? ''));
         if ($orderId !== '') {
             return self::orderStatus($orders, $orderId);
+        }
+
+        $planId = $atts['plan'] !== '' ? (string) $atts['plan'] : sanitize_key(wp_unslash($_GET['paket'] ?? ''));
+        $plan = $plans[$planId] ?? null;
+        if ($plan === null) {
+            return $atts['plan'] !== '' ? '<p>' . esc_html('Paket bulunamadı: ' . $atts['plan']) . '</p>' : self::planList($plans);
         }
 
         self::styles();
@@ -168,6 +177,83 @@ final class Checkout
         $html .= '<label><input type="checkbox" name="vk_privacy" value="1" required> <span>' . $privacy . ' okudum.</span></label></div>';
         $html .= '<p><button type="submit" class="wp-element-button vernuko-button">Ödemeye geç</button></p></form>';
         return $html;
+    }
+
+    /** @param array<string,Plan> $plans */
+    private static function planList(array $plans): string
+    {
+        self::styles();
+        $sorted = array_values($plans);
+        usort($sorted, static fn (Plan $a, Plan $b) => [$a->kind === 'renewal', $a->priceKurus] <=> [$b->kind === 'renewal', $b->priceKurus]);
+        $items = '';
+        foreach ($sorted as $p) {
+            if ($p->priceKurus <= 0) {
+                continue;
+            }
+            $detail = ($p->kind === 'renewal' ? 'Yenileme, ' : '') . $p->priceText() . ', ' . $p->devices . ' bilgisayar, ' . $p->days . ' gün';
+            $items .= '<li><a href="' . esc_url(add_query_arg('paket', $p->id, remove_query_arg(['paket', 'vernuko_order', 'durum', 'vk_n'], self::currentUrl()))) . '"><b>' . esc_html($p->name) . '</b><span>' . esc_html($detail) . '</span></a></li>';
+        }
+        return $items === '' ? '<p>Satışta paket yok.</p>' : '<p>Bir paket seçin:</p><ul class="vernuko-plan-list">' . $items . '</ul>';
+    }
+
+    /**
+     * The newest installer in VERNUKO_LICENSE_RELEASES_DIR (the Velopack output folder that also feeds updates).
+     * @return array{path:string,name:string,size:int,version:?string}|null
+     */
+    public static function installer(): ?array
+    {
+        if (!defined('VERNUKO_LICENSE_RELEASES_DIR')) {
+            return null;
+        }
+        $dir = rtrim((string) VERNUKO_LICENSE_RELEASES_DIR, '/\\');
+        $files = glob($dir . '/*-Setup.exe') ?: [];
+        if (!$files) {
+            return null;
+        }
+        usort($files, static fn ($a, $b) => filemtime($b) <=> filemtime($a));
+        $version = null;
+        if (is_file($dir . '/releases.win.json')) {
+            $feed = json_decode((string) file_get_contents($dir . '/releases.win.json'), true);
+            foreach ((array) ($feed['Assets'] ?? []) as $asset) {
+                $v = is_array($asset) ? (string) ($asset['Version'] ?? '') : '';
+                if ($v !== '' && ($version === null || version_compare($v, $version, '>'))) {
+                    $version = $v;
+                }
+            }
+        }
+        return ['path' => $files[0], 'name' => basename($files[0]), 'size' => (int) filesize($files[0]), 'version' => $version];
+    }
+
+    /** [vernuko_indir] — the trial download button (the installer is public; the update feed stays license-gated). */
+    public static function downloadShortcode(): string
+    {
+        self::styles();
+        $i = self::installer();
+        if ($i === null) {
+            return current_user_can('manage_options')
+                ? '<p class="vernuko-note">İndirme düğmesi için wp-config.php\'de <code>VERNUKO_LICENSE_RELEASES_DIR</code> sabitini tanımlayın ve o klasöre kurulum dosyasını (<code>…-Setup.exe</code>) koyun.</p>'
+                : '<p>Kurulum dosyası çok yakında burada.</p>';
+        }
+        $mb = $i['size'] / 1048576;
+        $size = number_format($mb, $mb < 10 ? 1 : 0, ',', '.') . ' MB';
+        return '<div class="vernuko-indir"><a class="wp-element-button vernuko-button" href="' . esc_url(rest_url(Plugin::REST_NAMESPACE . '/indir')) . '">Windows için indir</a>'
+            . '<small>' . esc_html(($i['version'] !== null ? 'Sürüm ' . $i['version'] . ', ' : '') . $size) . '</small></div>';
+    }
+
+    /** GET /wp-json/vernuko/v1/indir — streams the newest installer. */
+    public static function downloadInstaller()
+    {
+        $i = self::installer();
+        if ($i === null) {
+            return new \WP_REST_Response(['code' => 'download.not_found', 'message' => 'Kurulum dosyası yayınlanmadı.'], 404);
+        }
+        nocache_headers();
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . str_replace('"', '', $i['name']) . '"');
+        header('Content-Length: ' . $i['size']);
+        header('X-Content-Type-Options: nosniff');
+        readfile($i['path']);
+        exit;
     }
 
     private static function field(string $name, string $label, string $value, string $placeholder = '', bool $required = false, string $type = 'text'): string
@@ -341,6 +427,7 @@ final class Checkout
 
     public static function routes(): void
     {
+        register_rest_route(Plugin::REST_NAMESPACE, '/indir', ['methods' => 'GET', 'permission_callback' => '__return_true', 'callback' => [self::class, 'downloadInstaller']]);
         register_rest_route(Plugin::REST_NAMESPACE, '/pay/iyzico', ['methods' => 'POST', 'permission_callback' => '__return_true', 'callback' => [self::class, 'iyzicoReturn']]);
         register_rest_route(Plugin::REST_NAMESPACE, '/pay/paytr', ['methods' => 'POST', 'permission_callback' => '__return_true', 'callback' => [self::class, 'paytrNotify']]);
         foreach (['sales', 'sales/revoke'] as $route) {
@@ -687,9 +774,9 @@ final class Checkout
                 . '<td><input type="number" min="1" name="plans[' . $i . '][days]" value="' . esc_attr((string) ($p?->days ?? 365)) . '" style="width:70px" aria-label="Satır ' . $row . ': gün"></td></tr>';
             $i++;
         }
-        $form .= '</tbody></table><p>Kısa adı boşaltılan satır silinir. Sayfaya eklemek için: <code>[vernuko_satin_al plan="yillik"]</code> · Lisanslarım sayfası: <code>[vernuko_lisanslarim]</code></p>';
+        $form .= '</tbody></table><p>Kısa adı boşaltılan satır silinir. Tek paket sayfası: <code>[vernuko_satin_al plan="yillik"]</code>. Tüm paketler için tek sayfa: <code>[vernuko_satin_al]</code> (adres <code>?paket=yillik</code> ile gelirse o paket açılır). Lisanslarım: <code>[vernuko_lisanslarim]</code>. Deneme indirme düğmesi: <code>[vernuko_indir]</code>.</p>';
         $form .= '<h2>Bağlantılar</h2><table class="form-table">';
-        foreach (['terms_url' => 'Mesafeli satış sözleşmesi + ön bilgilendirme sayfası', 'privacy_url' => 'KVKK aydınlatma metni sayfası', 'licenses_url' => '[vernuko_lisanslarim] sayfası', 'renew_url' => 'Yenileme paketinin [vernuko_satin_al] sayfası'] as $k => $label) {
+        foreach (['terms_url' => 'Mesafeli satış sözleşmesi + ön bilgilendirme sayfası', 'privacy_url' => 'KVKK aydınlatma metni sayfası', 'licenses_url' => '[vernuko_lisanslarim] sayfası', 'renew_url' => 'Yenileme paketinin [vernuko_satin_al] sayfası', 'buy_url' => 'Satın alma sayfası (plan yazılmadan [vernuko_satin_al]; temadaki fiyat fişi buraya gönderir)'] as $k => $label) {
             $form .= '<tr><th><label for="vernuko-' . esc_attr($k) . '">' . esc_html($label) . '</label></th><td><input type="url" id="vernuko-' . esc_attr($k) . '" name="settings[' . $k . ']" value="' . esc_attr($s[$k]) . '" class="regular-text"></td></tr>';
         }
         echo $form . '</table><p><button class="button button-primary">Kaydet</button></p></form></div>';
@@ -728,7 +815,7 @@ final class Checkout
                 }
                 update_option(self::OPT_PLANS, $plans, false);
                 $settings = [];
-                foreach (['terms_url', 'privacy_url', 'licenses_url', 'renew_url'] as $k) {
+                foreach (['terms_url', 'privacy_url', 'licenses_url', 'renew_url', 'buy_url'] as $k) {
                     $settings[$k] = esc_url_raw(wp_unslash($_POST['settings'][$k] ?? ''));
                 }
                 update_option(self::OPT_SETTINGS, $settings, false);

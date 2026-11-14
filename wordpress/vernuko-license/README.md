@@ -54,7 +54,9 @@ Vernuko masaüstü uygulamasının lisans sunucusu, WordPress sitenizin içinde.
    - Lisanslarım sayfası,
    - yenileme sayfası.
 4. Sayfalar (temanızın içine istediğiniz yere):
-   - Satın alma: `[vernuko_satin_al plan="yillik"]`
+   - Satın alma, tek paket: `[vernuko_satin_al plan="yillik"]`
+   - Satın alma, tüm paketler tek sayfada: `[vernuko_satin_al]`. Adres `?paket=yillik` ile gelirse o paket açılır, gelmezse paket listesi görünür. Bu sayfanın adresini Paketler ve satış'ta "Satın alma sayfası" alanına yazın; Vernuko temasındaki fiyat fişi buraya gönderir.
+   - Deneme indirme: `[vernuko_indir]`. `wp-config.php`'de `VERNUKO_LICENSE_RELEASES_DIR` (Velopack çıktı klasörü) tanımlıysa en yeni `…-Setup.exe` dosyası `/wp-json/vernuko/v1/indir` adresinden herkese açık indirilir; düğmenin altında sürüm ve boyut yazar. Güncelleme beslemesi lisanslı kurulumlara kapalı kalır.
    - Yenileme: `[vernuko_satin_al plan="yenileme"]`. Lisanslarım'daki "Yenile" düğmesi bu sayfayı anahtarı doldurulmuş olarak açar.
    - Lisanslarım: `[vernuko_lisanslarim]`. Müşteri e-postasını yazar, 30 dakika geçerli bir giriş bağlantısı alır (parola yok). Bu sayfada anahtarını, bilgisayarlarını ve bitiş tarihini görür; bozulan bilgisayarı kaldırabilir.
 
@@ -122,6 +124,10 @@ Gerçek WordPress'te, gerçek HTTP istekleriyle denendi. iyzico ve PayTR yerine,
 - **Dış satış bağlantısı:** imzasız ya da eski istek reddediliyor; tekrar ve iade doğru çalışıyor.
 - PHP testleri: `tests/core-test.php` (33 kontrol) ve `tests/sales-test.php` (51 kontrol).
 - **1.2.0 (2026-11-14):** güncel eklenti aynı sitede yeniden denendi: tablo yükseltmesi, müşteri dönmeden iyzico onayı, PayTR bildirimi, hesap e-postasını değiştirerek başkasının lisansını görme denemesi (görünmüyor), önbellek başlıkları, telefon ve masaüstü genişliğinde görünüm.
+- **1.3.0 (2026-11-14):** Vernuko satış temasıyla, WordPress 7.1.4 üzerinde denendi.
+  - Paketsiz satın alma sayfası paket listesini gösteriyor; `?paket=` ile doğru form açılıyor.
+  - Temadaki fiyat fişinden gelen bağlantı doğru paketi açıyor.
+  - `[vernuko_indir]` sürümü ve boyutu gösteriyor; `/wp-json/vernuko/v1/indir` dosyayı indiriyor (deneme dosyasıyla).
 
 ## Neler denendi (WooCommerce)
 - Çekirdek: `php tests/core-test.php` (33 kontrol).
