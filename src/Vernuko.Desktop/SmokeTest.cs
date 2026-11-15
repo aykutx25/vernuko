@@ -367,12 +367,21 @@ internal static class SmokeTest
             content = lockVm;
         }
 
+        // Screens of the main window get the window's caption buttons too, as MainWindow draws them, so the top bar
+        // looks in the screenshot as it does on screen.
+        var body = new System.Windows.Controls.Grid();
+        body.Children.Add(new System.Windows.Controls.ContentControl { Content = content });
+        if (dataContext is RootViewModel)
+        {
+            body.Children.Add(new Views.CaptionButtons { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 16, 12, 0) });
+        }
+
         var page = new System.Windows.Controls.Border
         {
             Width = width,
             Height = height,
             Background = (Brush)System.Windows.Application.Current.FindResource("AppBackgroundBrush"),
-            Child = new System.Windows.Controls.ContentControl { Content = content },
+            Child = body,
         };
         var canvas = new System.Windows.Controls.Canvas();
         canvas.Children.Add(page);

@@ -97,12 +97,8 @@ public partial class MainWindow : Window
         RootGrid.Margin = WindowState == WindowState.Maximized ? new Thickness(t.Left * 2, t.Top * 2, t.Right * 2, t.Bottom * 2) : new Thickness(0);
     }
 
-    private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
-
     private void OnMaximize(object sender, RoutedEventArgs e) =>
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-
-    private void OnClose(object sender, RoutedEventArgs e) => Close();
 
     protected override async void OnClosing(CancelEventArgs e)
     {
