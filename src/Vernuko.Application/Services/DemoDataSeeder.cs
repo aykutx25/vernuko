@@ -14,6 +14,14 @@ public sealed class DemoDataSeeder(SetupService setup, AuthService auth, Custome
     public const string DemoUsername = "demo";
     public const string DemoPassword = "Randevu-Deneme-2026";
 
+    /// <summary>Each program's demo has its own password, named after the program.</summary>
+    public static string DemoPasswordFor(BusinessMode mode) => mode switch
+    {
+        BusinessMode.Stok => "Stok-Deneme-2026",
+        BusinessMode.TeknikServis => "Servis-Deneme-2026",
+        _ => DemoPassword,
+    };
+
     public async Task<Result> SeedAsync(CancellationToken ct = default)
     {
         if (!await setup.IsCompletedAsync(ct))

@@ -257,8 +257,9 @@ public class ModeViewModelTests
         var login = Assert.IsType<LoginViewModel>(root.Screen);
         Assert.Equal(name, "Vernuko " + login.ProgramName);
         Assert.Equal(name, root.WindowTitle);
+        Assert.DoesNotContain("Randevu", DemoDataSeeder.DemoPasswordFor(mode), StringComparison.Ordinal);
         login.Username = DemoDataSeeder.DemoUsername;
-        login.Password = DemoDataSeeder.DemoPassword;
+        login.Password = DemoDataSeeder.DemoPasswordFor(mode);
         await login.LoginCommand.ExecuteAsync(null);
         await root.LastScreenChange;
 
@@ -278,6 +279,8 @@ public class ModeViewModelTests
 
         var settings = Assert.IsType<SettingsViewModel>((await Navigate(shell, "settings")).CurrentPage);
         Assert.False(settings.Messaging.ShowReminders);
+        Assert.False(settings.ShowCommissionRules);
+        Assert.Equal(mode == BusinessMode.TeknikServis, settings.ShowConsentTemplates); // phone repair keeps customer photos
         Assert.Equal("Mesaj kuralları", settings.Messaging.RulesTitle);
         if (mode == BusinessMode.TeknikServis)
         {

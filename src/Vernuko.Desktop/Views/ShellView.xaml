@@ -19,7 +19,8 @@
                 IsEnabled="{Binding Overlay, Converter={StaticResource IsNull}}">
             <Grid Margin="20,0,140,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="212" />
+                    <!-- At least the sidebar's width; "Vernuko Teknik Servis" is longer and widens it instead of being cut. -->
+                    <ColumnDefinition Width="Auto" MinWidth="212" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />

@@ -26,7 +26,9 @@ public sealed partial class LoginViewModel(IAuthService auth, ISettingsService s
     /// <summary>Shown under the login form so the user can see which version is running after an update.</summary>
     public string VersionText => $"Sürüm {env.AppVersion}";
 
-    public string? DemoHint => env.IsDemo ? $"Demo modu — kullanıcı adı: {DemoDataSeeder.DemoUsername}, parola: {DemoDataSeeder.DemoPassword}" : null;
+    private BusinessMode _mode = BusinessMode.Randevu;
+
+    public string? DemoHint => env.IsDemo ? $"Demo modu — kullanıcı adı: {DemoDataSeeder.DemoUsername}, parola: {DemoDataSeeder.DemoPasswordFor(_mode)}" : null;
 
     public event EventHandler? LoggedIn;
 
@@ -37,6 +39,8 @@ public sealed partial class LoginViewModel(IAuthService auth, ISettingsService s
             var info = await settings.GetBusinessInfoAsync();
             BusinessName = info?.BusinessName ?? "Vernuko";
             ProgramName = info is null ? string.Empty : BusinessProfileDefinition.ModeShortName(info.Mode);
+            _mode = info?.Mode ?? BusinessMode.Randevu;
+            OnPropertyChanged(nameof(DemoHint));
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

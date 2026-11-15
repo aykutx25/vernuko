@@ -29,7 +29,7 @@ public sealed class ModeDemoSeeder(SetupService setup, AuthService auth, Custome
             }
         }
 
-        var login = await auth.LoginAsync(DemoDataSeeder.DemoUsername, DemoDataSeeder.DemoPassword, ct);
+        var login = await auth.LoginAsync(DemoDataSeeder.DemoUsername, DemoDataSeeder.DemoPasswordFor(mode), ct);
         if (login.IsFailure)
         {
             return login;
@@ -56,7 +56,7 @@ public sealed class ModeDemoSeeder(SetupService setup, AuthService auth, Custome
         [],
         "Demo Yönetici",
         DemoDataSeeder.DemoUsername,
-        DemoDataSeeder.DemoPassword,
+        DemoDataSeeder.DemoPasswordFor(BusinessMode.Stok),
         false,
         null,
         IsDemo: true);
@@ -79,7 +79,7 @@ public sealed class ModeDemoSeeder(SetupService setup, AuthService auth, Custome
         [],
         "Demo Yönetici",
         DemoDataSeeder.DemoUsername,
-        DemoDataSeeder.DemoPassword,
+        DemoDataSeeder.DemoPasswordFor(BusinessMode.TeknikServis),
         false,
         null,
         IsDemo: true);

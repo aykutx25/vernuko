@@ -231,7 +231,7 @@ internal static class SmokeTest
         await RenderAsync(root, 1366, 768, Path.Combine(dir, $"{prefix}-login.png"));
         problems += Expect(report, $"{prefix} login title", root.WindowTitle, expected);
 
-        var login = await services.GetRequiredService<IAuthService>().LoginAsync(DemoDataSeeder.DemoUsername, DemoDataSeeder.DemoPassword);
+        var login = await services.GetRequiredService<IAuthService>().LoginAsync(DemoDataSeeder.DemoUsername, DemoDataSeeder.DemoPasswordFor(mode));
         if (login.IsFailure)
         {
             report.AppendLine($"{prefix}: HATA giriş {login.Error}");

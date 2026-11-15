@@ -15,7 +15,7 @@
 - **Randevuya özgü ekranlar yalnızca Vernuko Randevu'da var.** Stok ve Teknik Servis'te bunlar görünmez:
   - takvim, paketler, bekleme listesi ve randevu raporları;
   - müşteri kartında "Randevu ver", "Paket sat", randevu geçmişi ve paket sekmeleri;
-  - ayarlarda randevu aralığı, otomatik onay ve randevu hatırlatma;
+  - ayarlarda randevu aralığı, otomatik onay, randevu hatırlatma ve prim kuralları (onam formları yalnızca müşteri dosyası tutan profillerde);
   - durum çubuğundaki hatırlatma bilgisi.
 - **İşçilik:** Teknik Servis'te Hizmetler ekranının adı "İşçilik"tir; süre, oda ve cihaz alanları yoktur. Servis fişinde işçilik bu listeden seçilebilir.
 - **Kurulum sihirbazı:** Stok modunda çalışma günü, çalışma saati, personel ve hizmet adımları atlanır. Teknik Servis'te "hizmetler" adımı "işçilik kalemleri" olarak görünür.
@@ -85,7 +85,7 @@ Kaynaklar: [research/service-mode-tr.md](research/service-mode-tr.md).
 - e-Arşiv; çevrim içi durum sorgulama (yukarıdaki KVKK nedeniyle tasarım gerektirir).
 
 ## Demolar
-Her programın kendi demosu ve kendi demo veritabanı vardır. Gerçek kayıtlara dokunmazlar:
+Her programın kendi demosu, kendi demo veritabanı ve kendi demo parolası vardır (giriş ekranında yazar: Randevu-, Stok-, Servis-Deneme-2026). Gerçek kayıtlara dokunmazlar:
 - Vernuko Randevu: `demo.cmd` ya da `--demo`.
 - Vernuko Stok: `demo-stok.cmd` ya da `--demo-stok`. Örnek veri: hırdavat dükkânı; ürünler, iki tedarikçi, mal kabul, bugünkü satışlar, veresiye, iade.
 - Vernuko Teknik Servis: `demo-servis.cmd` ya da `--demo-servis`. Örnek veri: telefon servisi; her durumda birer servis fişi (teslim alındı, onay bekliyor, onarımda, parça bekliyor, hazır, teslim edildi), parçalar, kapora, aksesuar satışı.

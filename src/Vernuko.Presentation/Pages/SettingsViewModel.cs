@@ -225,10 +225,11 @@ public sealed partial class SettingsViewModel(
 
     public bool ShowMultiComputerTab => CanManageSettings || IsClient;
 
-    /// <summary>Commission rules and consent forms are useful for every profile (KVKK açık rıza applies everywhere).</summary>
-    public bool ShowCommissionRules => CanManageSettings;
+    /// <summary>Commission rules work on appointments, packages and services: Vernuko Randevu only.</summary>
+    public bool ShowCommissionRules => CanManageSettings && (Shell?.IsAppointmentMode ?? true);
 
-    public bool ShowConsentTemplates => CanManageSettings;
+    /// <summary>Consent forms belong to the customer card's "Onam ve dosyalar" tab, so they follow it.</summary>
+    public bool ShowConsentTemplates => CanManageSettings && (Shell?.ShowCustomerFiles ?? true);
 
     public override Task OnNavigatedToAsync(object? parameter) => RunAsync(async () =>
     {
