@@ -277,6 +277,14 @@ public sealed class FakePlatform : Vernuko.Presentation.Common.IPlatformServices
 
     public void CopyToClipboard(string text) => Clipboard = text;
 
+    public List<Vernuko.Application.ServiceSlipDto> PrintedSlips { get; } = [];
+
+    public bool PrintServiceSlip(Vernuko.Application.ServiceSlipDto slip)
+    {
+        PrintedSlips.Add(slip);
+        return true;
+    }
+
     public Task WriteTextFileAsync(string path, string content) => File.WriteAllTextAsync(path, content);
 
     public Task<string> ReadTextFileAsync(string path) => File.ReadAllTextAsync(path);

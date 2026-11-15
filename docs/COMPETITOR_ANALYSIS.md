@@ -9,6 +9,8 @@ Bu belge, `docs/research/` altındaki kaynaklı raporların özetidir. Tüm raka
 | [research/turkey-market-and-law.md](research/turkey-market-and-law.md) | SalonJet, Salun, Rezzim, Arvengo, Salon Randevu, Orest, CosmeticSoft, Hursoft, Diş Hekimi Pro, DentalBulut, GymKod (+ KVKK, İYS, e-Arşiv, sağlık) |
 | [research/licensing-payments-signing.md](research/licensing-payments-signing.md) | Lisanslama, ödeme altyapısı, kod imzalama, kurulum/güncelleme |
 | [research/messaging-and-backup-apis.md](research/messaging-and-backup-apis.md) | WhatsApp, Google Drive, OneDrive, Dropbox, şifreli yedek, SMS segment hesabı |
+| [research/stock-mode-tr.md](research/stock-mode-tr.md) | Vernuko Stok (15 Kasım 2026): Wolvox, Logo GO/İşbaşı, Mikro, Paraşüt, Bizim Hesap, Nebim, Bilsoft; ÖKC/GMP-3, e-Arşiv, KDV, saklama |
+| [research/service-mode-tr.md](research/service-mode-tr.md) | Vernuko Teknik Servis (15 Kasım 2026): Wolvox Servis, Bilsoft, TamirTakip, Online Servis Takip, Servisinitakipet, RepairDesk, RepairShopr, Orderry; 6502 ve SSHY, KVKK |
 
 **Yöntem ve sınırlar.** Araştırma 11–12 Kasım 2026'da yapıldı. Capterra, G2, GetApp ve Şikayetvar gibi bazı yorum siteleri otomatik erişime 403 döndürdü; bu nedenle yorum analizi Trustpilot, App Store, Google Play ve forum derlemelerine dayanıyor ve ilgili ifadeler raporlarda "ikincil" olarak işaretli. Doğrulanamayan özellikler kesin bilgi gibi yazılmadı.
 
@@ -87,6 +89,35 @@ Pazar yeri (müşteri bulma platformu), AI resepsiyonist, markalı mobil uygulam
 | Resmî olmayan WhatsApp Web otomasyonu | Hesap kapatma, politika ihlali | Asla; yalnızca wa.me (manuel) ve resmî Cloud API |
 | Pazar yeri komisyonu | Güven kaybı (Fresha/Booksy şikâyetleri) | Yok |
 | Kayıtlı kart / ön provizyon | PCI-DSS, yerel sağlayıcı bağımlılığı | Kapsam dışı; kapora manuel kaydedilir |
+
+---
+
+## 3.6 Vernuko Stok ve Vernuko Teknik Servis (15 Kasım 2026)
+Kaynaklar: [research/stock-mode-tr.md](research/stock-mode-tr.md), [research/service-mode-tr.md](research/service-mode-tr.md). Ne yapıldığı: [MODES.md](MODES.md).
+
+**Stok yazılımları**
+- Bulut ürünler (Paraşüt, Bizim Hesap, Logo İşbaşı) internetsiz çalışmıyor.
+- Masaüstü ürünlerin (Wolvox, Logo GO, Mikro) şikâyetleri güncelleme ücretinde ve "lisans bitince sistem kilitlendi" konusunda toplanıyor.
+- Küçük dükkân için modern, internetsiz, fiyatı açık bir masaüstü ürün görünmüyor.
+
+**Teknik servis yazılımları**
+- İncelenen Türk servis programlarının hiçbiri çevrimdışı çalıştığını yazmıyor.
+- Online Servis Takip, kilit desenini fişte saklıyor. Vernuko şifreyi yazdırmaz ve teslimde siler.
+
+**Yasal sınırlar (ürüne yansıyan)**
+- Perakende satış yazılımı ÖKC'ye GMP-3 ile bağlanmalıdır (VUK 483 m.8). Bağlantı yapılana kadar satış ekranı "mali fiş kesmez" der.
+- 2026'dan itibaren fatura e-Arşiv'dir. Vernuko fatura düzenlemez.
+- Servis belgeleri SSHY m.11 alanlarını, "özel servis" ibaresini ve m.10 garanti sürelerini içerir.
+- Dışarıdan sorgulanan bir durum sayfası yok: 2019'da numara tahminiyle veri sızdıran bir servis 150.000 TL KVKK cezası aldı.
+
+**Sıradaki işler (araştırmanın önceliğiyle)**
+1. Çoklu barkod ve koli/adet birim.
+2. Fiyat listeleri.
+3. Etiket yazdırma ve Excel aktarımı.
+4. Alış iadesi.
+5. Servis fişine fotoğraf.
+6. e-Arşiv entegratörü.
+7. Bir iki marka ÖKC ile GMP-3 bağlantısı.
 
 ---
 

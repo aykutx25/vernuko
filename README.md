@@ -1,9 +1,13 @@
 # Vernuko
 
-Windows için **çevrimdışı çalışan** randevu, sekreter ve işletme yönetim yazılımı. Türkiye öncelikli; güzellik ve lazer merkezlerinden kliniklere, kuaförlerden eğitim kurumlarına kadar farklı meslekler **tek bir randevu motorunu** kullanır.
+Windows için **çevrimdışı çalışan** işletme yazılımı. Türkiye öncelikli. Tek kurulum dosyası üç programdır; hangisinin çalışacağını kurulumda seçilen işletme türü belirler ([docs/MODES.md](docs/MODES.md)):
 
-> **Durum: Faz 0 ve Faz 1 tamamlandı, Faz 2 (Güzellik & Lazer operasyonları) eklendi, kurulum paketi hazır (v0.2.0, geliştirme sürümü — ticari kullanıma hazır değil).**
-> İş kuralları, veritabanı, yedekleme, lisans istemcisi ve ekranların view model'leri gerçek SQLite dosyaları üzerinde 136 otomatik testle doğrulandı. WPF arayüzü derleniyor, tüm bağlamaları statik olarak kontrol ediliyor ve kurulum paketi üretilebiliyor, **ancak henüz Windows'ta çalıştırılarak görsel olarak doğrulanmadı** (bkz. "Bilinen sınırlar").
+- **Vernuko Randevu:** güzellik ve lazer merkezlerinden kliniklere, kuaförlerden eğitim kurumlarına; tüm meslekler tek bir randevu motorunu kullanır.
+- **Vernuko Stok:** hırdavat, kırtasiye, oto yedek parça, toptan ve perakende; barkodlu satış, mal kabul, tedarikçi ve müşteri hesabı, sayım. *Mali fiş kesmez (ÖKC bağlantısı yok).*
+- **Vernuko Teknik Servis:** telefon, bilgisayar, beyaz eşya ve elektronik servisleri; servis fişi, fiyat onayı, parça, teslim, onarım garantisi.
+
+> **Durum: geliştirme sürümü 0.16.0, ticari kullanıma hazır değil.**
+> İş kuralları, veritabanı, yedekleme, lisans ve ekranların view model'leri gerçek SQLite dosyaları üzerinde otomatik testlerle doğrulanıyor (282 test). Windows CI her ekranı çizip bağlama hatalarını denetliyor. Stok ve Teknik Servis ekranları yeni; gerçek bir dükkânda denenmedi (bkz. "Bilinen sınırlar").
 
 ## Ne çalışıyor (Faz 1)
 - **Kurulum sihirbazı** (10 adım, atlanabilir adımlar), 14 meslek profili; "Güzellik ve Lazer Merkezi" tek profil.
@@ -26,8 +30,11 @@ Windows için **çevrimdışı çalışan** randevu, sekreter ve işletme yönet
 - **Onam formları** (sürümlü) ve **şifreli müşteri fotoğrafları/belgeleri** (ayrı yetki, yedeğe dahil).
 - **Kurulum paketi ve güncelleme** (Velopack): yönetici yetkisi istemez, güncellemeden önce şifreli yedek alır, kaldırma verileri silmez — [docs/RELEASE.md](docs/RELEASE.md).
 
+## Stok ve Teknik Servis (0.16.0)
+Ekran ekran ne yaptıkları, mevzuat sınırları ve henüz yapılmayanlar: [docs/MODES.md](docs/MODES.md).
+
 ## Henüz olmayanlar
-Otomatik SMS/WhatsApp, Google Drive/OneDrive/Dropbox yedeği, lisans sunucusu ve satış, diğer mesleklerin özel modülleri, çoklu bilgisayar, yükleyici imzası. Plan: [docs/ROADMAP.md](docs/ROADMAP.md).
+Yükleyici imzası; e-Arşiv/e-Fatura; ÖKC (yazar kasa) bağlantısı; Stok'ta çoklu barkod, koli/adet, fiyat listeleri, etiket ve Excel aktarımı; Teknik Servis'te cihaz fotoğrafı ve etiket. Plan: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Gereksinimler
 - Çalıştırma: Windows 10 veya 11 (x64).
@@ -77,6 +84,8 @@ src/
   Vernuko.Packages          seans paketleri ve defter
   Vernuko.Payments          cari hesap / kasa, prim kuralları ve prim defteri
   Vernuko.Inventory         ürün, stok hareketleri, hizmet malzemeleri
+  Vernuko.Commerce          Stok: satış, iade, alış, tedarikçi ve hesabı, KDV
+  Vernuko.ServiceDesk       Teknik Servis: servis fişi, durum, onay, garanti kuralları
   Vernuko.Licensing         lisans belgesi ve değerlendirme
   Vernuko.Messaging         wa.me, şablonlar, SMS arayüzü
   Vernuko.Reporting         özetler
@@ -98,6 +107,7 @@ docs/                       mimari, kararlar ve araştırma
 |---|---|
 | [docs/COMPETITOR_ANALYSIS.md](docs/COMPETITOR_ANALYSIS.md) | A. Rakip araştırması ve özellik matrisi ([kaynaklı raporlar](docs/research/)) |
 | [docs/BUSINESS_PROFILES.md](docs/BUSINESS_PROFILES.md) | B. Meslek modül matrisi |
+| [docs/MODES.md](docs/MODES.md) | Programlar: Randevu, Stok, Teknik Servis (ekranlar, mevzuat, sınırlar) |
 | [docs/DATABASE.md](docs/DATABASE.md) | C. Veritabanı mimarisi |
 | [docs/LICENSING.md](docs/LICENSING.md) | D. Lisans altyapısı kararı (ve ödeme/imzalama) |
 | [docs/BACKUP_RECOVERY.md](docs/BACKUP_RECOVERY.md) | E. Yedekleme ve kurtarma |
@@ -129,3 +139,4 @@ Copyright © 2026 Vernuko.
 - Performans hedefleri gerçek cihazlarda ölçülmedi.
 - Hukuki konular (bulut yedek ve KVKK yurt dışı aktarım, İYS, sağlık verisi) avukat görüşü gerektirir — bkz. [docs/SECURITY.md](docs/SECURITY.md).
 - **Stripe Türkiye'de kayıtlı işletmelere açık değil**; satış altyapısı için karar gerekiyor — bkz. [docs/LICENSING.md](docs/LICENSING.md).
+- **Vernuko Stok mali fiş kesmez.** Perakende satış yazılımı ÖKC'ye bağlanmalıdır (VUK 483 m.8); bu bağlantı yok. Kullanım şekli için mali müşavir görüşü gerekir — bkz. [docs/MODES.md](docs/MODES.md).

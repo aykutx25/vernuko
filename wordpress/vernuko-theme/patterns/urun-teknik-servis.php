@@ -3,7 +3,7 @@
  * Title: Program sayfası: Vernuko Teknik Servis
  * Slug: vernuko/urun-teknik-servis
  * Categories: vernuko
- * Description: Vernuko Teknik Servis sayfası ("Geniş sayfa" şablonuyla). Planlanan ekran, planlanan özellikler, satış bölümü (paket tanımlanınca fiyat ve indirme kendiliğinden gelir) ve diğer programlar.
+ * Description: Vernuko Teknik Servis sayfası ("Geniş sayfa" şablonuyla). Temsilî ekran, programdaki özellikler, satış bölümü (paket tanımlanınca fiyat ve indirme kendiliğinden gelir) ve diğer programlar.
  */
 ?>
 <!-- wp:group {"align":"full","className":"vk-giris","style":{"spacing":{"padding":{"top":"var:preset|spacing|50","bottom":"var:preset|spacing|60"}}},"layout":{"type":"constrained"}} -->
@@ -20,7 +20,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"vk-giris__not"} -->
-<p class="vk-giris__not">Telefon, bilgisayar, beyaz eşya ve klima servisleri için geliştiriliyor.</p>
+<p class="vk-giris__not">Telefon, bilgisayar, beyaz eşya, klima ve elektronik servisleri için.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:column -->
 
@@ -32,20 +32,21 @@
 
 <!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"var:preset|spacing|60","bottom":"var:preset|spacing|60"}},"border":{"top":{"color":"var:preset|color|cizgi","width":"1px"}}},"layout":{"type":"constrained"}} -->
 <section class="wp-block-group alignfull" style="border-top-color:var(--wp--preset--color--cizgi);border-top-width:1px;padding-top:var(--wp--preset--spacing--60);padding-bottom:var(--wp--preset--spacing--60)"><!-- wp:heading {"align":"wide"} -->
-<h2 class="wp-block-heading alignwide">Planlananlar</h2>
+<h2 class="wp-block-heading alignwide">Programda neler var</h2>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"align":"wide","className":"vk-aile__giris"} -->
-<p class="alignwide vk-aile__giris">Program çıktığında bu liste değişebilir. Vernuko Randevu'daki temel aynen gelir: internetsiz çalışma, aynı işyerindeki diğer bilgisayarlar, yetkiler ve şifreli yedek.</p>
+<p class="alignwide vk-aile__giris">Vernuko Randevu ile aynı kurulum dosyasıdır; kurulumda işletme türünüzü seçersiniz. Temel aynıdır: internetsiz çalışma, aynı işyerindeki diğer bilgisayarlar, yetkiler ve şifreli yedek.</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:html -->
 <ul class="vk-soz vk-soz--genis alignwide">
-	<li><b>Servis fişi.</b> Cihaz, seri numarası, arıza, aksesuarlar ve teslim alan; fiş ve cihaz etiketi yazdırılır.</li>
-	<li><b>Fiyat onayı.</b> Tutar müşteriye SMS ile kendi hesabınızdan gider; onay fişe yazılır.</li>
-	<li><b>Parça.</b> Parça stoku, parça bekleyen fişler ve fişe düşülen parçalar.</li>
-	<li><b>Cihaz geçmişi.</b> Aynı seri numarasıyla gelen cihazın önceki onarımları ve garanti süresi.</li>
-	<li><b>Teslim.</b> Hazır cihazlar listesi, ödeme ve teslim imzası.</li>
+	<li><b>Cihaz kabul.</b> Cihaz, seri numarası veya IMEI, arıza, aksesuarlar, görünür durum ve getiren; kabul belgesi yazdırılır.</li>
+	<li><b>Fiyat onayı.</b> Teklif ve müşterinin onayı fişe yazılır: nasıl alındı, kim verdi, ne zaman. Onay alınmadan cihaz onarıma alınmaz.</li>
+	<li><b>Parça ve işçilik.</b> Parça stoktan düşer; parça bekleyen fişler listede görünür.</li>
+	<li><b>Cihaz geçmişi ve garanti.</b> Aynı seri numarasıyla gelen cihazın önceki onarımları; aynı arıza 12 ay, değişen parça 6 ay garantili.</li>
+	<li><b>Teslim.</b> Kapora, ödeme ve imza alanlı servis fişi. Cihaz hazır olunca müşteriye kendi SMS hesabınızdan mesaj gider.</li>
+	<li><b>Cihaz şifresi.</b> Şifreli saklanır, hiçbir belgeye yazılmaz, teslimde silinir.</li>
 </ul>
 <!-- /wp:html --></section>
 <!-- /wp:group -->

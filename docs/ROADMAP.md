@@ -15,6 +15,7 @@
 | 6 | Lisans sunucusu ve satış | ✅ **WordPress eklentisi** (karar 2026-11-13), üç satış yolu: kendi satış sayfası (iyzico + PayTR, Lisanslarım e-posta bağlantısıyla), WooCommerce, dış sistem bağlantısı (imzalı API); gerçek WordPress'te uçtan uca ve masaüstü istemcisiyle denendi · ⬜ sitenin kurulması (tema sizde), gerçek iyzico/PayTR test hesabıyla deneme · (.NET sunucu yedek seçenek) |
 | 7 | Çoklu bilgisayar | ✅ ana bilgisayar + bağlanan bilgisayarlar (SQLite, PostgreSQL yok; testli, CI yeşil) · 🟡 iki gerçek bilgisayarda denenmedi |
 | 8 | Üretime hazırlık: güvenlik denetimi, performans, kurulum, imzalama, güncelleme, dokümantasyon | Kısmen: kurulum paketi + güncelleme ✅ (Linux'ta paket üretildi, Windows'ta kur/güncelle denenmedi 🟡) · imzalama ⬜ (sertifika yok) |
+| 9 | Programlar: Vernuko Stok ve Vernuko Teknik Servis (tek kurulum, ayrı lisans; `docs/MODES.md`) | ✅ iş kuralları, ekranlar, belgeler (testli; smoke test CI'de) · 🟡 gerçek dükkânda barkod okuyucu ve yazıcıyla denenmedi · ⬜ ÖKC (GMP-3), e-Arşiv |
 
 **Kural:** Başarı kriterleri (REQUIREMENTS.md › I) Windows'ta uçtan uca doğrulanmadan Faz 3'e geçilmez.
 
@@ -55,6 +56,23 @@
 | P1-15 | Hizmete özel oda/cihaz kuralı (lazer → lazer odası + cihaz) | P0-3 | Yanlış oda veya cihazsız randevu kaydedilmez; öneriler diğer uygun odaları tarar | ✅ (test, uçtan uca senaryo dahil) · 🟡 ekran |
 | P1-13 | Gizli uzman notları (yazar bazlı, şifreli) | P0-8 | Sekreter göremez; denetim kaydı | ✅ (test: şifreli, yalnızca yazarı, denetim, anonimleştirmede silinir) |
 | P1-14 | Arayüz yerelleştirme altyapısı (resx) | P0-12 | İngilizce dil paketi derlenir | ⬜ |
+
+## Stok ve Teknik Servis — sıradaki işler
+| # | İş | Kabul kriteri | Durum |
+|---|---|---|---|
+| S-1 | Ürün başına birden fazla barkod; koli/adet birim çarpanı (koli alınır, adet satılır) | Koli barkodu okutulunca doğru adet düşer | ⬜ |
+| S-2 | Fiyat listeleri (perakende/toptan/müşteriye özel) ve toplu % güncelleme | Müşteri seçilince listesi uygulanır | ⬜ |
+| S-3 | Barkod ve raf etiketi yazdırma (EAN-13, mağaza içi 20–29 önekleri) | Etiket yazıcıda okunur barkod | ⬜ |
+| S-4 | Excel'den ürün, fiyat ve açılış bakiyesi aktarımı | 5.000 ürün hatasız aktarılır; hatalı satırlar raporlanır | ⬜ |
+| S-5 | Alış iadesi (tedarikçiye iade) | Stok düşer, tedarikçi bakiyesi azalır | ⬜ |
+| S-6 | Müşteri ekstresi PDF / WhatsApp | Tarih aralığı, bakiye | ⬜ |
+| S-7 | e-Arşiv / e-Fatura (tek entegratör, çevrimdışı kuyruk, 7 gün sınırı uyarısı) | Entegratör test ortamında belge kesilir | ⬜ |
+| S-8 | ÖKC GMP-3 bağlantısı (1–2 marka, gerçek cihazla) | Satış mali fişe dönüşür | ⬜ |
+| T-1 | Servis fişine kabul/teslim fotoğrafı (şifreli dosya altyapısı) | Fotoğraf yedekte; yetkisiz göremez | ⬜ |
+| T-2 | Barkod/QR etiket ve termal fiş biçimi (QR yalnızca fiş kimliği) | 58/80 mm yazıcıda okunur | ⬜ |
+| T-3 | Belgenin SMS/WhatsApp ile gönderimi ve alındı kaydı (SSHY m.11/6) | Alındı tarihi fişte | ⬜ |
+| T-4 | Bakım sözleşmesi / periyodik klima bakımı | Vadesi gelen bakım listelenir | ⬜ |
+| T-5 | Teknisyen raporları ve primi | İş sayısı, süre, ciro | ⬜ |
 
 ## P2 — Gelecek
 ~~Çoklu bilgisayar (Faz 7)~~ → ✅ 0.9.0: ana bilgisayar + bağlanan bilgisayarlar (SQLite ana bilgisayarda, yerel ağda şifreli bağlantı; `docs/MULTI_PC.md`; iki gerçek bilgisayarda henüz denenmedi) · çok şube ve merkezi yönetim · online randevu portalı · Google/Microsoft takvim senkronu · e-Arşiv/e-Fatura entegratörü · grup dersleri/kontenjan · evcil hayvan, araç, veli modülleri · hediye kartı/üyelik · koyu tema · mobil yardımcı uygulama.

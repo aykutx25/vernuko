@@ -43,11 +43,14 @@ public sealed record BusinessProfileDefinition(
         _ => BusinessMode.Randevu,
     };
 
-    public static string ModeName(BusinessMode mode) => mode switch
+    public static string ModeName(BusinessMode mode) => "Vernuko " + ModeShortName(mode);
+
+    /// <summary>The program's name after the Vernuko wordmark: Randevu, Stok or Teknik Servis.</summary>
+    public static string ModeShortName(BusinessMode mode) => mode switch
     {
-        BusinessMode.Stok => "Vernuko Stok",
-        BusinessMode.TeknikServis => "Vernuko Teknik Servis",
-        _ => "Vernuko Randevu",
+        BusinessMode.Stok => "Stok",
+        BusinessMode.TeknikServis => "Teknik Servis",
+        _ => "Randevu",
     };
 
     /// <summary>For special-category data (health, therapy) reminders must not reveal the service name.</summary>

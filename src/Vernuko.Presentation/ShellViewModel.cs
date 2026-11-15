@@ -84,7 +84,13 @@ public sealed partial class ShellViewModel : ViewModelBase
     private string _connectionText = "Yerel veritabanı — internetsiz çalışır";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ProgramName), nameof(ProgramFullName))]
     private BusinessInfo? _business;
+
+    /// <summary>Next to the logo in the header: Randevu, Stok or Teknik Servis.</summary>
+    public string ProgramName => BusinessProfileDefinition.ModeShortName(Business?.Mode ?? BusinessMode.Randevu);
+
+    public string ProgramFullName => BusinessProfileDefinition.ModeName(Business?.Mode ?? BusinessMode.Randevu);
 
     public ShellViewModel(IServiceProvider services, UserSession session, ISettingsService settings, ILicenseService license, IBackupService backups, IAuthService auth, TimeProvider time, IAppEnvironment env)
     {
@@ -121,7 +127,13 @@ public sealed partial class ShellViewModel : ViewModelBase
         OnPropertyChanged(nameof(UserRoleName));
         OnPropertyChanged(nameof(UserInitials));
         await RefreshStatusAsync();
-        var start = NavItems.FirstOrDefault(n => n.Key == "appointments") ?? NavItems.First();
+        var startKey = (Business?.Mode ?? BusinessMode.Randevu) switch
+        {
+            BusinessMode.Stok => "sales",
+            BusinessMode.TeknikServis => "servicetickets",
+            _ => "appointments",
+        };
+        var start = NavItems.FirstOrDefault(n => n.Key == startKey) ?? NavItems.First();
         await NavigateAsync(start, null);
     }
 
@@ -314,6 +326,25 @@ public sealed partial class ShellViewModel : ViewModelBase
         NavItems.Clear();
         var terms = Business?.Terms ?? new Terminology("Müşteri", "Müşteriler", "Personel", "Personel", "Kaynak", "Kaynaklar");
         var features = Business?.Features ?? new HashSet<ProfileFeature>();
+        var mode = Business?.Mode ?? BusinessMode.Randevu;
+        var items = mode switch
+        {
+            BusinessMode.Stok => StockNavigation(terms),
+            BusinessMode.TeknikServis => ServiceNavigation(terms, features),
+            _ => AppointmentNavigation(terms, features),
+        };
+
+        items.Add(new("payments", mode == BusinessMode.Randevu ? "Ödemeler" : "Kasa ve Ödemeler", "IconCard", typeof(PaymentsViewModel), Permission.PaymentsView));
+        items.Add(new("reports", "Raporlar", "IconChart", typeof(ReportsViewModel), Permission.ReportsOperational));
+        items.Add(new("settings", "Ayarlar", "IconSettings", typeof(SettingsViewModel), null));
+        foreach (var item in items.Where(i => i.Permission is null || _session.Has(i.Permission.Value)))
+        {
+            NavItems.Add(item);
+        }
+    }
+
+    private static List<NavItem> AppointmentNavigation(Terminology terms, IReadOnlySet<ProfileFeature> features)
+    {
         var items = new List<NavItem>
         {
             new("home", "Ana Sayfa", "IconHome", typeof(HomeViewModel), Permission.AppointmentsView),
@@ -337,13 +368,42 @@ public sealed partial class ShellViewModel : ViewModelBase
             items.Add(new("inventory", "Stok", "IconTag", typeof(InventoryViewModel), Permission.InventoryView));
         }
 
-        items.Add(new("payments", "Ödemeler", "IconCard", typeof(PaymentsViewModel), Permission.PaymentsView));
-        items.Add(new("reports", "Raporlar", "IconChart", typeof(ReportsViewModel), Permission.ReportsOperational));
-        items.Add(new("settings", "Ayarlar", "IconSettings", typeof(SettingsViewModel), null));
-        foreach (var item in items.Where(i => i.Permission is null || _session.Has(i.Permission.Value)))
+        return items;
+    }
+
+    /// <summary>Vernuko Stok: the counter first.</summary>
+    private static List<NavItem> StockNavigation(Terminology terms) =>
+    [
+        new("sales", "Satış", "IconCart", typeof(SalesViewModel), Permission.ProductsSell),
+        new("inventory", "Ürünler ve Stok", "IconTag", typeof(InventoryViewModel), Permission.InventoryView),
+        new("purchases", "Alış ve Tedarikçiler", "IconTruck", typeof(PurchasesViewModel), Permission.InventoryView),
+        new("stocktools", "Sayım ve Sipariş", "IconClipboard", typeof(StockToolsViewModel), Permission.InventoryView),
+        new("customers", terms.Customers, "IconUsers", typeof(CustomersViewModel), Permission.CustomersView),
+    ];
+
+    /// <summary>Vernuko Teknik Servis: tickets first; sales and stock screens of the Stok mode where the profile has them.</summary>
+    private static List<NavItem> ServiceNavigation(Terminology terms, IReadOnlySet<ProfileFeature> features)
+    {
+        var items = new List<NavItem>
         {
-            NavItems.Add(item);
+            new("servicetickets", "Servis Fişleri", "IconWrench", typeof(ServiceTicketsViewModel), Permission.ServiceTicketsView),
+            new("appointments", "Randevular", "IconCalendar", typeof(AppointmentsViewModel), Permission.AppointmentsView),
+            new("customers", terms.Customers, "IconUsers", typeof(CustomersViewModel), Permission.CustomersView),
+        };
+        if (features.Contains(ProfileFeature.Sales))
+        {
+            items.Add(new("sales", "Satış", "IconCart", typeof(SalesViewModel), Permission.ProductsSell));
         }
+
+        items.Add(new("inventory", "Parça ve Stok", "IconTag", typeof(InventoryViewModel), Permission.InventoryView));
+        if (features.Contains(ProfileFeature.Purchases))
+        {
+            items.Add(new("purchases", "Alış ve Tedarikçiler", "IconTruck", typeof(PurchasesViewModel), Permission.InventoryView));
+        }
+
+        items.Add(new("catalog", "İşçilik", "IconLayers", typeof(CatalogViewModel), Permission.AppointmentsView));
+        items.Add(new("staff", terms.Staff, "IconStaff", typeof(StaffViewModel), Permission.AppointmentsView));
+        return items;
     }
 }
 

@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Vernuko.Application.Common;
 using Vernuko.Application.Services;
+using Vernuko.BusinessProfiles;
 using Vernuko.Presentation.Common;
 
 namespace Vernuko.Presentation;
@@ -16,6 +17,9 @@ public sealed partial class LoginViewModel(IAuthService auth, ISettingsService s
 
     [ObservableProperty]
     private string _businessName = "Vernuko";
+
+    [ObservableProperty]
+    private string _programName = string.Empty;
 
     public bool IsDemo => env.IsDemo;
 
@@ -32,6 +36,7 @@ public sealed partial class LoginViewModel(IAuthService auth, ISettingsService s
         {
             var info = await settings.GetBusinessInfoAsync();
             BusinessName = info?.BusinessName ?? "Vernuko";
+            ProgramName = info is null ? string.Empty : BusinessProfileDefinition.ModeShortName(info.Mode);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

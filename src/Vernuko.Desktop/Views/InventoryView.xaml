@@ -39,6 +39,7 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Ürün" Binding="{Binding Name}" Width="*" />
                                 <DataGridTextColumn Header="Kod" Binding="{Binding Sku}" Width="90" />
+                                <DataGridTextColumn Header="Barkod" Binding="{Binding Barcode}" Width="120" />
                                 <DataGridTextColumn Header="Stok" Binding="{Binding StockText}" Width="90" />
                                 <DataGridTextColumn Header="Kritik" Binding="{Binding MinimumStock}" Width="60" />
                                 <DataGridTextColumn MinWidth="104" Header="Satış fiyatı" Binding="{Binding SalePriceMinor, Converter={StaticResource Money}}" Width="100" />
@@ -77,6 +78,11 @@
                                     <StackPanel Margin="0,0,6,0"><TextBlock Text="SATIŞ FİYATI (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding SalePrice, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
                                     <StackPanel><TextBlock Text="ALIŞ MALİYETİ (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Cost, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
                                     <StackPanel Margin="0,0,6,0"><TextBlock Text="KRİTİK STOK" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding MinimumStock, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel><TextBlock Text="KDV (%)" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding VatRates}" SelectedItem="{Binding VatRate}" AutomationProperties.Name="KDV oranı" /></StackPanel>
+                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="BARKOD" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged}" Tag="Okutun veya yazın" /></StackPanel>
+                                    <StackPanel><TextBlock Text="RAF" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ShelfLocation, UpdateSourceTrigger=PropertyChanged}" Tag="Ör. A-03" /></StackPanel>
+                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="KATEGORİ" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Category, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel><TextBlock Text="TEDARİKÇİ" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Suppliers}" SelectedItem="{Binding Supplier}" DisplayMemberPath="Name" AutomationProperties.Name="Tedarikçi" /></StackPanel>
                                 </UniformGrid>
                                 <CheckBox Content="Aktif" IsChecked="{Binding IsActive}" Margin="0,10,0,0" />
                                 <WrapPanel Margin="0,12,0,0">

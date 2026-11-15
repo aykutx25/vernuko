@@ -1,0 +1,305 @@
+<UserControl x:Class="Vernuko.Desktop.Views.ServiceTicketsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="24,20,24,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <CheckBox Content="Yalnızca açık fişler" IsChecked="{Binding OpenOnly}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <Button Style="{StaticResource PrimaryButton}" Content="+ Cihaz kabul" Command="{Binding NewTicketCommand}" IsEnabled="{Binding CanManage}" />
+            </StackPanel>
+            <TextBlock Text="Servis Fişleri" Style="{StaticResource PageTitle}" />
+        </DockPanel>
+        <StackPanel Grid.Row="1">
+            <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
+            <Border Style="{StaticResource InfoBanner}" Visibility="{Binding InfoMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding InfoMessage}" TextWrapping="Wrap" /></Border>
+            <Border Style="{StaticResource WarnBanner}" Margin="0,8,0,0" Visibility="{Binding CanManage, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
+                <TextBlock Text="Servis fişlerini görüntüleyebilirsiniz; kabul, işlem ve teslim için yetki gerekir." />
+            </Border>
+        </StackPanel>
+        <Grid Grid.Row="2" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="360" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Ticket list -->
+            <Border Style="{StaticResource Card}" Margin="0,0,14,0" Padding="0">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="12,12,12,6">
+                        <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Tag="Fiş no, müşteri, telefon, seri no" Padding="34,0,10,0" AutomationProperties.Name="Servis fişi ara" />
+                        <Path Data="{StaticResource IconSearch}" Style="{StaticResource Icon}" Width="15" HorizontalAlignment="Left" Margin="11,0,0,0" IsHitTestVisible="False" TextElement.Foreground="{StaticResource TextMutedBrush}" />
+                    </Grid>
+                    <TextBlock DockPanel.Dock="Top" Margin="14,10" Style="{StaticResource Muted}" TextWrapping="Wrap" Text="Açık servis fişi yok. Cihaz geldiğinde + Cihaz kabul ile fiş açın." Visibility="{Binding Tickets.Count, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}" />
+                    <ListBox ItemsSource="{Binding Tickets}" SelectedItem="{Binding Selected}" Style="{StaticResource PlainListBox}" Margin="6,0,6,6" AutomationProperties.Name="Servis fişleri">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="4,6">
+                                    <DockPanel>
+                                        <Border DockPanel.Dock="Right" Style="{StaticResource StatusChip}" Background="{StaticResource NeutralSoftBrush}">
+                                            <TextBlock Text="{Binding StatusText}" FontSize="12" />
+                                        </Border>
+                                        <TextBlock FontWeight="SemiBold"><Run Text="{Binding Number, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding CustomerName, Mode=OneWay}" /></TextBlock>
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding DeviceText}" Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="12"><Run Text="Teslim sözü " /><Run Text="{Binding DueDate, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=date}" /></TextBlock>
+                                        <TextBlock Text="  gecikti" Foreground="{StaticResource DangerBrush}" FontSize="12" FontWeight="SemiBold" Visibility="{Binding IsOverdue, Converter={StaticResource VisibleWhen}}" />
+                                        <TextBlock Text="  onay bekliyor" Foreground="{StaticResource WarningBrush}" FontSize="12" FontWeight="SemiBold" Visibility="{Binding AwaitingApproval, Converter={StaticResource VisibleWhen}}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <!-- Nothing selected -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" VerticalAlignment="Top" Visibility="{Binding ShowEmpty, Converter={StaticResource VisibleWhen}}">
+                <StackPanel MaxWidth="620" HorizontalAlignment="Left">
+                    <TextBlock Text="Bir servis fişi seçin ya da yeni cihaz kabul edin" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Text="Kabulde müşteriye kabul belgesi verin: cihaz, seri numarası, müşterinin anlattığı arıza, aksesuarlar ve cihazın görünür durumu yazılır. Teslimde servis fişi verilir; yapılan işlem, değişen parçalar ve garanti tarihleri yazar." />
+                </StackPanel>
+            </Border>
+
+            <!-- Intake form -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" Visibility="{Binding IsEditingIntake, Converter={StaticResource VisibleWhen}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+                        <TextBlock Text="Cihaz kabul" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="MÜŞTERİ" Style="{StaticResource FieldLabel}" />
+                        <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}" Tag="Ad veya telefon yazın, listeden seçin" AutomationProperties.Name="Müşteri ara" />
+                        <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,4,0,0" Padding="4" Visibility="{Binding CustomerResults.Count, Converter={StaticResource VisibleWhen}}">
+                            <ItemsControl ItemsSource="{Binding CustomerResults}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource ListRowButton}" Command="{Binding DataContext.PickCustomerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                            <DockPanel>
+                                                <TextBlock DockPanel.Dock="Right" Text="{Binding Phone}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5" />
+                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" />
+                                            </DockPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                        <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0" Visibility="{Binding Customer, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}" Text="Müşteri kayıtlı değilse önce Müşteriler ekranından ekleyin." />
+                        <UniformGrid Columns="3">
+                            <StackPanel Margin="0,0,6,0"><TextBlock Text="CİHAZ TÜRÜ" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Devices}" SelectedItem="{Binding Device}" DisplayMemberPath="Label" AutomationProperties.Name="Cihaz türü" /></StackPanel>
+                            <StackPanel Margin="0,0,6,0"><TextBlock Text="MARKA" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Brand, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                            <StackPanel><TextBlock Text="MODEL" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                        </UniformGrid>
+                        <TextBlock Text="SERİ NO / IMEI" Style="{StaticResource FieldLabel}" />
+                        <TextBox Text="{Binding Serial, UpdateSourceTrigger=PropertyChanged}" Tag="Cihazın etiketinden; *#06# telefonda IMEI'yi gösterir" />
+                        <Border Style="{StaticResource InfoBanner}" Margin="0,6,0,0" Visibility="{Binding DeviceHistory.Count, Converter={StaticResource VisibleWhen}}">
+                            <StackPanel>
+                                <TextBlock FontWeight="SemiBold" Text="Bu seri numarası daha önce servise geldi:" />
+                                <ItemsControl ItemsSource="{Binding DeviceHistory}" Focusable="False">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock><Run Text="{Binding Number, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding ReceivedAtUtc, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=utc-date}" /><Run Text="  " /><Run Text="{Binding StatusText, Mode=OneWay}" /></TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="ARIZA (MÜŞTERİNİN ANLATTIĞI)" Style="{StaticResource FieldLabel}" />
+                        <TextBox Text="{Binding Complaint, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MultilineTextBox}" />
+                        <UniformGrid Columns="2">
+                            <StackPanel Margin="0,0,6,0"><TextBlock Text="AKSESUARLAR" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Accessories, UpdateSourceTrigger=PropertyChanged}" Tag="Şarj aleti, kılıf, SIM kart…" /></StackPanel>
+                            <StackPanel><TextBlock Text="GÖRÜNÜR DURUMU" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Condition, UpdateSourceTrigger=PropertyChanged}" Tag="Çizik, kırık, sıvı teması…" /></StackPanel>
+                            <StackPanel Margin="0,0,6,0"><TextBlock Text="GETİREN" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding BroughtBy, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                            <StackPanel><TextBlock Text="TEKNİSYEN" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Staff}" SelectedItem="{Binding Technician}" DisplayMemberPath="DisplayName" AutomationProperties.Name="Teknisyen" /></StackPanel>
+                            <StackPanel Margin="0,0,6,0"><TextBlock Text="TESLİM SÖZÜ (BOŞ: 20 İŞ GÜNÜ)" Style="{StaticResource FieldLabel}" /><DatePicker SelectedDate="{Binding PromisedDate}" AutomationProperties.Name="Teslim sözü" /></StackPanel>
+                            <StackPanel><TextBlock Text="CİHAZ ŞİFRESİ (İSTEĞE BAĞLI)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding UnlockCode, UpdateSourceTrigger=PropertyChanged}" Tag="Şifreli saklanır, yazdırılmaz" AutomationProperties.Name="Cihaz şifresi" /></StackPanel>
+                        </UniformGrid>
+                        <CheckBox Content="Yerinde servis (cihaz müşterinin adresinde)" IsChecked="{Binding OnSite}" Margin="0,10,0,0" />
+                        <StackPanel Visibility="{Binding OnSite, Converter={StaticResource VisibleWhen}}">
+                            <TextBlock Text="SERVİS ADRESİ" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding SiteAddress, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Muted}" Margin="0,10,0,0" TextWrapping="Wrap" Text="Cihaz şifresini yalnızca onarım için gerekiyorsa isteyin. Şifre şifrelenmiş saklanır, kabul belgesine ve servis fişine yazılmaz, her görüntüleme kaydedilir ve teslimde silinir." />
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveIntakeCommand}" MinWidth="110" Margin="0,0,8,0" IsEnabled="{Binding CanManage}" />
+                            <Button Content="Vazgeç" Command="{Binding CancelIntakeCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Ticket detail -->
+            <Grid Grid.Column="1" Visibility="{Binding ShowDetail, Converter={StaticResource VisibleWhen}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <DockPanel>
+                            <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Top">
+                                <Button Content="Kabul belgesi yazdır" Command="{Binding PrintCommand}" CommandParameter="Intake" Margin="0,0,8,4" />
+                                <Button Content="Servis fişi yazdır" Command="{Binding PrintCommand}" CommandParameter="Delivery" Margin="0,0,8,4" Visibility="{Binding IsOpenTicket, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}" />
+                                <Button Style="{StaticResource GhostButton}" Content="Bilgileri düzenle" Command="{Binding EditIntakeCommand}" Margin="0,0,0,4" IsEnabled="{Binding CanManage}" Visibility="{Binding IsOpenTicket, Converter={StaticResource VisibleWhen}}" />
+                            </WrapPanel>
+                            <StackPanel>
+                                <TextBlock FontSize="18" FontWeight="SemiBold"><Run Text="{Binding Ticket.Summary.Number, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding Ticket.Summary.StatusText, Mode=OneWay}" Foreground="{StaticResource PrimaryBrush}" /></TextBlock>
+                                <TextBlock><Run Text="{Binding Ticket.Summary.CustomerName, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="  " /><Run Text="{Binding Ticket.Summary.CustomerPhone, Mode=OneWay}" Foreground="{StaticResource TextSecondaryBrush}" /></TextBlock>
+                                <TextBlock Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"><Run Text="{Binding Ticket.Summary.DeviceText, Mode=OneWay}" /><Run Text="  Seri: " /><Run Text="{Binding Ticket.Intake.SerialNumber, Mode=OneWay, TargetNullValue='—'}" /></TextBlock>
+                                <TextBlock Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"><Run Text="Arıza: " /><Run Text="{Binding Ticket.Intake.Complaint, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="12"><Run Text="Kabul " /><Run Text="{Binding Ticket.Summary.ReceivedAtUtc, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" /><Run Text=", teslim sözü " /><Run Text="{Binding Ticket.Summary.DueDate, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=date}" /><Run Text=", teknisyen " /><Run Text="{Binding Ticket.Summary.TechnicianName, Mode=OneWay, TargetNullValue='atanmadı'}" /></TextBlock>
+                            </StackPanel>
+                        </DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Visibility="{Binding Ticket.HasUnlockCode, Converter={StaticResource VisibleWhen}}">
+                            <Path Data="{StaticResource IconLock}" Style="{StaticResource Icon}" Width="14" Margin="0,0,6,0" />
+                            <TextBlock Text="Cihaz şifresi kayıtlı." VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Button Style="{StaticResource LinkButton}" Content="Göster" Command="{Binding RevealCodeCommand}" IsEnabled="{Binding CanManage}" Visibility="{Binding RevealedCode, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}" />
+                            <TextBox Text="{Binding RevealedCode, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource MonoTextBox}" MinWidth="140" Visibility="{Binding RevealedCode, Converter={StaticResource VisibleWhen}}" AutomationProperties.Name="Cihaz şifresi" />
+                        </StackPanel>
+                        <Border Style="{StaticResource InfoBanner}" Margin="0,8,0,0" Visibility="{Binding WarrantyText, Converter={StaticResource VisibleWhen}}">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="Garanti kapsamına al" Command="{Binding LinkWarrantyCommand}" Visibility="{Binding CanLinkWarranty, Converter={StaticResource VisibleWhen}}" IsEnabled="{Binding CanManage}" Margin="8,0,0,0" />
+                                <TextBlock Text="{Binding WarrantyText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+                <TabControl Grid.Row="1">
+                    <TabItem Header="İşlem ve onay">
+                        <Border Style="{StaticResource Card}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel MaxWidth="760" HorizontalAlignment="Left" IsEnabled="{Binding IsOpenTicket}">
+                                    <TextBlock Text="Tespit ve yapılan işlem" Style="{StaticResource SectionTitle}" />
+                                    <TextBlock Text="TESPİT (TEKNİSYEN)" Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding Diagnosis, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MultilineTextBox}" />
+                                    <TextBlock Text="YAPILAN İŞLEM (SERVİS FİŞİNE YAZILIR)" Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding WorkDone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MultilineTextBox}" />
+                                    <Button Content="Kaydet" Command="{Binding SaveDiagnosisCommand}" HorizontalAlignment="Left" Margin="0,8,0,0" IsEnabled="{Binding CanManage}" />
+
+                                    <Separator Margin="0,14" />
+                                    <TextBlock Text="Fiyat teklifi ve müşteri onayı" Style="{StaticResource SectionTitle}" />
+                                    <TextBlock Text="{Binding ApprovalText}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                    <WrapPanel>
+                                        <StackPanel Margin="0,0,8,0"><TextBlock Text="TEKLİF (₺, KDV DAHİL)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Estimate, UpdateSourceTrigger=PropertyChanged}" Width="150" /></StackPanel>
+                                        <StackPanel Margin="0,0,8,0"><TextBlock Text="ONAYLANMAZSA TESPİT ÜCRETİ (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding DiagnosticFee, UpdateSourceTrigger=PropertyChanged}" Width="150" /></StackPanel>
+                                        <Button Content="Teklifi kaydet" Command="{Binding SetEstimateCommand}" VerticalAlignment="Bottom" IsEnabled="{Binding CanManage}" />
+                                    </WrapPanel>
+                                    <StackPanel Visibility="{Binding IsApprovalPending, Converter={StaticResource VisibleWhen}}" Margin="0,8,0,0">
+                                        <WrapPanel>
+                                            <StackPanel Margin="0,0,8,0"><TextBlock Text="ONAY NASIL ALINDI" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding ApprovalChannels}" SelectedItem="{Binding ApprovalChannel}" DisplayMemberPath="Label" Width="170" AutomationProperties.Name="Onay kanalı" /></StackPanel>
+                                            <StackPanel><TextBlock Text="ONAY VEREN" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ApprovedBy, UpdateSourceTrigger=PropertyChanged}" Width="200" /></StackPanel>
+                                        </WrapPanel>
+                                        <WrapPanel Margin="0,8,0,0">
+                                            <Button Style="{StaticResource PrimaryButton}" Content="Müşteri onayladı" Command="{Binding ApproveCommand}" Margin="0,0,8,0" IsEnabled="{Binding CanManage}" />
+                                            <Button Content="Onaylamadı" Command="{Binding DeclineCommand}" Margin="0,0,8,0" IsEnabled="{Binding CanManage}" />
+                                            <Button Style="{StaticResource GhostButton}" Content="Teklifi geri çek" Command="{Binding WithdrawEstimateCommand}" IsEnabled="{Binding CanManage}" />
+                                        </WrapPanel>
+                                    </StackPanel>
+
+                                    <Separator Margin="0,14" />
+                                    <TextBlock Text="Durum" Style="{StaticResource SectionTitle}" />
+                                    <WrapPanel>
+                                        <Button Content="Arıza tespitinde" Command="{Binding MoveCommand}" CommandParameter="Diagnosing" Margin="0,0,8,6" IsEnabled="{Binding CanManage}" />
+                                        <Button Content="Parça bekliyor" Command="{Binding MoveCommand}" CommandParameter="AwaitingParts" Margin="0,0,8,6" IsEnabled="{Binding CanManage}" />
+                                        <Button Content="Onarımda" Command="{Binding MoveCommand}" CommandParameter="Repairing" Margin="0,0,8,6" IsEnabled="{Binding CanManage}" />
+                                        <Button Style="{StaticResource PrimaryButton}" Content="Teslime hazır" Command="{Binding MoveCommand}" CommandParameter="Ready" Margin="0,0,8,6" IsEnabled="{Binding CanManage}" />
+                                        <Button Style="{StaticResource DangerButton}" Content="Onarılamadı" Command="{Binding MoveCommand}" CommandParameter="Unrepairable" Margin="0,0,0,6" IsEnabled="{Binding CanManage}" />
+                                    </WrapPanel>
+                                    <TextBlock Text="AÇIKLAMA (ONARILAMADIYSA NEDENİ ZORUNLU)" Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding StatusReason, UpdateSourceTrigger=PropertyChanged}" />
+                                    <CheckBox Content="Hazır olunca müşteriye SMS gönder (Mesajlar ayarlıysa)" IsChecked="{Binding NotifyCustomer}" Margin="0,8,0,0" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </TabItem>
+                    <TabItem Header="Parça ve işçilik">
+                        <Border Style="{StaticResource Card}">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0" IsEnabled="{Binding IsOpenTicket}">
+                                    <WrapPanel>
+                                        <StackPanel Margin="0,0,8,0"><TextBlock Text="PARÇA (BARKOD, KOD VEYA AD)" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding PartCode, UpdateSourceTrigger=PropertyChanged}" Width="240" AutomationProperties.Name="Parça">
+                                                <TextBox.InputBindings><KeyBinding Key="Enter" Command="{Binding AddPartCommand}" /></TextBox.InputBindings>
+                                            </TextBox>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,0,8,0"><TextBlock Text="ADET" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding PartQuantity, UpdateSourceTrigger=PropertyChanged}" Width="60" /></StackPanel>
+                                        <Button Content="Parça ekle" Command="{Binding AddPartCommand}" VerticalAlignment="Bottom" IsEnabled="{Binding CanManage}" />
+                                    </WrapPanel>
+                                    <WrapPanel Margin="0,6,0,0">
+                                        <StackPanel Margin="0,0,8,0"><TextBlock Text="İŞÇİLİK" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding LaborText, UpdateSourceTrigger=PropertyChanged}" Width="240" Tag="Ör. ekran değişimi" /></StackPanel>
+                                        <StackPanel Margin="0,0,8,0"><TextBlock Text="ÜCRET (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding LaborPrice, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
+                                        <Button Content="İşçilik ekle" Command="{Binding AddLaborCommand}" VerticalAlignment="Bottom" IsEnabled="{Binding CanManage}" />
+                                    </WrapPanel>
+                                    <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" TextWrapping="Wrap" Text="Eklenen parça stoktan düşer; kaldırırsanız stoğa geri döner. Garanti kapsamındaki onarımda işçilik ücreti alınmaz." />
+                                </StackPanel>
+                                <TextBlock DockPanel.Dock="Bottom" Text="{Binding AmountDueText}" FontWeight="SemiBold" Margin="0,8,0,0" />
+                                <DataGrid ItemsSource="{Binding Ticket.Lines}" AutomationProperties.Name="Parça ve işçilik">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Kalem" Binding="{Binding Description}" Width="*" />
+                                        <DataGridTextColumn Header="Adet" Binding="{Binding Quantity}" Width="60" />
+                                        <DataGridTextColumn Header="Birim" Binding="{Binding UnitPriceMinor, Converter={StaticResource Money}}" Width="100" />
+                                        <DataGridTextColumn Header="Tutar" Binding="{Binding TotalMinor, Converter={StaticResource Money}}" Width="100" />
+                                        <DataGridTextColumn Header="Teknisyen" Binding="{Binding StaffName}" Width="120" />
+                                        <DataGridTemplateColumn Width="70">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Style="{StaticResource LinkButton}" Content="Kaldır" Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" IsEnabled="{Binding DataContext.IsOpenTicket, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </Border>
+                    </TabItem>
+                    <TabItem Header="Kapora ve teslim">
+                        <Border Style="{StaticResource Card}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding AmountDueText}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <StackPanel IsEnabled="{Binding IsOpenTicket}">
+                                        <Separator Margin="0,12" />
+                                        <TextBlock Text="Kapora (nakit)" Style="{StaticResource SectionTitle}" />
+                                        <WrapPanel>
+                                            <TextBox Text="{Binding Deposit, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="0,0,8,0" AutomationProperties.Name="Kapora" />
+                                            <Button Content="Kapora al" Command="{Binding TakeDepositCommand}" IsEnabled="{Binding CanManage}" />
+                                        </WrapPanel>
+                                        <Separator Margin="0,12" />
+                                        <TextBlock Text="Teslim" Style="{StaticResource SectionTitle}" />
+                                        <TextBlock Text="TESLİM ALAN" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding DeliveredTo, UpdateSourceTrigger=PropertyChanged}" />
+                                        <UniformGrid Columns="2">
+                                            <StackPanel Margin="0,0,6,0"><TextBlock Text="NAKİT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding PayCash, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                            <StackPanel><TextBlock Text="KART (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding PayCard, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                        </UniformGrid>
+                                        <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" TextWrapping="Wrap" Text="Ödenmeyen kısım müşterinin hesabına yazılır. Teslimde cihaz şifresi silinir; servis fişini yazdırıp imzalatın." />
+                                        <Button Style="{StaticResource PrimaryButton}" Content="Cihazı teslim et" Command="{Binding DeliverCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" IsEnabled="{Binding CanManage}" />
+                                    </StackPanel>
+                                    <StackPanel Visibility="{Binding IsOpenTicket, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}" Margin="0,12,0,0">
+                                        <TextBlock><Run Text="Teslim edildi: " /><Run Text="{Binding Ticket.DeliveredAtUtc, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" /><Run Text=", teslim alan " /><Run Text="{Binding Ticket.DeliveredTo, Mode=OneWay}" /></TextBlock>
+                                        <TextBlock Margin="0,4,0,0"><Run Text="Aynı arıza garantisi: " /><Run Text="{Binding Ticket.SameFaultWarrantyUntil, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=date}" /></TextBlock>
+                                        <TextBlock><Run Text="Parça garantisi: " /><Run Text="{Binding Ticket.PartsWarrantyUntil, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=date}" /></TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </TabItem>
+                    <TabItem Header="Geçmiş">
+                        <Border Style="{StaticResource Card}" Padding="0">
+                            <DataGrid ItemsSource="{Binding Ticket.History}" AutomationProperties.Name="Fiş geçmişi">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Tarih" Binding="{Binding AtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                                    <DataGridTextColumn Header="Olay" Binding="{Binding Text}" Width="*" />
+                                    <DataGridTextColumn Header="Kullanıcı" Binding="{Binding UserName}" Width="120" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

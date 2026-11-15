@@ -130,7 +130,7 @@ function vernuko_urun_satis_html(string $id): string
     }
     return '<div class="vk-yakinda" role="note">'
         . '<p class="vk-yakinda__durum">' . esc_html($u['ad']) . ' geliştiriliyor</p>'
-        . '<p>Henüz satılmıyor ve indirilemiyor; çıkış tarihi belli değil. Bu sayfadaki ekran ve özellikler planlanan tasarımdır, çıktığında değişebilir.</p>'
-        . '<p>Program satışa çıktığında fiyatı ve indirme düğmesi burada görünür. Lisansı da Vernuko Randevu\'nunkinden ayrıdır: her program kendi anahtarıyla çalışır.</p>'
+        . '<p>Henüz satılmıyor ve indirilemiyor; satış tarihi belli değil. Program Vernuko Randevu ile aynı kurulum dosyasındadır; kurulumda işletme türünü seçersiniz.</p>'
+        . '<p>Satış başladığında fiyatı ve indirme düğmesi burada görünür. Lisansı Vernuko Randevu\'nunkinden ayrıdır: her program kendi anahtarıyla çalışır.</p>'
         . '</div>';
 }

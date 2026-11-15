@@ -22,7 +22,7 @@ public sealed partial class MaterialRow : ObservableObject
 }
 
 /// <summary>Stok: products, stock in/out, automatic service materials and product sales.</summary>
-public sealed partial class InventoryViewModel(IInventoryService inventory, ICatalogService catalog, ICustomerService customers, IDialogService dialogs) : PageViewModel, IShellAware
+public sealed partial class InventoryViewModel(IInventoryService inventory, ICatalogService catalog, ICustomerService customers, ICommerceService commerce, IDialogService dialogs) : PageViewModel, IShellAware
 {
     private readonly Debouncer _debounce = new(TimeSpan.FromMilliseconds(250));
     private string _saleKey = Guid.NewGuid().ToString("N");
@@ -50,6 +50,21 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
 
     [ObservableProperty]
     private bool _isActive = true;
+
+    [ObservableProperty]
+    private string? _barcode;
+
+    [ObservableProperty]
+    private int _vatRate = 20;
+
+    [ObservableProperty]
+    private string? _category;
+
+    [ObservableProperty]
+    private string? _shelfLocation;
+
+    [ObservableProperty]
+    private SupplierDto? _supplier;
 
     [ObservableProperty]
     private bool _lowOnly;
@@ -96,6 +111,10 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
 
     public ObservableCollection<MaterialRow> Materials { get; } = [];
 
+    public ObservableCollection<SupplierDto> Suppliers { get; } = [];
+
+    public IReadOnlyList<int> VatRates { get; } = [0, 1, 10, 20];
+
     public IReadOnlyList<Option<PaymentMethod?>> PaymentOptions { get; } =
         new[] { new Option<PaymentMethod?>("Daha sonra ödenecek (borç)", null) }
             .Concat(PaymentDialogViewModel.MoneyMethods.Select(m => new Option<PaymentMethod?>("Hemen tahsil et: " + m.Label, m.Value))).ToList();
@@ -108,6 +127,12 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
 
     public override Task OnNavigatedToAsync(object? parameter) => RunAsync(async () =>
     {
+        Suppliers.Clear();
+        foreach (var s in (await commerce.GetSuppliersAsync()).OrEmpty())
+        {
+            Suppliers.Add(s);
+        }
+
         Staff.Clear();
         foreach (var s in (await catalog.GetStaffAsync()).OrEmpty())
         {
@@ -140,6 +165,11 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
         Cost = (value.CostMinor / 100m).ToString("0.##", TurkishText.Culture);
         MinimumStock = value.MinimumStock.ToString(CultureInfo.InvariantCulture);
         IsActive = value.IsActive;
+        Barcode = value.Barcode;
+        VatRate = value.VatRate;
+        Category = value.Category;
+        ShelfLocation = value.ShelfLocation;
+        Supplier = Suppliers.FirstOrDefault(s => s.Id == value.SupplierId);
         SalePriceText = SalePrice;
         _ = LoadMovementsAsync();
     }
@@ -191,6 +221,11 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
         Cost = "0";
         MinimumStock = "0";
         IsActive = true;
+        Barcode = null;
+        VatRate = 20;
+        Category = null;
+        ShelfLocation = null;
+        Supplier = null;
         Movements.Clear();
     }
 
@@ -210,7 +245,7 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
             return;
         }
 
-        var r = await inventory.SaveProductAsync(new ProductDto(Selected?.Id ?? Guid.Empty, Name, Sku, Unit, price.Value.Minor, cost.Value.Minor, min, IsActive, 0));
+        var r = await inventory.SaveProductAsync(new ProductDto(Selected?.Id ?? Guid.Empty, Name, Sku, Unit, price.Value.Minor, cost.Value.Minor, min, IsActive, 0, Barcode, VatRate, Category, ShelfLocation, Supplier?.Id));
         if (Check(r))
         {
             await LoadAsync();

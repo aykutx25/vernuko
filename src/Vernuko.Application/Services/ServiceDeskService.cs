@@ -360,7 +360,7 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
             };
             if (kind == SlipKind.Intake)
             {
-                notes.Add($"Tahmini teslim tarihi: {t.Summary.DueDate:dd.MM.yyyy}. Cihazınızdaki verilerin yedeğini almanız önerilir; onarım sırasında veri kaybından servis sorumlu tutulamaz durumlar mevcut olabilir.");
+                notes.Add($"Tahmini teslim tarihi: {t.Summary.DueDate:dd.MM.yyyy}. Onarımdan önce cihazınızdaki verilerin yedeğini almanız önerilir.");
             }
             else if (t.Repaired)
             {

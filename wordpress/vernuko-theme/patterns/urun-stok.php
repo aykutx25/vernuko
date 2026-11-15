@@ -3,7 +3,7 @@
  * Title: Program sayfası: Vernuko Stok
  * Slug: vernuko/urun-stok
  * Categories: vernuko
- * Description: Vernuko Stok sayfası ("Geniş sayfa" şablonuyla). Planlanan ekran, planlanan özellikler, satış bölümü (paket tanımlanınca fiyat ve indirme kendiliğinden gelir) ve diğer programlar.
+ * Description: Vernuko Stok sayfası ("Geniş sayfa" şablonuyla). Temsilî ekran, programdaki özellikler, mali fiş notu, satış bölümü (paket tanımlanınca fiyat ve indirme kendiliğinden gelir) ve diğer programlar.
  */
 ?>
 <!-- wp:group {"align":"full","className":"vk-giris","style":{"spacing":{"padding":{"top":"var:preset|spacing|50","bottom":"var:preset|spacing|60"}}},"layout":{"type":"constrained"}} -->
@@ -20,7 +20,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"vk-giris__not"} -->
-<p class="vk-giris__not">Hırdavat, kırtasiye, yedek parça ve toptancılar için geliştiriliyor.</p>
+<p class="vk-giris__not">Hırdavat, kırtasiye, yedek parça, toptancı ve mağazalar için.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:column -->
 
@@ -32,22 +32,26 @@
 
 <!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"var:preset|spacing|60","bottom":"var:preset|spacing|60"}},"border":{"top":{"color":"var:preset|color|cizgi","width":"1px"}}},"layout":{"type":"constrained"}} -->
 <section class="wp-block-group alignfull" style="border-top-color:var(--wp--preset--color--cizgi);border-top-width:1px;padding-top:var(--wp--preset--spacing--60);padding-bottom:var(--wp--preset--spacing--60)"><!-- wp:heading {"align":"wide"} -->
-<h2 class="wp-block-heading alignwide">Planlananlar</h2>
+<h2 class="wp-block-heading alignwide">Programda neler var</h2>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"align":"wide","className":"vk-aile__giris"} -->
-<p class="alignwide vk-aile__giris">Program çıktığında bu liste değişebilir. Vernuko Randevu'daki temel aynen gelir: internetsiz çalışma, aynı işyerindeki diğer bilgisayarlar, yetkiler ve şifreli yedek.</p>
+<p class="alignwide vk-aile__giris">Vernuko Randevu ile aynı kurulum dosyasıdır; kurulumda işletme türünüzü seçersiniz. Temel aynıdır: internetsiz çalışma, aynı işyerindeki diğer bilgisayarlar, yetkiler ve şifreli yedek.</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:html -->
 <ul class="vk-soz vk-soz--genis alignwide">
-	<li><b>Barkodla satış ve mal kabul.</b> Okuyucuyla ya da elle; fiş ve irsaliye numarasıyla.</li>
-	<li><b>Kritik seviye.</b> Biten ürün satış anında görünür; sipariş önerisi tedarikçiye göre toplanır.</li>
+	<li><b>Barkodla satış.</b> Okuyucuyla ya da elle; aynı ürün tekrar okutulunca adet artar. Nakit, kart, havale ya da müşterinin hesabına (veresiye).</li>
+	<li><b>Mal kabul ve tedarikçi.</b> Fatura veya irsaliye numarasıyla, KDV hariç maliyetle; tedarikçinin hesabı ve ödemesi.</li>
 	<li><b>Sayım.</b> Rafta sayılanla kayıttaki yan yana; fark gerekçesiyle kaydedilir, eski kayıt silinmez.</li>
-	<li><b>Cari hesap.</b> Veresiye ve vadeli satış, tahsilat, müşteri ve tedarikçi ekstresi.</li>
-	<li><b>Birden fazla kasa.</b> Aynı işyerindeki bilgisayarlar ana bilgisayara yerel ağdan bağlanır.</li>
+	<li><b>Kritik seviye ve sipariş önerisi.</b> Kritik seviyenin altına düşen ürünler tedarikçiye göre toplanır.</li>
+	<li><b>Gün sonu ve iade.</b> Nakit, kart, havale ve veresiye ayrı; KDV oranına göre döküm. İade edilen ürün stoğa döner.</li>
+	<li><b>Birden fazla bilgisayar.</b> Aynı işyerindeki bilgisayarlar ana bilgisayara yerel ağdan bağlanır.</li>
 </ul>
-<!-- /wp:html --></section>
+<!-- /wp:html -->
+<!-- wp:paragraph {"align":"wide","className":"vk-aile__giris"} -->
+<p class="alignwide vk-aile__giris"><b>Mali fiş kesmez.</b> Perakende satışta fiş, yazar kasa POS'tan (ÖKC) ya da e-Arşiv faturadan düzenlenir. Vernuko'nun ÖKC bağlantısı ve e-Arşiv'i henüz yok; programı nasıl kullanacağınızı mali müşavirinize danışın.</p>
+<!-- /wp:paragraph --></section>
 <!-- /wp:group -->
 
 <!-- wp:group {"tagName":"section","anchor":"fiyat","align":"full","style":{"spacing":{"padding":{"top":"var:preset|spacing|60","bottom":"var:preset|spacing|60"}},"border":{"top":{"color":"var:preset|color|cizgi","width":"1px"}}},"layout":{"type":"constrained"}} -->

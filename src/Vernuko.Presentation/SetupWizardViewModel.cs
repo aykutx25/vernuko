@@ -36,6 +36,9 @@ public sealed partial class ProfileOption(BusinessProfileDefinition profile) : O
     public string Description => Profile.Description;
 }
 
+/// <summary>Business types under the mode they belong to (Randevu, Stok, Teknik Servis).</summary>
+public sealed record ProfileGroup(string Title, string Description, IReadOnlyList<ProfileOption> Profiles);
+
 public sealed partial class DayOption(DayOfWeek day, bool isOpen) : ObservableObject
 {
     [ObservableProperty]
@@ -112,6 +115,7 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
     private SetupStep _step = SetupStep.Welcome;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Mode), nameof(ProgramName))]
     private ProfileOption? _selectedProfile;
 
     [ObservableProperty]
@@ -176,6 +180,12 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
         _platform = platform;
         _backupFolder = env.DefaultBackupDirectory;
         Profiles = new ObservableCollection<ProfileOption>(BusinessProfileCatalog.All.Where(p => p.IsAvailable).Select(p => new ProfileOption(p)));
+        ProfileGroups =
+        [
+            new("Randevuyla çalışanlar (Vernuko Randevu)", "Takvim, seans paketleri, personel ve oda planı.", Profiles.Where(p => p.Profile.Mode == BusinessMode.Randevu).ToList()),
+            new("Stok ve satış (Vernuko Stok)", "Barkodlu satış, mal kabul, tedarikçi ve müşteri carisi, sayım.", Profiles.Where(p => p.Profile.Mode == BusinessMode.Stok).ToList()),
+            new("Teknik servis (Vernuko Teknik Servis)", "Servis fişi, cihaz geçmişi, fiyat onayı, parça ve teslim.", Profiles.Where(p => p.Profile.Mode == BusinessMode.TeknikServis).ToList()),
+        ];
         Days = new ObservableCollection<DayOption>(DayNames.WeekOrder.Select(d => new DayOption(d, d != DayOfWeek.Sunday)));
         Staff = [new EditableStaff()];
         ResourceKinds = Enum.GetValues<ResourceKind>().Select(k => new Option<ResourceKind>(BusinessProfileCatalog.ResourceKindName(k), k)).ToList();
@@ -187,6 +197,14 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
     public event EventHandler? RestoredFromBackup;
 
     public ObservableCollection<ProfileOption> Profiles { get; }
+
+    public IReadOnlyList<ProfileGroup> ProfileGroups { get; }
+
+    /// <summary>The mode of the chosen business type: it decides which steps apply (Stok needs no hours, staff or services).</summary>
+    public BusinessMode Mode => SelectedProfile?.Profile.Mode ?? BusinessMode.Randevu;
+
+    /// <summary>Next to the logo: empty until a business type is chosen, then Randevu, Stok or Teknik Servis.</summary>
+    public string ProgramName => SelectedProfile is null ? string.Empty : BusinessProfileDefinition.ModeShortName(Mode);
 
     public ObservableCollection<DayOption> Days { get; }
 
@@ -218,7 +236,7 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
         SetupStep.WorkingDays => "Çalışma günleri",
         SetupStep.WorkingHours => "Çalışma saatleri",
         SetupStep.Staff => "Personel",
-        SetupStep.Services => "Hizmetler ve odalar",
+        SetupStep.Services => Mode == BusinessMode.TeknikServis ? "İşçilik kalemleri" : "Hizmetler ve odalar",
         SetupStep.Admin => "Yönetici hesabı",
         SetupStep.Backup => "Yedekleme",
         _ => "Kurulum tamamlandı",
@@ -232,7 +250,9 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
         SetupStep.WorkingDays => "Kapalı günlere randevu verilirken uyarı gösterilir.",
         SetupStep.WorkingHours => "Personel bazında farklı saatleri daha sonra tanımlayabilirsiniz.",
         SetupStep.Staff => "Randevu alacak uzmanları ekleyin. Atlarsanız yönetici adıyla bir personel oluşturulur.",
-        SetupStep.Services => "Önerilen hizmetleri düzenleyebilir, fiyat ve süreleri değiştirebilirsiniz.",
+        SetupStep.Services => Mode == BusinessMode.TeknikServis
+            ? "Servis fişine eklenecek işçilik kalemleri ve adreste servis süreleri. Fiyatları sonra da değiştirebilirsiniz."
+            : "Önerilen hizmetleri düzenleyebilir, fiyat ve süreleri değiştirebilirsiniz.",
         SetupStep.Admin => "Bu hesap tüm yetkilere sahiptir. Parolanızı kimseyle paylaşmayın.",
         SetupStep.Backup => "Yedekler bilgisayarınızda şifrelenir. Mümkünse harici bir diske veya USB belleğe yedekleyin.",
         _ => string.Empty,
@@ -260,7 +280,31 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
             return;
         }
 
-        Step++;
+        Step = NextOf(Step);
+    }
+
+    /// <summary>Steps that do not apply to the chosen mode are skipped (forward and back).</summary>
+    private bool Applies(SetupStep step) =>
+        Mode != BusinessMode.Stok || step is not (SetupStep.WorkingDays or SetupStep.WorkingHours or SetupStep.Staff or SetupStep.Services);
+
+    private SetupStep NextOf(SetupStep step)
+    {
+        do
+        {
+            step++;
+        }
+        while (step < SetupStep.Finish && !Applies(step));
+        return step;
+    }
+
+    private SetupStep PrevOf(SetupStep step)
+    {
+        do
+        {
+            step--;
+        }
+        while (step > SetupStep.Welcome && !Applies(step));
+        return step;
     }
 
     [RelayCommand]
@@ -269,7 +313,7 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
         ErrorMessage = null;
         if (CanGoBack)
         {
-            Step--;
+            Step = PrevOf(Step);
         }
     }
 
@@ -291,7 +335,7 @@ public sealed partial class SetupWizardViewModel : ViewModelBase
                 return;
         }
 
-        Step++;
+        Step = NextOf(Step);
     }
 
     [RelayCommand]

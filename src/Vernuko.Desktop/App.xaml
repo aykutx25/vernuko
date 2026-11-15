@@ -53,6 +53,10 @@
             <DataTemplate DataType="{x:Type pages:UpdatesViewModel}"><v:UpdatesView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:MessagingSettingsViewModel}"><v:MessagingSettingsView /></DataTemplate>
             <DataTemplate DataType="{x:Type pages:MultiComputerViewModel}"><v:MultiComputerView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pages:SalesViewModel}"><v:SalesView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pages:PurchasesViewModel}"><v:PurchasesView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pages:StockToolsViewModel}"><v:StockToolsView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pages:ServiceTicketsViewModel}"><v:ServiceTicketsView /></DataTemplate>
             <DataTemplate DataType="{x:Type dialogs:PaymentDialogViewModel}"><v:PaymentDialogView /></DataTemplate>
             <DataTemplate DataType="{x:Type dialogs:SellPackageDialogViewModel}"><v:SellPackageDialogView /></DataTemplate>
         </ResourceDictionary>

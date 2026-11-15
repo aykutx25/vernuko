@@ -2,6 +2,68 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.16.0] — 2026-11-15 — Vernuko Stok ve Vernuko Teknik Servis
+
+Kurulum dosyası artık üç programdır. Kurulumda seçilen işletme türü programı belirler. Her program kendi lisansıyla çalışır (`vernuko-desktop`, `vernuko-stok`, `vernuko-teknik-servis`). Ayrıntılar: [docs/MODES.md](docs/MODES.md). Rakip ve mevzuat araştırması: [docs/research/stock-mode-tr.md](docs/research/stock-mode-tr.md), [docs/research/service-mode-tr.md](docs/research/service-mode-tr.md).
+
+### Eklendi — program modları
+- 9 yeni işletme türü:
+  - **Stok:** hırdavat ve yapı malzemesi, kırtasiye ve kitapçı, oto yedek parça, toptan satış, mağaza.
+  - **Teknik Servis:** telefon ve tablet, bilgisayar, beyaz eşya ve klima, elektronik.
+- Kurulum sihirbazında işletme türleri üç program altında gruplanır. Stok'ta çalışma günü, saat, personel ve hizmet adımları atlanır.
+- Menü ve açılış ekranı programa göre değişir. Teknik Servis, profilinde varsa satış ve alış ekranlarını da gösterir.
+- Üst çubuk, giriş ve sihirbaz logonun yanına programın adını yazar. Pencere başlığı "Vernuko".
+- Lisansın ürünü moda göre seçilir. Başka programın anahtarı kabul edilmez.
+
+### Eklendi — Vernuko Stok
+- **Satış:**
+  - Barkod okutma (tekrar okutunca adet artar), kod veya adla arama.
+  - Satır ve belge indirimi; karışık ödeme (nakit, kart, havale); para üstü.
+  - Kayıtlı müşteride veresiye. Kayıtsız müşteri tam öder.
+  - Stoktan fazla satışta uyarı.
+- **Gün sonu ve iade:**
+  - Gün sonunda ödeme türüne ve KDV oranına göre döküm, tahmini brüt kâr.
+  - Satıştan kısmi iade; ürün stoğa döner.
+- **Ürün kartı:** barkod (tekil), KDV oranı (%0/1/10/20), kategori, raf yeri, tedarikçi.
+- **Alış ve tedarikçiler:**
+  - Tedarikçi kartı (VKN/TCKN ve IBAN doğrulamalı).
+  - Mal kabul: KDV hariç maliyet, satır indirimi, fatura no ve tarihi. İsteğe bağlı maliyet güncelleme, şimdi ödenen tutar.
+  - Tedarikçi hesabı ve ödemesi.
+- **Sayım ve sipariş:**
+  - Sayımda yalnızca farklar kaydedilir; aynı sayım iki kez kaydedilmez.
+  - Tedarikçiye göre sipariş önerisi.
+  - Stok değeri (maliyet ve satış fiyatıyla).
+- **Satış ekranı mali fiş kesmez; ekranda bu yazılı.** VUK 483 m.8'e göre perakende satış yazılımı ÖKC'ye GMP-3 ile bağlanmalıdır. Vernuko'da bu bağlantı yok. Kullanım şekline işletmenin mali müşaviri karar vermelidir.
+
+### Eklendi — Vernuko Teknik Servis
+- **Cihaz kabul:**
+  - Fişte müşteri, cihaz, seri/IMEI, arıza, aksesuar, görünür durum, getiren, teknisyen, teslim sözü (varsayılan 20 iş günü) ve yerinde servis bilgisi yer alır.
+  - Seri numarasıyla cihazın servis geçmişi görünür.
+- **Durumlar:** teslim alındı, arıza tespitinde, fiyat onayı bekliyor, parça bekliyor, onarımda, teslime hazır, onarılamadı, teslim edildi. Her değişiklik fişin geçmişine yazılır.
+- **Fiyat teklifi ve onay:**
+  - Onayın nasıl, kimden ve ne zaman alındığı kaydedilir. Onaysız cihaz "onarımda" veya "hazır" yapılamaz.
+  - Teklif reddedilirse önceden belirtilen arıza tespit ücreti alınır.
+- **Parça ve işçilik:** parça stoktan düşer, satır kaldırılınca stoğa döner. Kapora alınabilir.
+- **Teslim:** nakit veya kartla ödenir; kalan tutar hesaba yazılır.
+- **Garanti:**
+  - Aynı arıza 12 ay içinde işçilik ücreti alınmadan onarılır. Aynı seri numarası gelince fiş bunu önerir.
+  - Değişen parçalar 6 ay garantilidir.
+- **Yazdırma:** kabul belgesi ve servis fişi Windows yazdırma penceresiyle basılır. "Özel servis" ibaresi, garanti tarihleri ve imza alanları belgededir.
+- **Cihaz şifresi:**
+  - Şifreli saklanır, hiçbir belgeye yazılmaz.
+  - "Göster" ile açılır ve her görüntüleme denetim günlüğüne yazılır.
+  - Teslimde silinir.
+- **SMS:** mesajlar ayarlıysa, cihaz "teslime hazır" yapılınca müşteriye işletmenin kendi SMS hesabından mesaj gider.
+
+### Değişti
+- Cari hesapta yeni hareket türü "Ürün iadesi". Elle iade veya ters kayıt girilemez; bunlar belgeden oluşur.
+- Veritabanı iki migration alır: `StockMode`, `TechnicalServiceMode`.
+
+### Test
+- 14 yeni test (servis katmanında 11, ekranlarda uçtan uca 3). Toplam 282 geçen, 2 atlanan (yalnızca Windows'ta çalışanlar).
+- Windows smoke testi yeni dört ekranı ve iki belgeyi çizer.
+- Gerçek bir dükkânda barkod okuyucu ve yazıcıyla denenmedi.
+
 ## [0.15.0] — 2026-11-15 — Yeni Vernuko logosu
 
 ### Değişti

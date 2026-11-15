@@ -111,19 +111,19 @@ function vernuko_pano_stok_isletmeleri(): array
             'satirlar' => [
                 ['08:45', 'Matkap ucu seti, 13 parça', 'Satış, 2 adet', 'Kalan 4; kritik seviye 5', 'Kasa 1', 'Raf A-03', 'bekliyor'],
                 ['09:20', 'Silikon, şeffaf', 'Mal kabul, 48 adet', 'Ece Yapı, irsaliye 4471', 'Depo', 'Raf C-11', 'geldi'],
-                ['09:55', 'Vida 4×40, 100\'lü kutu', 'Satış, 6 kutu', 'Usta Elektrik carisine, 30 gün vadeli', 'Kasa 1', 'Raf B-07', 'tamam'],
+                ['09:55', 'Vida 4×40, 100\'lü kutu', 'Satış, 6 kutu', 'Usta Elektrik hesabına (veresiye)', 'Kasa 1', 'Raf B-07', 'tamam'],
                 ['10:30', 'Boya rulosu, 25 cm', 'Sayım', 'Kayıtta 18, rafta 17: fark kaydedildi', 'Depo', 'Raf D-02', 'islemde'],
-                ['14:00', 'Su terazisi, 60 cm', 'Beklenen mal, 10 adet', 'Kritik seviyeden sipariş önerisi', 'Satın alma', 'Raf A-09', 'onay'],
+                ['14:00', 'Su terazisi, 60 cm', 'Sipariş önerisi, 10 adet', 'Kritik seviyenin altında; tedarikçi Ece Yapı', 'Satın alma', 'Raf A-09', 'onay'],
             ],
         ],
         'kirtasiye' => [
             'etiket' => 'Kırtasiye',
             'isletme' => 'Kalem Kırtasiye',
             'satirlar' => [
-                ['09:05', 'A4 fotokopi kâğıdı', 'Satış, 5 paket', 'Okul siparişi, faturalı', 'Kasa', 'Depo 1', 'tamam'],
+                ['09:05', 'A4 fotokopi kâğıdı', 'Satış, 5 paket', 'Okul siparişi, havaleyle', 'Kasa', 'Depo 1', 'tamam'],
                 ['09:40', 'Kurşun kalem, 12\'li', 'Satış, 20 kutu', 'Kalan 3; kritik seviye 10', 'Kasa', 'Raf 2', 'bekliyor'],
                 ['10:15', 'Dosya, şeffaf', 'Mal kabul, 200 adet', 'Barkodla tek tek okutuldu', 'Depo', 'Raf 5', 'geldi'],
-                ['13:30', 'Defter, 80 yaprak', 'Hazırlanacak sipariş, 60 adet', 'Ata İlkokulu, teslim yarın', 'Depo', 'Raf 1', 'onay'],
+                ['13:30', 'Defter, 80 yaprak', 'Sipariş önerisi, 60 adet', 'Okul dönemi; kritik seviyenin altında', 'Satın alma', 'Raf 1', 'onay'],
             ],
         ],
         'parca' => [
@@ -131,10 +131,10 @@ function vernuko_pano_stok_isletmeleri(): array
             'isletme' => 'Kaya Oto Yedek Parça',
             'satirlar' => [
                 ['08:30', 'Fren balatası, ön', 'Satış, 1 takım', 'Usta Oto Servis carisine', 'Tezgâh', 'Raf F-12', 'tamam'],
-                ['09:10', 'Yağ filtresi', 'Mal kabul, 30 adet', 'Lot 2611; fatura eşleşti', 'Depo', 'Raf Y-04', 'geldi'],
+                ['09:10', 'Yağ filtresi', 'Mal kabul, 30 adet', 'Fatura 2611 ile; maliyet güncellendi', 'Depo', 'Raf Y-04', 'geldi'],
                 ['10:05', 'Silecek, 55 cm', 'Sayım', 'Kayıtla raf aynı: 14', 'Depo', 'Raf S-01', 'islemde'],
                 ['10:20', 'Ampul H7', 'Satış, 4 adet', 'Kalan 2; kritik seviye 6', 'Tezgâh', 'Raf E-08', 'bekliyor'],
-                ['15:00', 'Triger seti', 'Beklenen mal, 3 takım', 'Tedarikçi siparişi verildi', 'Satın alma', 'Raf T-02', 'onay'],
+                ['15:00', 'Triger seti', 'Sipariş önerisi, 3 takım', 'Kritik seviyenin altında', 'Satın alma', 'Raf T-02', 'onay'],
             ],
         ],
     ];
@@ -170,7 +170,7 @@ function vernuko_pano_servis_isletmeleri(): array
             'etiket' => 'Bilgisayar',
             'isletme' => 'Bit Bilgisayar',
             'satirlar' => [
-                ['09:00', 'Ece Muhasebe', 'Dizüstü, açılmıyor', 'Firma cari; 3 cihaz aynı fişte', 'Tolga', 'Fiş 3301', 'islemde'],
+                ['09:00', 'Ece Muhasebe', 'Dizüstü, açılmıyor', 'Firma müşterisi; kalan tutar hesabına', 'Tolga', 'Fiş 3301', 'islemde'],
                 ['09:50', 'Arda Şen', 'Masaüstü, veri kurtarma', 'Disk müşterinin onayıyla kopyalandı', 'Tolga', 'Fiş 3302', 'tamam'],
                 ['10:25', 'İpek Yalın', 'Dizüstü, klavye', 'Parça siparişte', 'Sena', 'Fiş 3303', 'bekliyor'],
                 ['15:30', 'Mert Avcı', 'Teslim alınacak cihaz', 'Kurye ile gelecek', 'Sena', 'Fiş 3304', 'geldi'],
@@ -197,12 +197,12 @@ function vernuko_pano_ekranlar(): array
         ],
         'stok' => [
             'profiller' => vernuko_pano_stok_isletmeleri(),
-            'durumlar' => ['tamam' => 'Satıldı', 'geldi' => 'Mal kabul', 'islemde' => 'Sayımda', 'onay' => 'Bekleniyor', 'bekliyor' => 'Kritik seviye'],
+            'durumlar' => ['tamam' => 'Satıldı', 'geldi' => 'Mal kabul', 'islemde' => 'Sayım', 'onay' => 'Sipariş önerisi', 'bekliyor' => 'Kritik seviye'],
             'birim' => 'hareket',
             'cevrimdisi' => ['saat' => '10:41', 'baslik' => 'Kasadan satış', 'alt' => 'İnternetsiz kaydedildi; stok düştü', 'durum' => 'tamam'],
             'acik' => 'Yerel veritabanı — internetsiz çalışır',
             'kapali' => 'İnternet yok. Satış, stok ve yedek bu bilgisayarda çalışmaya devam ediyor.',
-            'altyazi' => 'Vernuko Stok geliştiriliyor: bu ekran planlanan tasarımdır, program henüz satışta değil. Ürünler ve işletmeler hayal ürünüdür.',
+            'altyazi' => 'Vernuko Stok\'ta bir günün hareketlerini özetleyen temsilî ekran; programın kendi ekranları satış, alış ve sayım diye ayrıdır. Ürünler ve işletmeler hayal ürünüdür.',
         ],
         'servis' => [
             'profiller' => vernuko_pano_servis_isletmeleri(),
@@ -211,7 +211,7 @@ function vernuko_pano_ekranlar(): array
             'cevrimdisi' => ['saat' => '10:41', 'baslik' => 'Kapıdan gelen cihaz', 'alt' => 'İnternetsiz servis fişi açıldı', 'durum' => 'geldi', 'kaynak' => 'Yeni fiş'],
             'acik' => 'Yerel veritabanı — internetsiz çalışır',
             'kapali' => 'İnternet yok. Servis fişi, kasa ve yedek bu bilgisayarda çalışmaya devam ediyor.',
-            'altyazi' => 'Vernuko Teknik Servis geliştiriliyor: bu ekran planlanan tasarımdır, program henüz satışta değil. Kişiler ve işletmeler hayal ürünüdür.',
+            'altyazi' => 'Vernuko Teknik Servis\'te bir günün servis fişlerini özetleyen temsilî ekran; programda fişler liste ve fiş ayrıntısı olarak görünür. Kişiler ve işletmeler hayal ürünüdür.',
         ],
     ];
 }

@@ -11,10 +11,10 @@
         <!-- Left: brand + progress -->
         <Border Background="{StaticResource PrimaryBrush}">
             <DockPanel Margin="32,40,28,28">
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" AutomationProperties.Name="Vernuko Randevu">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" AutomationProperties.Name="{Binding ProgramName, StringFormat=Vernuko {0}}">
                     <Path Data="{StaticResource LogoMark}" Fill="White" Stretch="Uniform" Height="28" VerticalAlignment="Center" />
                     <Path Data="{StaticResource LogoWordmark}" Fill="White" Stretch="Uniform" Height="20" Margin="8,0,0,0" VerticalAlignment="Center" />
-                    <TextBlock Text="Randevu" FontFamily="{StaticResource AppFontDisplay}" FontSize="24" Foreground="White" Margin="7,0,0,1" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding ProgramName}" FontFamily="{StaticResource AppFontDisplay}" FontSize="24" Foreground="White" Margin="7,0,0,1" VerticalAlignment="Center" />
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Bottom" Foreground="#B8C3D9" FontSize="12.5" TextWrapping="Wrap"
                            Text="Verileriniz bu bilgisayarda saklanır. Vernuko çalışmak için internete ihtiyaç duymaz." />
@@ -82,26 +82,36 @@
                     </StackPanel>
 
                     <!-- 2. Profile -->
-                    <ItemsControl x:Name="Profile" Visibility="Collapsed" ItemsSource="{Binding Profiles}" Focusable="False">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
+                    <ItemsControl x:Name="Profile" Visibility="Collapsed" ItemsSource="{Binding ProfileGroups}" Focusable="False">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button x:Name="Tile" Margin="0,0,10,10" Padding="16,12" HorizontalContentAlignment="Stretch" MinHeight="84"
-                                        Command="{Binding DataContext.SelectProfileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="15" />
-                                        <TextBlock Text="{Binding Description}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
-                                    </StackPanel>
-                                </Button>
-                                <DataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                        <Setter TargetName="Tile" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
-                                        <Setter TargetName="Tile" Property="BorderThickness" Value="2" />
-                                        <Setter TargetName="Tile" Property="Background" Value="{StaticResource SelectionBrush}" />
-                                    </DataTrigger>
-                                </DataTemplate.Triggers>
+                                <StackPanel Margin="0,0,0,14">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="16" />
+                                    <TextBlock Text="{Binding Description}" Style="{StaticResource Muted}" Margin="0,2,0,8" />
+                                    <ItemsControl ItemsSource="{Binding Profiles}" Focusable="False">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button x:Name="Tile" Margin="0,0,10,10" Padding="16,12" HorizontalContentAlignment="Stretch" MinHeight="84"
+                                                        Command="{Binding DataContext.SelectProfileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="15" />
+                                                        <TextBlock Text="{Binding Description}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter TargetName="Tile" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                                                        <Setter TargetName="Tile" Property="BorderThickness" Value="2" />
+                                                        <Setter TargetName="Tile" Property="Background" Value="{StaticResource SelectionBrush}" />
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

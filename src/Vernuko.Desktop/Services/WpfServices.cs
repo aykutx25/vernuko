@@ -90,4 +90,6 @@ public sealed class WpfPlatformServices : IPlatformServices
     public Task<byte[]> ReadFileBytesAsync(string path) => File.ReadAllBytesAsync(path);
 
     public Task WriteFileBytesAsync(string path, byte[] content) => File.WriteAllBytesAsync(path, content);
+
+    public bool PrintServiceSlip(Vernuko.Application.ServiceSlipDto slip) => ServiceSlipPrinter.Print(slip);
 }

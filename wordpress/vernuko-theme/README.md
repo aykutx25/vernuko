@@ -31,14 +31,14 @@ Vernuko logosu (iki yaprak + "Vernuko" yazısı) markanın verdiği görselden v
 - **Program adı:** Vernuko yazısının yanına programın adı, sitenin yazı tipiyle ve aynı büyük harf yüksekliğinde yazılır. Bunu `vernuko/urun-logo` bloğu yapar; ana sayfada ve program sayfalarında başlığın üstünde durur. Program listesinde de aynı biçim kullanılır.
 - **Site simgesi:** WordPress'te **Görünüm › Özelleştir › Site kimliği** ile bir simge yüklerseniz o kullanılır; yüklemezseniz tema yapraklı simgeyi verir.
 
-## Vernuko programları (1.1.0)
+## Vernuko programları (1.1.0, metinler 1.3.0)
 
-Tema üç programı tanır: Vernuko Randevu (satışta), Vernuko Stok ve Vernuko Teknik Servis (geliştiriliyor).
+Tema üç programı tanır: Vernuko Randevu, Vernuko Stok ve Vernuko Teknik Servis. Üçü masaüstünde tek kurulum dosyasıdır (masaüstü 0.16.0); kurulumda seçilen işletme türü programı belirler. Hangi programın "Satışta" görüneceğini eklentideki paketler belirler.
 
 - **Ana sayfa:** "Vernuko programları" bölümü hepsini tek bir defter satırı gibi listeler: ne tuttuğu, kimin için, durumu.
 - **Program sayfaları:** `/stok/` ve `/teknik-servis/`. Her birinde şunlar var:
   - programın kendi gün ekranı: hırdavat, kırtasiye, yedek parça; telefon, beyaz eşya, bilgisayar servisi,
-  - planlanan özellikler,
+  - programdaki özellikler (Stok sayfasında "mali fiş kesmez" notuyla),
   - satış bölümü,
   - diğer programlar.
 - **Durum kendiliğinden değişir.** Bir program, eklentide ona ait fiyatı olan bir "Yeni lisans" paketi tanımlandığı an "Satışta" olur. O andan itibaren:
@@ -46,7 +46,10 @@ Tema üç programı tanır: Vernuko Randevu (satışta), Vernuko Stok ve Vernuko
   - ana sayfadaki liste "Satışta" yazar.
 
   Sayfaları elle değiştirmek gerekmez.
-- **Dürüstlük:** satışta olmayan programların ekranı ve özellik listesi "planlanan tasarım" olarak etiketlidir. Tarih verilmez; e-posta toplanmaz.
+- **Dürüstlük:**
+  - Özellik listeleri yalnızca programda olanı yazar (1.3.0'da masaüstü 0.16.0'a göre güncellendi).
+  - Ekran görüntüsü yerine kullanılan gün ekranı "temsilî ekran" olarak etiketlidir.
+  - Satışta olmayan program için tarih verilmez, e-posta toplanmaz.
 - **Bloklar:** düzenleyicide her bloğun ayarında program seçilir.
   - `vernuko/pano`: ekran (randevu, stok veya servis).
   - `vernuko/fis`: program.
@@ -56,8 +59,8 @@ Tema üç programı tanır: Vernuko Randevu (satışta), Vernuko Stok ve Vernuko
 
 **Yeni bir programı satışa çıkarmak:**
 1. Eklentide **Paketler ve satış** sayfasında programı seçerek "Yeni lisans" ve "Yenileme" paketlerini girin.
-2. Kurulum dosyasını `VERNUKO_LICENSE_RELEASES_DIR/<program kimliği>/` klasörüne koyun. Örnek: `vernuko-stok/`.
-3. Program sayfasındaki "Planlananlar" metnini, artık gerçek olan özelliklerle güncelleyin. Ekranın altındaki "planlanan tasarım" yazısı da `inc/pano.php` dosyasındadır.
+2. Kurulum dosyasını `VERNUKO_LICENSE_RELEASES_DIR/<program kimliği>/` klasörüne koyun. Örnek: `vernuko-stok/`. Üç program aynı kurulum dosyasını kullanır; aynı dosya her programın klasörüne konur.
+3. Program sayfasındaki "Programda neler var" listesini yeni sürümün özellikleriyle karşılaştırın. Gün ekranının altyazısı `inc/pano.php` dosyasındadır.
 
 Dördüncü bir program için:
 - tema tarafında `vernuko_tema_urunler` süzgeci (ad, sayfa, özet, kimler için, fiş satırları),

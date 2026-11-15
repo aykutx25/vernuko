@@ -35,6 +35,9 @@ public interface IPlatformServices
 
     /// <summary>Closes Vernuko and starts it again (after changing the computer's role).</summary>
     void RestartApplication();
+
+    /// <summary>Prints a service ticket's intake document or delivery slip (A4/A5, the Windows print dialog). False: cancelled.</summary>
+    bool PrintServiceSlip(Vernuko.Application.ServiceSlipDto slip);
 }
 
 public sealed record UpdateCheck(bool Available, string? NewVersion, string Message);

@@ -57,6 +57,20 @@ Kaynak: `src/Vernuko.BusinessProfiles/BusinessProfileCatalog.cs`. Yeni meslek ek
 - **Oto servis:** Araç müşteriden bağımsız varlık; finansal kayıtlar asla kademeli silinmez (Faz 1'de tüm finansal tablolar zaten append-only).
 - **Eğitim:** Öğrencilerin (çoğunlukla çocuk) verileri için veli rızası ve veri minimizasyonu.
 
+## Stok ve Teknik Servis profilleri (0.16.0)
+Bu dokuz profil randevu motorunu değil kendi modüllerini kullanır: `Vernuko.Commerce` (satış, alış, tedarikçi) ve `Vernuko.ServiceDesk` (servis fişi). Profil, programı (mod) ve lisans ürününü belirler. Ayrıntılar: [MODES.md](MODES.md).
+
+| Profil | Program | Özellikler |
+|---|---|---|
+| Hırdavat ve Yapı Malzemesi, Kırtasiye ve Kitapçı, Oto Yedek Parça, Toptan Satış | Stok | stok, satış, alış, firma müşterisi |
+| Mağaza (genel perakende) | Stok | stok, satış, alış |
+| Telefon ve Tablet Servisi | Teknik Servis | servis fişi, stok, satış, alış, kapora, müşteri fotoğrafı |
+| Bilgisayar Servisi | Teknik Servis | servis fişi, stok, satış, alış, kapora, firma müşterisi |
+| Beyaz Eşya ve Klima Servisi | Teknik Servis | servis fişi, stok, alış, kapora, bakım hatırlatma |
+| Elektronik Servis | Teknik Servis | servis fişi, stok, satış, alış, kapora |
+
+Stok profillerinde terimler Müşteri, Personel ve Raf'tır; servis profillerinde Teknisyen ve Tezgâh. Servis profilleri kurulumda önerilen işçilik kalemleriyle gelir.
+
 ## Yeni meslek ekleme kontrol listesi
 1. `BusinessProfileId` ve `BusinessProfileCatalog` kaydı (terimler, özellikler, öneriler, hassasiyet).
 2. Gerekli yeni özellik yoksa iş bitti — motor ortak.
