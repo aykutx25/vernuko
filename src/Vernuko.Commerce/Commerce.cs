@@ -313,6 +313,43 @@ public sealed class Sale : Entity
             ? Error.Validation("sale.return_of_return", "İade fişinden iade alınamaz.")
             : Build(SaleKind.Return, number, original.CustomerId, original.Id, lines, 0, cashMinor, cardMinor, transferMinor, allowOnAccount, note, userId, nowUtc);
 
+    /// <summary>Splits <paramref name="discount"/> (≤ the sum) over the amounts in proportion; whole kuruş, exact sum.</summary>
+    internal static long[] SpreadDiscount(IReadOnlyList<long> amounts, long discount)
+    {
+        var shares = new long[amounts.Count];
+        var total = amounts.Sum();
+        if (discount <= 0 || total <= 0)
+        {
+            return shares;
+        }
+
+        var remainders = new decimal[amounts.Count];
+        long assigned = 0;
+        for (var i = 0; i < amounts.Count; i++)
+        {
+            var exact = (decimal)discount * amounts[i] / total;
+            shares[i] = (long)decimal.Floor(exact);
+            remainders[i] = exact - shares[i];
+            assigned += shares[i];
+        }
+
+        foreach (var i in Enumerable.Range(0, amounts.Count).OrderByDescending(i => remainders[i]).ThenByDescending(i => amounts[i]))
+        {
+            if (assigned == discount)
+            {
+                break;
+            }
+
+            if (shares[i] < amounts[i])
+            {
+                shares[i]++;
+                assigned++;
+            }
+        }
+
+        return shares;
+    }
+
     private static Result<Sale> Build(SaleKind kind, string number, Guid customerId, Guid? returnOf, IReadOnlyList<LineInput> lines, long documentDiscountMinor, long cashMinor, long cardMinor, long transferMinor, bool allowOnAccount, string? note, Guid? userId, DateTime nowUtc)
     {
         if (lines.Count == 0)
@@ -374,17 +411,14 @@ public sealed class Sale : Entity
         sale.DocumentDiscountMinor = documentDiscountMinor;
         sale.TotalMinor = afterLines - documentDiscountMinor;
 
-        // KDV per line on its share of the total (the document discount is spread by line amount).
+        // KDV per line on its share of the total. The document discount is spread by line amount (largest remainder):
+        // the shares add up exactly, a free line gets nothing and no share is larger than its line.
+        var shares = SpreadDiscount(sale._lines.Select(l => l.TotalMinor).ToList(), documentDiscountMinor);
         long vat = 0;
-        long spread = 0;
         for (var i = 0; i < sale._lines.Count; i++)
         {
             var line = sale._lines[i];
-            var share = afterLines == 0 ? 0 : i == sale._lines.Count - 1
-                ? documentDiscountMinor - spread
-                : (long)Math.Round((decimal)documentDiscountMinor * line.TotalMinor / afterLines, MidpointRounding.AwayFromZero);
-            spread += share;
-            line.ApplyDocumentDiscount(share);
+            line.ApplyDocumentDiscount(shares[i]);
             vat += Vat.IncludedIn(line.NetTotalMinor, line.VatRate);
         }
 

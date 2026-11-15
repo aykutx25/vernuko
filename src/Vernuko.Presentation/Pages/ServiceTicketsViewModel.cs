@@ -25,6 +25,9 @@ public sealed partial class ServiceTicketsViewModel(IServiceDeskService desk, IC
     private string _deliverKey = Guid.NewGuid().ToString("N");
     private string _depositKey = Guid.NewGuid().ToString("N");
     private bool _keepTicket;
+    private string _partKey = Guid.NewGuid().ToString("N");
+    private string _laborKey = Guid.NewGuid().ToString("N");
+    private int _showVersion;
 
     [ObservableProperty]
     private bool _openOnly = true;
@@ -241,8 +244,28 @@ public sealed partial class ServiceTicketsViewModel(IServiceDeskService desk, IC
         }
     }
 
-    partial void OnTicketChanged(TicketDto? value)
+    partial void OnTicketChanged(TicketDto? oldValue, TicketDto? newValue)
     {
+        var value = newValue;
+        if (oldValue?.Summary.Id != newValue?.Summary.Id)
+        {
+            // Another ticket: nothing typed for the previous one may carry over (an estimate, a payment, a part…).
+            Estimate = "0";
+            DiagnosticFee = "0";
+            ApprovedBy = null;
+            StatusReason = null;
+            PartCode = string.Empty;
+            PartQuantity = "1";
+            LaborItem = null;
+            LaborText = string.Empty;
+            LaborPrice = "0";
+            Deposit = "0";
+            PayCash = "0";
+            PayCard = "0";
+            _partKey = Guid.NewGuid().ToString("N");
+            _laborKey = Guid.NewGuid().ToString("N");
+        }
+
         OnPropertyChanged(nameof(HasTicket));
         OnPropertyChanged(nameof(IsOpenTicket));
         OnPropertyChanged(nameof(AmountDueText));
@@ -433,9 +456,11 @@ public sealed partial class ServiceTicketsViewModel(IServiceDeskService desk, IC
             return;
         }
 
-        var r = await desk.AddPartAsync(Ticket.Summary.Id, part.Id, qty, null);
+        // The key stays the same until the part is added, so a retry after a timeout cannot take it twice.
+        var r = await desk.AddPartAsync(Ticket.Summary.Id, part.Id, qty, null, _partKey);
         if (Check(r))
         {
+            _partKey = Guid.NewGuid().ToString("N");
             Ticket = r.Value;
             PartCode = string.Empty;
             PartQuantity = "1";
@@ -443,8 +468,9 @@ public sealed partial class ServiceTicketsViewModel(IServiceDeskService desk, IC
     });
 
     [RelayCommand]
-    private Task AddLaborAsync() => Apply(id => desk.AddLaborAsync(id, LaborText, Minor(LaborPrice), Technician?.Id ?? Ticket?.Intake.TechnicianStaffId), "İşçilik eklendi.", () =>
+    private Task AddLaborAsync() => Apply(id => desk.AddLaborAsync(id, LaborText, Minor(LaborPrice), Ticket?.Intake.TechnicianStaffId, _laborKey), "İşçilik eklendi.", () =>
     {
+        _laborKey = Guid.NewGuid().ToString("N");
         LaborItem = null;
         LaborText = string.Empty;
         LaborPrice = "0";
@@ -528,8 +554,22 @@ public sealed partial class ServiceTicketsViewModel(IServiceDeskService desk, IC
         }
 
         IsEditingIntake = false;
-        var r = await desk.GetTicketAsync(id.Value);
-        Ticket = r.IsSuccess ? r.Value : null;
+
+        // Quick clicks on two tickets: only the last one's answer is shown.
+        var version = ++_showVersion;
+        try
+        {
+            var r = await desk.GetTicketAsync(id.Value);
+            if (version == _showVersion)
+            {
+                Ticket = r.IsSuccess ? r.Value : null;
+                ErrorMessage = r.IsFailure ? r.Error.Message : null;
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            ErrorMessage = "Servis fişi açılamadı. Yeniden deneyin.";
+        }
     }
 
     private async Task LoadListAsync()

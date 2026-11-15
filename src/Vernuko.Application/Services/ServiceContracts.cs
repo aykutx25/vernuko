@@ -211,9 +211,10 @@ public partial interface IServiceDeskService
 
     Task<Result<TicketDto>> LinkWarrantyAsync(Guid ticketId, Guid? earlierTicketId, CancellationToken ct = default);
 
-    Task<Result<TicketDto>> AddPartAsync(Guid ticketId, Guid productId, int quantity, long? unitPriceMinor, CancellationToken ct = default);
+    /// <param name="idempotencyKey">The same key again (a retry) adds nothing.</param>
+    Task<Result<TicketDto>> AddPartAsync(Guid ticketId, Guid productId, int quantity, long? unitPriceMinor, string? idempotencyKey = null, CancellationToken ct = default);
 
-    Task<Result<TicketDto>> AddLaborAsync(Guid ticketId, string description, long priceMinor, Guid? staffId, CancellationToken ct = default);
+    Task<Result<TicketDto>> AddLaborAsync(Guid ticketId, string description, long priceMinor, Guid? staffId, string? idempotencyKey = null, CancellationToken ct = default);
 
     Task<Result<TicketDto>> RemoveLineAsync(Guid ticketId, Guid lineId, CancellationToken ct = default);
 

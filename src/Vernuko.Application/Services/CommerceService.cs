@@ -144,11 +144,14 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
             }
 
             var (settings, zone) = await BusinessContext.LoadAsync(db, ct);
-            var walkIn = r.CustomerId is null;
+            var walkInId = await WalkInCustomerAsync(db, UtcNow, ct);
+
+            // Picking the "Perakende Satış" account by hand is still a walk-in sale: it must be paid in full.
+            var walkIn = r.CustomerId is null || r.CustomerId == walkInId;
             Guid customerId;
             if (walkIn)
             {
-                customerId = await WalkInCustomerAsync(db, ct);
+                customerId = walkInId;
             }
             else
             {
@@ -227,7 +230,10 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
 
             var returned = await ReturnedQuantitiesAsync(db, original.Id, ct);
             var inputs = new List<LineInput>();
-            foreach (var req in r.Lines.Where(l => l.Quantity > 0))
+
+            // The same sale line twice in one request counts once, with both quantities (else 2 + 2 of a 2-piece line passed).
+            var requested = r.Lines.Where(l => l.Quantity > 0).GroupBy(l => l.SaleLineId).Select(g => new ReturnLineRequest(g.Key, g.Sum(x => x.Quantity)));
+            foreach (var req in requested)
             {
                 var line = original.Lines.FirstOrDefault(l => l.Id == req.SaleLineId);
                 if (line is null)
@@ -241,14 +247,16 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
                     return Error.Validation("return.quantity", $"{line.ProductName}: en fazla {left} adet iade alınabilir.");
                 }
 
-                // The share of what the customer really paid for these units (after line and document discounts).
-                var amount = (long)Math.Round((decimal)line.NetTotalMinor * req.Quantity / line.Quantity, MidpointRounding.AwayFromZero);
+                // The share of what the customer really paid for these units (after line and document discounts), taken
+                // cumulatively: all returns of a line together never pay back more than the line brought in.
+                var before = returned.GetValueOrDefault(line.Id);
+                var amount = PaidShare(line, before + req.Quantity) - PaidShare(line, before);
                 var gross = line.UnitPriceMinor * req.Quantity;
                 inputs.Add(new LineInput(line.ProductId, line.ProductName, req.Quantity, line.UnitPriceMinor, line.VatRate, gross - amount, line.Barcode, line.UnitCostMinor, line.Id));
             }
 
             var (settings, zone) = await BusinessContext.LoadAsync(db, ct);
-            var walkIn = original.CustomerId == await WalkInCustomerAsync(db, ct);
+            var walkIn = original.CustomerId == await WalkInCustomerAsync(db, UtcNow, ct);
             var number = await NextNumberAsync(db.Sales.Select(s => s.Number), DocumentNumbers.SaleReturn, LocalYear(zone), ct);
             var created = Sale.CreateReturn(number, original, inputs, r.CashMinor, r.CardMinor, r.TransferMinor, allowOnAccount: !walkIn, r.Note, UserId, UtcNow);
             if (created.IsFailure)
@@ -500,7 +508,7 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
     // ------------------------------------------------------------------ helpers
 
     /// <summary>The account kayıtsız (walk-in) sales are booked to; created on first use.</summary>
-    internal static async Task<Guid> WalkInCustomerAsync(VernukoDbContext db, CancellationToken ct)
+    internal static async Task<Guid> WalkInCustomerAsync(VernukoDbContext db, DateTime nowUtc, CancellationToken ct)
     {
         if (await SettingsStore.GetAsync(db, WalkInCustomerKey, ct) is { } stored && Guid.TryParse(stored, out var id) && await db.Customers.AsNoTracking().AnyAsync(c => c.Id == id, ct))
         {
@@ -510,7 +518,7 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
         var number = (await db.Customers.MaxAsync(c => (int?)c.Number, ct) ?? 0) + 1;
         var customer = Customer.Create(number, new CustomerDetails("Perakende", "Satış", null, Notes: "Kayıtsız (perakende) satışlar bu hesaba yazılır. Kişisel bilgi içermez.")).Value;
         db.Customers.Add(customer);
-        await SettingsStore.SetAsync(db, WalkInCustomerKey, customer.Id.ToString(), DateTime.UtcNow, ct);
+        await SettingsStore.SetAsync(db, WalkInCustomerKey, customer.Id.ToString(), nowUtc, ct);
         return customer.Id;
     }
 
@@ -532,6 +540,9 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
         var last = await numbers.Where(n => n.StartsWith(head)).OrderByDescending(n => n).FirstOrDefaultAsync(ct);
         return DocumentNumbers.Format(prefix, year, (last is null ? 0 : DocumentNumbers.SequenceOf(last, prefix, year)) + 1);
     }
+
+    private static long PaidShare(SaleLine line, int quantity) =>
+        (long)Math.Round((decimal)line.NetTotalMinor * quantity / line.Quantity, MidpointRounding.AwayFromZero);
 
     private static async Task<Dictionary<Guid, int>> ReturnedQuantitiesAsync(VernukoDbContext db, Guid saleId, CancellationToken ct) =>
         await db.SaleLines.AsNoTracking()

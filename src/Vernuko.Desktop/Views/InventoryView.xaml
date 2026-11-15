@@ -41,9 +41,9 @@
                                 <DataGridTextColumn Header="Kod" Binding="{Binding Sku}" Width="90" />
                                 <DataGridTextColumn Header="Barkod" Binding="{Binding Barcode}" Width="120" />
                                 <DataGridTextColumn Header="Stok" Binding="{Binding StockText}" Width="90" />
-                                <DataGridTextColumn Header="Kritik" Binding="{Binding MinimumStock}" Width="60" />
+                                <DataGridTextColumn Header="Kritik seviye" Binding="{Binding MinimumStock}" Width="90" />
                                 <DataGridTextColumn MinWidth="104" Header="Satış fiyatı" Binding="{Binding SalePriceMinor, Converter={StaticResource Money}}" Width="100" />
-                                <DataGridCheckBoxColumn Header="Kritik mi" Binding="{Binding IsLow, Mode=OneWay}" Width="70" />
+                                <DataGridCheckBoxColumn Header="Azaldı" Binding="{Binding IsLow, Mode=OneWay}" Width="70" />
                                 <DataGridCheckBoxColumn Header="Aktif" Binding="{Binding IsActive, Mode=OneWay}" Width="55" />
                             </DataGrid.Columns>
                         </DataGrid>

@@ -128,7 +128,8 @@ public sealed partial class InventoryViewModel(IInventoryService inventory, ICat
     public override Task OnNavigatedToAsync(object? parameter) => RunAsync(async () =>
     {
         Suppliers.Clear();
-        foreach (var s in (await commerce.GetSuppliersAsync()).OrEmpty())
+        // Inactive suppliers too: a product whose usual supplier was deactivated must keep it when saved.
+        foreach (var s in (await commerce.GetSuppliersAsync(includeInactive: true)).OrEmpty())
         {
             Suppliers.Add(s);
         }

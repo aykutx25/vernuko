@@ -121,7 +121,7 @@
                         <Border Style="{StaticResource Card}" Padding="20">
                             <StackPanel>
                                 <DockPanel>
-                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
                                         <Button Style="{StaticResource PrimaryButton}" Content="Randevu ver" Command="{Binding NewAppointmentCommand}" Margin="0,0,8,0" Visibility="{Binding Shell.IsAppointmentMode, Converter={StaticResource VisibleWhen}}" />
                                         <Button Content="Düzenle" Command="{Binding EditCommand}" />
                                     </StackPanel>
@@ -195,8 +195,25 @@
                                     <TextBlock Style="{StaticResource Subtle}" Text="KVKK kapsamındaki talepler için müşterinin tüm kayıtlarını dışa aktarabilir, kaydı arşivleyebilir veya kişisel verilerini kalıcı olarak anonimleştirebilirsiniz." />
                                     <WrapPanel Margin="0,12,0,0">
                                         <Button Content="Verileri dışa aktar (JSON)" Command="{Binding ExportCustomerCommand}" Margin="0,0,8,8" />
-                                        <Button Content="Arşivle" Command="{Binding ArchiveCommand}" Margin="0,0,8,8" />
-                                        <Button Content="Arşivden çıkar" Command="{Binding RestoreCommand}" Margin="0,0,8,8" />
+                                        <Button Content="Arşivle" Command="{Binding ArchiveCommand}" Margin="0,0,8,8">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Details.State}" Value="Archived"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <Button Content="Arşivden çıkar" Command="{Binding RestoreCommand}" Margin="0,0,8,8">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Details.State}" Value="Archived"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
                                         <Button Style="{StaticResource DangerButton}" Content="Kişisel verileri sil (anonimleştir)" Command="{Binding AnonymizeCommand}" Margin="0,0,8,8" />
                                     </WrapPanel>
                                 </StackPanel>

@@ -41,6 +41,10 @@ internal sealed class ServiceTicketLineConfiguration : IEntityTypeConfiguration<
         b.Property(e => e.Description).HasMaxLength(200).IsRequired();
         b.HasIndex(e => new { e.TicketId, e.LineNo }).IsUnique();
         b.Ignore(e => e.TotalMinor);
+
+        // A part or labour line is added once per request (a retry after a timeout must not take the part twice).
+        b.Property<string?>("IdempotencyKey").HasMaxLength(120);
+        b.HasIndex("IdempotencyKey").IsUnique();
     }
 }
 

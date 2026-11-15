@@ -36,7 +36,7 @@
                             <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="Sayımı kaydet" Command="{Binding ApplyCountCommand}" IsEnabled="{Binding CanManage}" />
                             <TextBox Text="{Binding CountNote, UpdateSourceTrigger=PropertyChanged}" Tag="Not (ör. yıl sonu sayımı)" Margin="0,0,10,0" AutomationProperties.Name="Sayım notu" />
                         </DockPanel>
-                        <DataGrid ItemsSource="{Binding VisibleRows}" Margin="0,10,0,0" IsReadOnly="False" CanUserAddRows="False" CanUserDeleteRows="False" AutomationProperties.Name="Sayım listesi">
+                        <DataGrid ItemsSource="{Binding VisibleRows}" Margin="0,10,0,0" MinHeight="150" IsReadOnly="False" CanUserAddRows="False" CanUserDeleteRows="False" AutomationProperties.Name="Sayım listesi">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Ürün" Binding="{Binding Product.Name, Mode=OneWay}" Width="*" IsReadOnly="True" />
                                 <DataGridTextColumn Header="Barkod" Binding="{Binding Product.Barcode, Mode=OneWay}" Width="130" IsReadOnly="True" />

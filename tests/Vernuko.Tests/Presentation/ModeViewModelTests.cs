@@ -318,6 +318,27 @@ public class ModeViewModelTests
     }
 
     [Fact]
+    public async Task Switching_tickets_carries_nothing_over()
+    {
+        await using var app = await TestApp.CreateAsync();
+        Assert.True((await app.Get<ModeDemoSeeder>().SeedAsync(BusinessMode.TeknikServis)).IsSuccess);
+        var page = app.Get<ServiceTicketsViewModel>();
+        await page.OnNavigatedToAsync(null);
+
+        page.Selected = page.Tickets.Single(t => t.Status == TicketStatus.AwaitingApproval);
+        await WaitUntil(() => page.Ticket?.Summary.Status == TicketStatus.AwaitingApproval);
+        Assert.Equal("700,00", page.Estimate);
+        page.PayCash = "100";
+        page.LaborText = "Yarım kalan";
+
+        page.Selected = page.Tickets.Single(t => t.Status == TicketStatus.Received);
+        await WaitUntil(() => page.Ticket?.Summary.Status == TicketStatus.Received);
+        Assert.Equal("0", page.Estimate);
+        Assert.Equal("0", page.PayCash);
+        Assert.Equal(string.Empty, page.LaborText);
+    }
+
+    [Fact]
     public void Demo_barcodes_are_valid_ean13() => Assert.Equal("8690000000012", ModeDemoSeeder.Ean13("869000000001"));
 
     private static async Task<ShellViewModel> Navigate(ShellViewModel shell, string key)

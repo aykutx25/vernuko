@@ -213,8 +213,8 @@ public sealed class ModeDemoSeeder(SetupService setup, AuthService auth, Custome
         t1 = await Then(t1, id => desk.SetDiagnosisAsync(id, "Ekran paneli kırık; anakart sağlam.", null, ct));
         t1 = await Then(t1, id => desk.SetEstimateAsync(id, 210_000, 25_000, ct));
         t1 = await Then(t1, id => desk.RecordApprovalAsync(id, true, ApprovalChannel.Phone, "Serdar Aksoy", ct));
-        t1 = await Then(t1, id => desk.AddPartAsync(id, ids[0], 1, null, ct));
-        t1 = await Then(t1, id => desk.AddLaborAsync(id, "Ekran değişimi", 60_000, okan, ct));
+        t1 = await Then(t1, id => desk.AddPartAsync(id, ids[0], 1, null, ct: ct));
+        t1 = await Then(t1, id => desk.AddLaborAsync(id, "Ekran değişimi", 60_000, okan, ct: ct));
 
         // 2. Waiting for the customer's approval.
         var t2 = await desk.OpenTicketAsync(new OpenTicketRequest(Intake(1, DeviceKind.Tablet, "Tabula", "T10", "R52N80ABC12", "Şarj olmuyor", "Şarj kablosu", null, elif), null, "demo-t2"), ct);
@@ -226,8 +226,8 @@ public sealed class ModeDemoSeeder(SetupService setup, AuthService auth, Custome
         var t3 = await desk.OpenTicketAsync(new OpenTicketRequest(Intake(2, DeviceKind.Phone, "Telsa", "T9", "356938035643809", "Batarya çabuk bitiyor", null, null, elif), null, "demo-t3"), ct);
         t3 = await Then(t3, id => desk.SetEstimateAsync(id, 105_000, 0, ct));
         t3 = await Then(t3, id => desk.RecordApprovalAsync(id, true, ApprovalChannel.InPerson, "Burak Tan", ct));
-        t3 = await Then(t3, id => desk.AddPartAsync(id, ids[1], 1, null, ct));
-        t3 = await Then(t3, id => desk.AddLaborAsync(id, "Batarya değişimi", 40_000, elif, ct));
+        t3 = await Then(t3, id => desk.AddPartAsync(id, ids[1], 1, null, ct: ct));
+        t3 = await Then(t3, id => desk.AddLaborAsync(id, "Batarya değişimi", 40_000, elif, ct: ct));
         t3 = await Then(t3, id => desk.SetDiagnosisAsync(id, "Batarya kapasitesi %61.", "Batarya değiştirildi, şarj testi yapıldı.", ct));
         t3 = await Then(t3, id => desk.ChangeStatusAsync(id, TicketStatus.Ready, null, false, ct));
 
@@ -243,8 +243,8 @@ public sealed class ModeDemoSeeder(SetupService setup, AuthService auth, Custome
 
         // 6. Delivered and paid: its repair warranty runs.
         var t6 = await desk.OpenTicketAsync(new OpenTicketRequest(Intake(4, DeviceKind.Phone, "Telsa", "T12", "352099001761499", "Şarj soketi gevşek", null, null, okan), null, "demo-t6"), ct);
-        t6 = await Then(t6, id => desk.AddPartAsync(id, ids[2], 1, null, ct));
-        t6 = await Then(t6, id => desk.AddLaborAsync(id, "Şarj soketi değişimi", 45_000, okan, ct));
+        t6 = await Then(t6, id => desk.AddPartAsync(id, ids[2], 1, null, ct: ct));
+        t6 = await Then(t6, id => desk.AddLaborAsync(id, "Şarj soketi değişimi", 45_000, okan, ct: ct));
         t6 = await Then(t6, id => desk.SetDiagnosisAsync(id, "Soket pimleri aşınmış.", "Şarj soketi değiştirildi.", ct));
         t6 = await Then(t6, id => desk.ChangeStatusAsync(id, TicketStatus.Ready, null, false, ct));
         t6 = await Then(t6, id => desk.DeliverAsync(new DeliverTicketRequest(id, "Kaan Uslu", 0, 70_000, 0, "demo-t6-deliver"), ct));

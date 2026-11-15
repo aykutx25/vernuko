@@ -189,7 +189,7 @@
     <!-- Side navigation item -->
     <Style x:Key="NavButton" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
         <Setter Property="HorizontalContentAlignment" Value="Left" />
-        <Setter Property="Height" Value="44" />
+        <Setter Property="Height" Value="40" />
         <Setter Property="Padding" Value="14,0" />
         <Setter Property="Margin" Value="0,1" />
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
@@ -226,7 +226,8 @@
                         <Grid>
                             <TextBlock x:Name="Placeholder" Text="{TemplateBinding Tag}" Foreground="{StaticResource TextMutedBrush}" Margin="{TemplateBinding Padding}"
                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Padding="2,0,0,0" IsHitTestVisible="False" Visibility="Collapsed" TextTrimming="CharacterEllipsis" />
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Focusable="False" />
+                            <!-- No Margin here: the text box applies its Padding to the text itself; a margin counted it twice (typed text 10 px right of the placeholder). -->
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Focusable="False" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -283,7 +284,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="PasswordBox">
                     <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
-                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" Focusable="False" />
+                        <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" Focusable="False" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocused" Value="True">
@@ -610,6 +611,7 @@
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
         <Setter Property="EnableRowVirtualization" Value="True" />
         <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+        <Setter Property="b:DataGridAssist.TrimText" Value="True" />
     </Style>
     <Style TargetType="DataGridColumnHeader">
         <Setter Property="Background" Value="{StaticResource SurfaceAltBrush}" />
@@ -619,6 +621,13 @@
         <Setter Property="Padding" Value="10,9" />
         <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" ToolTip="{Binding}" />
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     <Style TargetType="DataGridCell">
         <Setter Property="Padding" Value="10,0" />
@@ -641,30 +650,44 @@
         </Style.Triggers>
     </Style>
 
+    <!-- Tabs wrap onto more rows in order (WPF's own panel moved the selected row to the bottom, so the rows swapped on click). -->
     <Style TargetType="TabControl">
         <Setter Property="b:TabControlAssist.SelectVisibleTab" Value="True" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Padding" Value="0,12,0,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabControl">
+                    <DockPanel KeyboardNavigation.TabNavigation="Local" SnapsToDevicePixels="True">
+                        <Border DockPanel.Dock="Top" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                            <WrapPanel IsItemsHost="True" KeyboardNavigation.TabIndex="1" />
+                        </Border>
+                        <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" Margin="{TemplateBinding Padding}" KeyboardNavigation.TabIndex="2" />
+                    </DockPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
+    <!-- Header colour and weight are set on the header only: set on the TabItem they reached the tab's content too
+         (every grid and form inside a selected tab was semi-bold). -->
     <Style TargetType="TabItem">
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TabItem">
-                    <Border x:Name="Bd" BorderThickness="0,0,0,2" BorderBrush="Transparent" Padding="14,8" Margin="0,0,4,0">
+                    <Border x:Name="Bd" BorderThickness="0,0,0,2" BorderBrush="Transparent" Padding="14,8" Margin="0,0,4,-1" Cursor="Hand"
+                            Background="Transparent" TextElement.Foreground="{StaticResource TextSecondaryBrush}">
                         <ContentPresenter ContentSource="Header" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
-                            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter TargetName="Bd" Property="TextElement.Foreground" Value="{StaticResource TextBrush}" />
+                            <Setter TargetName="Bd" Property="TextElement.FontWeight" Value="SemiBold" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+                            <Setter TargetName="Bd" Property="TextElement.Foreground" Value="{StaticResource TextBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

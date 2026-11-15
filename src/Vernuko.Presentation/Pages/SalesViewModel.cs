@@ -357,8 +357,12 @@ public sealed partial class SalesViewModel(ICommerceService commerce, IInventory
         }
     }
 
+    private int _saleVersion;
+
     private async Task LoadSaleAsync(SaleSummaryDto? summary)
     {
+        // Quick clicks on two sales: only the last one fills the return rows.
+        var version = ++_saleVersion;
         ReturnRows.Clear();
         SaleDetail = null;
         if (summary is null)
@@ -366,8 +370,18 @@ public sealed partial class SalesViewModel(ICommerceService commerce, IInventory
             return;
         }
 
-        var r = await commerce.GetSaleAsync(summary.Id);
-        if (r.IsFailure)
+        Result<SaleDto> r;
+        try
+        {
+            r = await commerce.GetSaleAsync(summary.Id);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            ErrorMessage = "Satış açılamadı. Yeniden deneyin.";
+            return;
+        }
+
+        if (r.IsFailure || version != _saleVersion)
         {
             return;
         }

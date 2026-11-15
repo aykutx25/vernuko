@@ -232,10 +232,10 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="110" />
-                                                <ColumnDefinition Width="190" />
+                                                <ColumnDefinition Width="Auto" MinWidth="110" />
+                                                <ColumnDefinition Width="220" />
                                             </Grid.ColumnDefinitions>
-                                            <StackPanel>
+                                            <StackPanel Margin="0,0,12,0">
                                                 <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                                                 <TextBlock Text="{Binding Note}" Style="{StaticResource Muted}" />
                                             </StackPanel>

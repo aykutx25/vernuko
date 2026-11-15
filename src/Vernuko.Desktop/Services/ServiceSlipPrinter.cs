@@ -28,7 +28,6 @@ internal static class ServiceSlipPrinter
         doc.PageWidth = dialog.PrintableAreaWidth;
         doc.PageHeight = dialog.PrintableAreaHeight;
         doc.ColumnWidth = dialog.PrintableAreaWidth;
-        doc.PagePadding = new Thickness(48);
         dialog.PrintDocument(((IDocumentPaginatorSource)doc).DocumentPaginator, $"{Title(slip)} {slip.Number}");
         return true;
     }
@@ -41,6 +40,7 @@ internal static class ServiceSlipPrinter
             FontSize = 11,
             Foreground = Brushes.Black,
             Background = Brushes.White,
+            PagePadding = new Thickness(48),
         };
 
         // Business header
@@ -97,6 +97,14 @@ internal static class ServiceSlipPrinter
             }
 
             group.Rows.Add(Cells(true, "Toplam", string.Empty, string.Empty, Amount(s.TotalMinor)));
+            foreach (var row in group.Rows)
+            {
+                // Quantities and amounts right-aligned, so the digits line up.
+                for (var c = 1; c < row.Cells.Count; c++)
+                {
+                    row.Cells[c].TextAlignment = TextAlignment.Right;
+                }
+            }
             doc.Blocks.Add(new Paragraph(new Run(s.Kind == SlipKind.Intake ? "Fiyat bilgisi" : "Ücret dökümü") { FontWeight = FontWeights.SemiBold }) { Margin = new Thickness(0, 12, 0, 4) });
             doc.Blocks.Add(lines);
         }

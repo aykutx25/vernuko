@@ -34,7 +34,7 @@ public sealed partial class ServiceChoice(ServiceDto service, bool selected) : O
 }
 
 /// <summary>Staff list, personal working hours, services they deliver, leave and business closures.</summary>
-public sealed partial class StaffViewModel(ICatalogService catalog, IDialogService dialogs, TimeProvider time) : PageViewModel
+public sealed partial class StaffViewModel(ICatalogService catalog, IDialogService dialogs, TimeProvider time) : PageViewModel, IShellAware
 {
     [ObservableProperty]
     private StaffDto? _selected;
@@ -55,10 +55,10 @@ public sealed partial class StaffViewModel(ICatalogService catalog, IDialogServi
     private bool _useBusinessHours = true;
 
     [ObservableProperty]
-    private DateTime _leaveFrom = DateTime.Today;
+    private DateTime _leaveFrom = time.GetLocalNow().Date;
 
     [ObservableProperty]
-    private DateTime _leaveTo = DateTime.Today;
+    private DateTime _leaveTo = time.GetLocalNow().Date;
 
     [ObservableProperty]
     private string? _leaveNote;
@@ -66,7 +66,12 @@ public sealed partial class StaffViewModel(ICatalogService catalog, IDialogServi
     [ObservableProperty]
     private bool _leaveIsBusinessClosure;
 
-    public override string Title => "Personel";
+    /// <summary>The program's word for staff: Personel, Uzmanlar, Teknisyenler… (the menu uses the same).</summary>
+    public override string Title => Shell?.Business?.Terms.Staff ?? "Personel";
+
+    public string NewText => "Yeni " + (Shell?.Business?.Terms.StaffMember ?? "personel").ToLower(Vernuko.Core.TurkishText.Culture);
+
+    public ShellViewModel? Shell { get; set; }
 
     public ObservableCollection<StaffDto> Staff { get; } = [];
 

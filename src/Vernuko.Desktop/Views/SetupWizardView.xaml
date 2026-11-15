@@ -30,7 +30,13 @@
         </Border>
 
         <!-- Right: step content -->
-        <Grid Grid.Column="1" Margin="56,48,56,32" MaxWidth="820" HorizontalAlignment="Left">
+        <!-- One width for every step (820 px at most), so "Devam" stays in the same place. -->
+        <Grid Grid.Column="1" Margin="56,48,56,32">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MaxWidth="820" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -322,6 +328,7 @@
                 <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Bu adımı atla" Command="{Binding SkipCommand}" Margin="0,0,10,0"
                         Visibility="{Binding CanSkip, Converter={StaticResource VisibleWhen}}" />
             </DockPanel>
+        </Grid>
         </Grid>
     </Grid>
 </UserControl>

@@ -57,7 +57,7 @@
                     </Border>
                     <DataGrid ItemsSource="{Binding Transactions}" SelectedItem="{Binding Selected}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn MinWidth="124" Header="Saat" Binding="{Binding OccurredAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
+                            <DataGridTextColumn MinWidth="124" Header="Tarih" Binding="{Binding OccurredAtUtc, Converter={StaticResource DateFormat}, ConverterParameter=utc-datetime}" Width="130" />
                             <DataGridTextColumn Header="Müşteri" Binding="{Binding CustomerName}" Width="*" />
                             <DataGridTextColumn Header="İşlem" Binding="{Binding KindName}" Width="150" />
                             <DataGridTextColumn MinWidth="104" Header="Tutar" Binding="{Binding AmountMinor, Converter={StaticResource Money}}" Width="110" />

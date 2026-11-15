@@ -2326,6 +2326,10 @@ namespace Vernuko.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsRemoved")
                         .HasColumnType("INTEGER");
 
@@ -2359,6 +2363,9 @@ namespace Vernuko.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
 
                     b.HasIndex("TicketId", "LineNo")
                         .IsUnique();

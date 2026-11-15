@@ -9,9 +9,9 @@
         </Grid.RowDefinitions>
         <DockPanel>
             <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Command="{Binding NewCommand}" Height="42">
-                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconPlus}" Style="{StaticResource Icon}" /><TextBlock Text="Yeni personel" Margin="8,0,0,0" /></StackPanel>
+                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconPlus}" Style="{StaticResource Icon}" /><TextBlock Text="{Binding NewText}" Margin="8,0,0,0" /></StackPanel>
             </Button>
-            <TextBlock Text="Personel" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" />
         </DockPanel>
         <StackPanel Grid.Row="1">
             <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>

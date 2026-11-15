@@ -238,6 +238,8 @@
                                     <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" TextWrapping="Wrap" Text="Eklenen parça stoktan düşer; kaldırırsanız stoğa geri döner. Garanti kapsamındaki onarımda işçilik ücreti alınmaz." />
                                 </StackPanel>
                                 <TextBlock DockPanel.Dock="Bottom" Text="{Binding AmountDueText}" FontWeight="SemiBold" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Muted}" Margin="0,0,0,8" Text="Henüz parça veya işçilik eklenmedi."
+                                           Visibility="{Binding Ticket.Lines.Count, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}" />
                                 <DataGrid ItemsSource="{Binding Ticket.Lines}" AutomationProperties.Name="Parça ve işçilik">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Kalem" Binding="{Binding Description}" Width="*" />

@@ -6,7 +6,7 @@
         <Border Style="{StaticResource InfoBanner}" Visibility="{Binding InfoMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding InfoMessage}" TextWrapping="Wrap" /></Border>
 
         <!-- Consents -->
-        <TextBlock Text="Onaylar" Style="{StaticResource SectionTitle}" Margin="0,8,0,6" />
+        <TextBlock Text="Onamlar" Style="{StaticResource SectionTitle}" Margin="0,8,0,6" />
         <DataGrid ItemsSource="{Binding Consents}" MaxHeight="220">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Form" Binding="{Binding Title}" Width="*" />
@@ -28,7 +28,7 @@
         <StackPanel Visibility="{Binding CanRecordConsent, Converter={StaticResource VisibleWhen}}" Margin="0,8,0,0">
             <TextBlock Style="{StaticResource Muted}" Visibility="{Binding HasNoTemplates, Converter={StaticResource VisibleWhen}}" TextWrapping="Wrap"
                        Text="Henüz onam formu tanımlanmamış. Yönetici Ayarlar › Onam formları bölümünden form ekleyebilir." />
-            <WrapPanel>
+            <WrapPanel Visibility="{Binding HasNoTemplates, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">
                 <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}" DisplayMemberPath="Title" Width="240" Margin="0,0,8,6" AutomationProperties.Name="Onam formu" />
                 <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" DisplayMemberPath="Label" Width="180" Margin="0,0,8,6" AutomationProperties.Name="Onay yöntemi" />
                 <TextBox Text="{Binding ConsentNote, UpdateSourceTrigger=PropertyChanged}" Tag="Not (isteğe bağlı)" Width="200" Margin="0,0,8,6" />

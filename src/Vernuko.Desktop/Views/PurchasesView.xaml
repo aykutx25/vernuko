@@ -81,7 +81,7 @@
                                 <Button Style="{StaticResource PrimaryButton}" Content="Mal kabulü kaydet" Command="{Binding SaveReceiptCommand}" HorizontalAlignment="Left" Margin="0,4,0,0" IsEnabled="{Binding CanManage}" />
                                 <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" TextWrapping="Wrap" Text="Kayıtla birlikte stok artar, tedarikçinin hesabına borç yazılır; ödenen kısım düşülür." />
                             </StackPanel>
-                            <DataGrid ItemsSource="{Binding Lines}" Margin="0,10,0,0" IsReadOnly="False" CanUserAddRows="False" CanUserDeleteRows="False" AutomationProperties.Name="Alış kalemleri">
+                            <DataGrid ItemsSource="{Binding Lines}" Margin="0,10,0,0" MinHeight="150" IsReadOnly="False" CanUserAddRows="False" CanUserDeleteRows="False" AutomationProperties.Name="Alış kalemleri">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Ürün" Binding="{Binding Product.Name, Mode=OneWay}" Width="*" MinWidth="130" IsReadOnly="True" />
                                     <DataGridTextColumn Header="Adet" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="70" />

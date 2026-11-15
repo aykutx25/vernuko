@@ -1,6 +1,7 @@
 <UserControl x:Class="Vernuko.Desktop.Views.ShellView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:b="clr-namespace:Vernuko.Desktop.Behaviors">
     <!-- Ctrl+N, Ctrl+L, Esc… are handled at window level (ShellView.xaml.cs → ShellViewModel.HandleShortcut), where the
          permission check and the "only Esc while a dialog is open" rule apply. -->
     <Grid>
@@ -84,14 +85,15 @@
                     </StackPanel>
                 </Border>
                 <Border DockPanel.Dock="Bottom" Style="{StaticResource WarnBanner}" Margin="0,0,0,10" Visibility="{Binding IsDemo, Converter={StaticResource VisibleWhen}}">
-                    <TextBlock Text="DEMO MODU — örnek verilerle çalışıyorsunuz. Gerçek kayıtlarınız etkilenmez." TextWrapping="Wrap" FontSize="12.5" />
+                    <TextBlock Text="Demo: örnek veriler. Gerçek kayıtlarınız etkilenmez." TextWrapping="Wrap" FontSize="12.5" />
                 </Border>
                 <!-- Scrolls when the menu is longer than the window (11 items + license card on a 768 px screen at 125 %). -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,10" Focusable="False">
                     <ItemsControl ItemsSource="{Binding NavItems}" Focusable="False">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Style="{StaticResource NavButton}" Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}">
+                                <Button Style="{StaticResource NavButton}" Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"
+                                        b:ScrollAssist.BringIntoViewWhen="{Binding IsSelected}">
                                     <StackPanel Orientation="Horizontal">
                                         <Path Data="{Binding Icon, Converter={StaticResource IconKey}}" Style="{StaticResource Icon}" Width="20" Height="20" />
                                         <TextBlock Text="{Binding Title}" Margin="14,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />

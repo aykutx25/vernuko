@@ -49,7 +49,7 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
             var t = opened.Value;
             db.ServiceTickets.Add(t);
             db.Entry(t).Property(PersistenceNames.DocumentKey).CurrentValue = key;
-            Log(db, t, TicketEventKind.Created, $"Cihaz teslim alındı: {DeviceText(t)}" + (t.BroughtBy is null ? string.Empty : $", getiren {t.BroughtBy}") + $". Söz verilen tarih {t.DueDate:dd.MM.yyyy}.");
+            Log(db, t, TicketEventKind.Created, $"Cihaz teslim alındı: {DeviceText(t)}. Söz verilen tarih {t.DueDate:dd.MM.yyyy}.");
             await Audit.AppendAsync(db, "ticket.opened", "ServiceTicket", t.Id, $"{t.Number}: {DeviceText(t)}", ct);
             await db.SaveChangesAsync(ct);
             return await LoadAsync(db, t.Id, ct);
@@ -61,6 +61,12 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
             if (await CheckIntakeAsync(db, intake, ct) is { } bad)
             {
                 return bad;
+            }
+
+            // A kapora was paid on the first customer's account: moving the ticket would leave it there.
+            if (intake.CustomerId != t.CustomerId && await DepositsAsync(db, t, ct) > 0)
+            {
+                return Error.Validation("ticket.customer_deposit", "Bu fişe kapora alınmış; müşteri değiştirilemez. Yeni müşteri için ayrı fiş açın.");
             }
 
             var (_, zone) = await BusinessContext.LoadAsync(db, ct);
@@ -88,7 +94,7 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
         {
             var r = t.RecordApproval(approved, channel, approvedBy, UtcNow);
             return Task.FromResult<Result<string>>(r.IsFailure ? r.Error
-                : $"{ServiceRules.ApprovalChannelName(channel)} {(approved ? "onaylandı" : "onaylanmadı")}" + (string.IsNullOrWhiteSpace(approvedBy) ? string.Empty : $" ({approvedBy.Trim()})") + ".");
+                : $"{ServiceRules.ApprovalChannelName(channel)} {(approved ? "onaylandı" : "onaylanmadı")}.");
         }, ct, TicketEventKind.ApprovalRecorded);
 
     public Task<Result<TicketDto>> WithdrawEstimateAsync(Guid ticketId, CancellationToken ct = default) =>
@@ -130,6 +136,18 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
                     return Error.Validation("ticket.warranty", "Garanti kapsamı için teslim edilmiş, onarılmış bir servis fişi seçin.");
                 }
 
+                // Only the same device, and only while its same-fault warranty runs (SSHY m.10/6: 1 year).
+                var (_, zone) = await BusinessContext.LoadAsync(db, ct);
+                if (t.SerialNumber is null || earlier.SerialNumber != t.SerialNumber)
+                {
+                    return Error.Validation("ticket.warranty_device", "Garanti yalnızca aynı seri numaralı cihazın önceki onarımı için geçerlidir.");
+                }
+
+                if (earlier.WarrantyUntil(zone) is not { } w || w.SameFault < TimeZones.LocalDate(UtcNow, zone))
+                {
+                    return Error.Validation("ticket.warranty_expired", $"{earlier.Number} fişinin aynı arıza garantisi sona ermiş.");
+                }
+
                 t.LinkWarranty(id);
                 return $"Onarım garantisi kapsamında ({earlier.Number}): işçilik ücretlendirilmez.";
             }
@@ -139,9 +157,14 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
         }, ct);
 
     /// <summary>A part from stock: it leaves stock now (fitted into the device).</summary>
-    public Task<Result<TicketDto>> AddPartAsync(Guid ticketId, Guid productId, int quantity, long? unitPriceMinor, CancellationToken ct = default) =>
+    public Task<Result<TicketDto>> AddPartAsync(Guid ticketId, Guid productId, int quantity, long? unitPriceMinor, string? idempotencyKey = null, CancellationToken ct = default) =>
         Change(ticketId, async (db, t) =>
         {
+            if (await AlreadyAddedAsync(db, idempotencyKey, ct))
+            {
+                return Result.Success("Parça zaten eklenmiş.");
+            }
+
             var p = await db.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == productId && x.IsActive, ct);
             if (p is null)
             {
@@ -162,12 +185,18 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
 
             db.StockMovements.Add(movement.Value);
             db.ServiceTicketLines.Add(line.Value);
+            Remember(db, line.Value, idempotencyKey);
             return $"Parça: {p.Name} × {quantity} ({new Money(line.Value.TotalMinor)})";
         }, ct, TicketEventKind.LineAdded);
 
-    public Task<Result<TicketDto>> AddLaborAsync(Guid ticketId, string description, long priceMinor, Guid? staffId, CancellationToken ct = default) =>
+    public Task<Result<TicketDto>> AddLaborAsync(Guid ticketId, string description, long priceMinor, Guid? staffId, string? idempotencyKey = null, CancellationToken ct = default) =>
         Change(ticketId, async (db, t) =>
         {
+            if (await AlreadyAddedAsync(db, idempotencyKey, ct))
+            {
+                return Result.Success("İşçilik zaten eklenmiş.");
+            }
+
             if (staffId is { } sid && !await db.Staff.AsNoTracking().AnyAsync(s => s.Id == sid, ct))
             {
                 return Error.NotFound("Teknisyen");
@@ -180,6 +209,7 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
             }
 
             db.ServiceTicketLines.Add(line.Value);
+            Remember(db, line.Value, idempotencyKey);
             return $"İşçilik: {line.Value.Description} ({new Money(priceMinor)})";
         }, ct, TicketEventKind.LineAdded);
 
@@ -210,6 +240,11 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
                 return "Kapora zaten kayıtlı.";
             }
 
+            if (!t.IsOpen)
+            {
+                return Error.Validation("ticket.closed", "Teslim edilmiş fişe kapora alınamaz.");
+            }
+
             var (settings, _) = await BusinessContext.LoadAsync(db, ct);
             var tx = CustomerTransaction.Create(Branch.DefaultId, t.CustomerId, TransactionKind.Payment, new Money(amountMinor, settings.Currency), method, true, null, null, $"Servis {t.Number} kaporası", UserId, UtcNow, key);
             if (tx.IsFailure)
@@ -231,9 +266,11 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
                 return Error.NotFound("Servis fişi");
             }
 
-            if (!t.IsOpen && await db.Transactions.AsNoTracking().AnyAsync(x => x.IdempotencyKey.StartsWith(key), ct))
+            if (t.Status == TicketStatus.Delivered)
             {
-                return await LoadAsync(db, t.Id, ct); // the same delivery again (double click / retry)
+                // The same delivery again (double click, retry after a timeout), also when nothing was charged or paid:
+                // a delivered ticket cannot be delivered twice, so the current state is the answer.
+                return await LoadAsync(db, t.Id, ct);
             }
 
             if (r.CashMinor < 0 || r.CardMinor < 0 || r.TransferMinor < 0)
@@ -262,8 +299,8 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
                 }
             }
 
-            Log(db, t, TicketEventKind.Delivered, $"Teslim edildi: {t.DeliveredTo}. " + (t.Repaired ? "Onarıldı." : "Onarılmadan iade.") + $" Tutar {money(t.TotalChargedMinor)}." + (t.UnlockCodeProtected is null ? " Cihaz şifresi silindi." : string.Empty));
-            await Audit.AppendAsync(db, "ticket.delivered", "ServiceTicket", t.Id, $"{t.Number} → {t.DeliveredTo}: {money(t.TotalChargedMinor)}", ct);
+            Log(db, t, TicketEventKind.Delivered, "Teslim edildi. " + (t.Repaired ? "Onarıldı." : "Onarılmadan iade.") + $" Tutar {money(t.TotalChargedMinor)}." + (t.UnlockCodeProtected is null ? " Cihaz şifresi silindi." : string.Empty));
+            await Audit.AppendAsync(db, "ticket.delivered", "ServiceTicket", t.Id, $"{t.Number}: {money(t.TotalChargedMinor)}", ct);
             await db.SaveChangesAsync(ct);
             return await LoadAsync(db, t.Id, ct);
         }, ct);
@@ -423,6 +460,22 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
         return null;
     }
 
+    private static async Task<long> DepositsAsync(VernukoDbContext db, ServiceTicket t, CancellationToken ct) =>
+        await db.Transactions.AsNoTracking().Where(x => x.IdempotencyKey.StartsWith("ticket-deposit:") && x.CustomerId == t.CustomerId && x.Description == $"Servis {t.Number} kaporası").SumAsync(x => (long?)x.AmountMinor, ct) ?? 0;
+
+    private const string LineKey = "IdempotencyKey";
+
+    private static async Task<bool> AlreadyAddedAsync(VernukoDbContext db, string? key, CancellationToken ct) =>
+        key is not null && await db.ServiceTicketLines.AsNoTracking().AnyAsync(l => EF.Property<string?>(l, LineKey) == "line:" + key, ct);
+
+    private static void Remember(VernukoDbContext db, ServiceTicketLine line, string? key)
+    {
+        if (key is not null)
+        {
+            db.Entry(line).Property(LineKey).CurrentValue = "line:" + key;
+        }
+    }
+
     private void Log(VernukoDbContext db, ServiceTicket t, TicketEventKind kind, string text) =>
         db.ServiceTicketEvents.Add(ServiceTicketEvent.Create(t.Id, kind, text, UserId, UtcNow));
 
@@ -463,7 +516,7 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
         var events = await db.ServiceTicketEvents.AsNoTracking().Where(e => e.TicketId == t.Id).OrderBy(e => e.AtUtc).ThenBy(e => e.Id).ToListAsync(ct);
         var userIds = events.Where(e => e.UserId != null).Select(e => e.UserId!.Value).Distinct().ToList();
         var users = await db.Users.AsNoTracking().Where(u => userIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, u => u.DisplayName, ct);
-        var deposits = await db.Transactions.AsNoTracking().Where(x => x.IdempotencyKey.StartsWith("ticket-deposit:") && x.CustomerId == t.CustomerId && x.Description == $"Servis {t.Number} kaporası").SumAsync(x => (long?)x.AmountMinor, ct) ?? 0;
+        var deposits = await DepositsAsync(db, t, ct);
         var warrantyOf = t.WarrantyOfTicketId is { } wid ? await db.ServiceTickets.AsNoTracking().Where(x => x.Id == wid).Select(x => x.Number).FirstOrDefaultAsync(ct) : null;
 
         WarrantyCandidateDto? candidate = null;

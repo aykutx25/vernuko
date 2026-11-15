@@ -22,6 +22,13 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
         ReadAsync<IReadOnlyList<CustomerListItem>>(Permission.CustomersView, async db =>
         {
             var q = db.Customers.AsNoTracking().Where(c => c.State != CustomerState.Anonymized);
+
+            // The built-in "Perakende Satış" account of walk-in sales is not a person: it is never offered as a customer.
+            if (await SettingsStore.GetAsync(db, CommerceService.WalkInCustomerKey, ct) is { } walkIn && Guid.TryParse(walkIn, out var walkInId))
+            {
+                q = q.Where(c => c.Id != walkInId);
+            }
+
             if (!includeArchived)
             {
                 q = q.Where(c => c.State == CustomerState.Active);

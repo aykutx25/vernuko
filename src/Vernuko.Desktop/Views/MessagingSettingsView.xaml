@@ -19,7 +19,7 @@
                         <StackPanel Margin="0,0,12,0"><TextBlock Text="SESSİZ SAAT BAŞI" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding QuietStart, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
                         <StackPanel Margin="0,0,12,0"><TextBlock Text="SESSİZ SAAT SONU" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding QuietEnd, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
                         <StackPanel Margin="0,0,12,0"><TextBlock Text="AYLIK MESAJ LİMİTİ" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding MonthlyLimit, UpdateSourceTrigger=PropertyChanged}" Width="120" /></StackPanel>
-                        <StackPanel><TextBlock Text="SMS BİRİM FİYATINIZ (₺, tahmin için)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding SmsUnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="120" /></StackPanel>
+                        <StackPanel><TextBlock Text="SMS BİRİM FİYATINIZ (₺, tahmin için)" Style="{StaticResource FieldLabel}" /><TextBox HorizontalAlignment="Left" Text="{Binding SmsUnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="120" /></StackPanel>
                     </WrapPanel>
                     <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding ShowReminders, Converter={StaticResource VisibleWhen}}"
                                Text="Hatırlatma, müşteri kartında ilgili kanaldan bildirime izin verilmişse gönderilir. Randevu iptal edilir veya taşınırsa bekleyen hatırlatma iptal edilir; taşınan saate yeni hatırlatma planlanır." />

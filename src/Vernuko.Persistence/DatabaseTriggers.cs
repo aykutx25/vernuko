@@ -80,6 +80,28 @@ public static class DatabaseTriggers
         }
     }
 
+    /// <summary>Rows may be corrected (e.g. erased for KVKK) but never deleted.</summary>
+    public static IEnumerable<string> NoDeleteStatements(params string[] tables)
+    {
+        foreach (var table in tables)
+        {
+            yield return $"""
+                CREATE TRIGGER "trg_{table}_NoDelete" BEFORE DELETE ON "{table}"
+                BEGIN
+                    SELECT RAISE(ABORT, '{AppendOnlyError}');
+                END;
+                """;
+        }
+    }
+
+    /// <summary>The listed columns never change once written (other columns may, e.g. an erasable text).</summary>
+    public static string NoUpdateOfStatement(string table, params string[] columns) => $"""
+        CREATE TRIGGER "trg_{table}_NoUpdateKey" BEFORE UPDATE OF {string.Join(", ", columns.Select(c => $"\"{c}\""))} ON "{table}"
+        BEGIN
+            SELECT RAISE(ABORT, '{AppendOnlyError}');
+        END;
+        """;
+
     public static IEnumerable<string> DropAppendOnlyStatements(params string[] tables)
     {
         foreach (var table in tables)

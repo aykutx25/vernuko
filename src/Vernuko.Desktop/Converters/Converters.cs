@@ -84,6 +84,8 @@ public sealed class MoneyConverter : IValueConverter
 /// <summary>Formats DateTime values: parameter "time", "date", "datetime", "long", or "utc-datetime" (UTC → local).</summary>
 public sealed class DateFormatConverter : IValueConverter
 {
+    private static readonly TimeZoneInfo BusinessZone = TimeZones.Find(TimeZones.Turkey);
+
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is DateOnly d)
@@ -102,8 +104,9 @@ public sealed class DateFormatConverter : IValueConverter
             "time" => dt.ToString("HH:mm", tr),
             "date" => dt.ToString("dd.MM.yyyy", tr),
             "long" => dt.ToString("d MMMM yyyy, dddd", tr),
-            "utc-datetime" => DateTime.SpecifyKind(dt, DateTimeKind.Utc).ToLocalTime().ToString("dd.MM.yyyy HH:mm", tr),
-            "utc-date" => DateTime.SpecifyKind(dt, DateTimeKind.Utc).ToLocalTime().ToString("dd.MM.yyyy", tr),
+            // Business time (Türkiye), not the PC's zone: the printed slips, reports and rules all use it.
+            "utc-datetime" => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(dt, DateTimeKind.Utc), BusinessZone).ToString("dd.MM.yyyy HH:mm", tr),
+            "utc-date" => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(dt, DateTimeKind.Utc), BusinessZone).ToString("dd.MM.yyyy", tr),
             _ => dt.ToString("dd.MM.yyyy HH:mm", tr),
         };
     }
