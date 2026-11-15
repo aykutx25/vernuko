@@ -43,8 +43,9 @@
                                         <Border DockPanel.Dock="Right" Style="{StaticResource StatusChip}" Padding="8,2">
                                             <TextBlock Text="{Binding StatusText}" FontSize="12" />
                                         </Border>
-                                        <TextBlock FontWeight="SemiBold"><Run Text="{Binding Number, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding CustomerName, Mode=OneWay}" /></TextBlock>
+                                        <TextBlock Text="{Binding Number}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                                     </DockPanel>
+                                    <TextBlock Text="{Binding CustomerName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
                                     <TextBlock Text="{Binding DeviceText}" Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="12"><Run Text="Teslim sözü " /><Run Text="{Binding DueDate, Mode=OneWay, Converter={StaticResource DateFormat}, ConverterParameter=date}" /></TextBlock>
