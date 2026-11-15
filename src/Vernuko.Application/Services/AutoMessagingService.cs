@@ -531,6 +531,43 @@ public sealed class AutoMessagingService(
         return [first, local.ToString("d MMMM yyyy dddd", TurkishText.Culture), local.ToString("HH:mm", TurkishText.Culture), business];
     }
 
+    /// <summary>
+    /// Teknik Servis: "your device can be collected" by SMS, through the business's own account and the usual
+    /// dispatcher (quiet hours, monthly limit). WhatsApp is not used: it can only send the one approved template.
+    /// Returns why nothing was queued, or null when it was (or already had been).
+    /// </summary>
+    internal async Task<string?> QueueServiceReadyAsync(VernukoDbContext db, Guid customerId, string ticketNumber, string idempotencyKey, CancellationToken ct)
+    {
+        var settings = await LoadSettingsAsync(db, ct);
+        if (!settings.RemindersEnabled || !settings.SmsConfigured)
+        {
+            return "Otomatik mesajlar kapalı ya da SMS hesabı ayarlanmamış (Ayarlar › Mesajlar).";
+        }
+
+        var customer = await db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == customerId, ct);
+        if (customer is null || customer.State != CustomerState.Active || customer.Phone is null || !customer.AllowSms || PhoneNumber.Parse(customer.Phone) is not { IsSuccess: true } phone)
+        {
+            return "Müşterinin SMS izni ya da geçerli telefonu yok.";
+        }
+
+        if (await db.Outbox.AsNoTracking().AnyAsync(m => m.IdempotencyKey == idempotencyKey, ct))
+        {
+            return null;
+        }
+
+        var (business, zone) = await BusinessContext.LoadAsync(db, ct);
+        var template = MessageTemplates.Defaults[MessagePurpose.ServiceReady].Replace("{Fis}", ticketNumber, StringComparison.Ordinal);
+        var text = MessageTemplates.Render(template, new MessageContext(customer.FirstName, business.BusinessName, TimeZones.ToLocal(UtcNow, zone), null, null, business.Phone), hideServiceName: false);
+        var message = OutboxMessage.Create(MessageChannel.Sms, MessagePurpose.ServiceReady, customer.Id, null, phone.Value, text, false, idempotencyKey, UtcNow, UtcNow);
+        if (message.IsFailure)
+        {
+            return message.Error.Message;
+        }
+
+        db.Outbox.Add(message.Value);
+        return null;
+    }
+
     private async Task<MessagingSettings> LoadSettingsAsync(VernukoDbContext db, CancellationToken ct)
     {
         async Task<string?> Get(string key) => await SettingsStore.GetAsync(db, key, ct) is { Length: > 0 } v ? v : null;

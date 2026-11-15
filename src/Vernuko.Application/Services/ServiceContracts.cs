@@ -4,6 +4,8 @@ using Vernuko.Application;
 using Vernuko.Appointments;
 using Vernuko.Backups;
 using Vernuko.Core;
+using Vernuko.Payments;
+using Vernuko.ServiceDesk;
 using Vernuko.Customers;
 using Vernuko.Licensing;
 using Vernuko.Messaging;
@@ -188,6 +190,84 @@ public partial interface ICommissionService
     Task<Result<Guid>> SaveRuleAsync(CommissionRuleDto dto, CancellationToken ct = default);
 
     Task<Result<CommissionReport>> GetReportAsync(DateOnly from, DateOnly toInclusive, CancellationToken ct = default);
+}
+
+/// <summary>Remotable contract of <see cref="ServiceDeskService"/> (Teknik Servis mode).</summary>
+public partial interface IServiceDeskService
+{
+    Task<Result<TicketDto>> OpenTicketAsync(OpenTicketRequest r, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> UpdateIntakeAsync(Guid ticketId, TicketIntakeRequest intake, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> SetDiagnosisAsync(Guid ticketId, string? diagnosis, string? workDone, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> SetEstimateAsync(Guid ticketId, long amountMinor, long diagnosticFeeMinor, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> RecordApprovalAsync(Guid ticketId, bool approved, ApprovalChannel channel, string? approvedBy, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> WithdrawEstimateAsync(Guid ticketId, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> ChangeStatusAsync(Guid ticketId, TicketStatus status, string? reason, bool notifyCustomer, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> LinkWarrantyAsync(Guid ticketId, Guid? earlierTicketId, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> AddPartAsync(Guid ticketId, Guid productId, int quantity, long? unitPriceMinor, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> AddLaborAsync(Guid ticketId, string description, long priceMinor, Guid? staffId, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> RemoveLineAsync(Guid ticketId, Guid lineId, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> TakeDepositAsync(Guid ticketId, long amountMinor, PaymentMethod method, string idempotencyKey, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> DeliverAsync(DeliverTicketRequest r, CancellationToken ct = default);
+
+    Task<Result<string>> RevealUnlockCodeAsync(Guid ticketId, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> SetUnlockCodeAsync(Guid ticketId, string? code, CancellationToken ct = default);
+
+    Task<Result<TicketDto>> GetTicketAsync(Guid ticketId, CancellationToken ct = default);
+
+    Task<Result<IReadOnlyList<TicketSummaryDto>>> GetTicketsAsync(bool openOnly = true, string? search = null, CancellationToken ct = default);
+
+    Task<Result<IReadOnlyList<TicketSummaryDto>>> GetDeviceHistoryAsync(string serialNumber, CancellationToken ct = default);
+
+    Task<Result<ServiceSlipDto>> GetSlipAsync(Guid ticketId, SlipKind kind, CancellationToken ct = default);
+}
+
+/// <summary>Remotable contract of <see cref="CommerceService"/> (Stok mode).</summary>
+public partial interface ICommerceService
+{
+    Task<Result<ProductDto?>> FindProductAsync(string code, CancellationToken ct = default);
+
+    Task<Result<IReadOnlyList<SupplierDto>>> GetSuppliersAsync(bool includeInactive = false, CancellationToken ct = default);
+
+    Task<Result<Guid>> SaveSupplierAsync(SupplierDto dto, CancellationToken ct = default);
+
+    Task<Result<SupplierStatementDto>> GetSupplierStatementAsync(Guid supplierId, CancellationToken ct = default);
+
+    Task<Result<Guid>> PaySupplierAsync(SupplierPaymentRequest r, CancellationToken ct = default);
+
+    Task<Result<SaleDto>> CreateSaleAsync(CreateSaleRequest r, CancellationToken ct = default);
+
+    Task<Result<SaleDto>> CreateReturnAsync(CreateReturnRequest r, CancellationToken ct = default);
+
+    Task<Result<SaleDto>> GetSaleAsync(Guid saleId, CancellationToken ct = default);
+
+    Task<Result<IReadOnlyList<SaleSummaryDto>>> GetSalesAsync(DateOnly from, DateOnly to, string? search = null, CancellationToken ct = default);
+
+    Task<Result<PurchaseDto>> CreatePurchaseAsync(CreatePurchaseRequest r, CancellationToken ct = default);
+
+    Task<Result<IReadOnlyList<PurchaseSummaryDto>>> GetPurchasesAsync(DateOnly from, DateOnly to, CancellationToken ct = default);
+
+    Task<Result<PurchaseDto>> GetPurchaseAsync(Guid purchaseId, CancellationToken ct = default);
+
+    Task<Result<StockCountResult>> ApplyStockCountAsync(StockCountRequest r, CancellationToken ct = default);
+
+    Task<Result<DayEndDto>> GetDayEndAsync(DateOnly day, CancellationToken ct = default);
+
+    Task<Result<IReadOnlyList<ReorderGroupDto>>> GetReorderSuggestionsAsync(CancellationToken ct = default);
+
+    Task<Result<StockValueDto>> GetStockValueAsync(CancellationToken ct = default);
 }
 
 /// <summary>Remotable contract of <see cref="InventoryService"/> (generated from its public async methods).</summary>

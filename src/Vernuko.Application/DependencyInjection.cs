@@ -50,6 +50,8 @@ public static class DependencyInjection
         services.AddSingleton<DemoDataSeeder>();
         services.AddSingleton<CommissionService>();
         services.AddSingleton<InventoryService>();
+        services.AddSingleton<CommerceService>();
+        services.AddSingleton<ServiceDeskService>();
         services.AddSingleton<WaitlistService>();
         services.AddSingleton<AttachmentKeyStore>();
         services.AddSingleton<CustomerRecordsService>();
@@ -72,6 +74,8 @@ public static class DependencyInjection
         services.TryAddSingleton<IMessagingService>(sp => sp.GetRequiredService<MessagingService>());
         services.TryAddSingleton<ICommissionService>(sp => sp.GetRequiredService<CommissionService>());
         services.TryAddSingleton<IInventoryService>(sp => sp.GetRequiredService<InventoryService>());
+        services.TryAddSingleton<ICommerceService>(sp => sp.GetRequiredService<CommerceService>());
+        services.TryAddSingleton<IServiceDeskService>(sp => sp.GetRequiredService<ServiceDeskService>());
         services.TryAddSingleton<IWaitlistService>(sp => sp.GetRequiredService<WaitlistService>());
         services.TryAddSingleton<ICustomerRecordsService>(sp => sp.GetRequiredService<CustomerRecordsService>());
         services.TryAddSingleton<IAutoMessagingService>(sp => sp.GetRequiredService<AutoMessagingService>());

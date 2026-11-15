@@ -21,5 +21,7 @@
     <ProjectReference Include="..\Vernuko.Licensing\Vernuko.Licensing.csproj" />
     <ProjectReference Include="..\Vernuko.Inventory\Vernuko.Inventory.csproj" />
     <ProjectReference Include="..\Vernuko.Messaging\Vernuko.Messaging.csproj" />
+    <ProjectReference Include="..\Vernuko.Commerce\Vernuko.Commerce.csproj" />
+    <ProjectReference Include="..\Vernuko.ServiceDesk\Vernuko.ServiceDesk.csproj" />
   </ItemGroup>
 </Project>

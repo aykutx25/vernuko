@@ -10,6 +10,10 @@ public static class BusinessProfileCatalog
 {
     private static readonly Terminology DefaultTerms = new("Müşteri", "Müşteriler", "Personel", "Personel", "Kaynak", "Kaynaklar");
 
+    private static readonly Terminology StockTerms = new("Müşteri", "Müşteriler", "Personel", "Personel", "Raf", "Raflar");
+
+    private static readonly Terminology ServiceTerms = new("Müşteri", "Müşteriler", "Teknisyen", "Teknisyenler", "Tezgâh", "Tezgâhlar");
+
     private static readonly IReadOnlyList<BusinessProfileDefinition> Profiles =
     [
         new(
@@ -212,9 +216,103 @@ public static class BusinessProfileCatalog
             [],
             DataSensitivity.Standard,
             true),
+        // ---------------- Stok mode
+        new(
+            BusinessProfileId.HardwareStore,
+            "Hırdavat ve Yapı Malzemesi",
+            "Barkodlu satış, mal kabul, tedarikçi ve müşteri carisi, veresiye ve vadeli satış, raf yeri, kritik stok ve sayım.",
+            StockTerms,
+            Set(ProfileFeature.ProductStock, ProfileFeature.Sales, ProfileFeature.Purchases, ProfileFeature.CompanyClients),
+            [], [], [], [],
+            DataSensitivity.Standard,
+            true),
+        new(
+            BusinessProfileId.Stationery,
+            "Kırtasiye ve Kitapçı",
+            "Barkodlu satış, okul ve kurum siparişleri, tedarikçi carisi, kritik stok ve sayım.",
+            StockTerms,
+            Set(ProfileFeature.ProductStock, ProfileFeature.Sales, ProfileFeature.Purchases, ProfileFeature.CompanyClients),
+            [], [], [], [],
+            DataSensitivity.Standard,
+            true),
+        new(
+            BusinessProfileId.AutoParts,
+            "Oto Yedek Parça",
+            "Parça kodu ve barkodla satış, servis ve usta carileri, vadeli satış, raf yeri, tedarikçi siparişi önerisi.",
+            StockTerms,
+            Set(ProfileFeature.ProductStock, ProfileFeature.Sales, ProfileFeature.Purchases, ProfileFeature.CompanyClients),
+            [], [], [], [],
+            DataSensitivity.Standard,
+            true),
+        new(
+            BusinessProfileId.Wholesale,
+            "Toptan Satış",
+            "Firma carileri, vadeli satış ve tahsilat, ekstre, mal kabul ve tedarikçi ödemeleri, stok ve sayım.",
+            StockTerms,
+            Set(ProfileFeature.ProductStock, ProfileFeature.Sales, ProfileFeature.Purchases, ProfileFeature.CompanyClients),
+            [], [], [], [],
+            DataSensitivity.Standard,
+            true),
+        new(
+            BusinessProfileId.RetailStore,
+            "Mağaza (genel perakende)",
+            "Barkodlu satış ve iade, kasa, gün sonu, mal kabul, kritik stok ve sayım.",
+            StockTerms,
+            Set(ProfileFeature.ProductStock, ProfileFeature.Sales, ProfileFeature.Purchases),
+            [], [], [], [],
+            DataSensitivity.Standard,
+            true),
+
+        // ---------------- Teknik Servis mode
+        new(
+            BusinessProfileId.PhoneRepair,
+            "Telefon ve Tablet Servisi",
+            "Servis fişi, IMEI ile cihaz geçmişi, fiyat onayı, parça stoku, hazır olunca SMS, teslim ve onarım garantisi; aksesuar satışı.",
+            ServiceTerms,
+            Set(ProfileFeature.ServiceTickets, ProfileFeature.ProductStock, ProfileFeature.Sales, ProfileFeature.Purchases, ProfileFeature.Deposits, ProfileFeature.CustomerPhotos),
+            [],
+            [new("Arıza tespiti", "Tespit", 30), new("Ekran değişimi", "Onarım", 60), new("Batarya değişimi", "Onarım", 30), new("Şarj soketi değişimi", "Onarım", 45), new("Yazılım yükleme", "Yazılım", 30)],
+            [], [],
+            DataSensitivity.Standard,
+            true),
+        new(
+            BusinessProfileId.ComputerRepair,
+            "Bilgisayar Servisi",
+            "Servis fişi, seri numarasıyla cihaz geçmişi, fiyat onayı, parça stoku, firma carileri, teslim ve garanti; donanım satışı.",
+            ServiceTerms,
+            Set(ProfileFeature.ServiceTickets, ProfileFeature.ProductStock, ProfileFeature.Sales, ProfileFeature.Purchases, ProfileFeature.Deposits, ProfileFeature.CompanyClients),
+            [],
+            [new("Arıza tespiti", "Tespit", 30), new("Format ve kurulum", "Yazılım", 90), new("Veri kurtarma", "Veri", 120), new("Temizlik ve bakım", "Bakım", 45), new("Ekran değişimi", "Onarım", 60)],
+            [], [],
+            DataSensitivity.Standard,
+            true),
+        new(
+            BusinessProfileId.ApplianceRepair,
+            "Beyaz Eşya ve Klima Servisi",
+            "Adreste servis randevusu, servis fişi, cihaz geçmişi, parça stoku, fiyat onayı, periyodik bakım hatırlatması ve garanti.",
+            ServiceTerms,
+            Set(ProfileFeature.ServiceTickets, ProfileFeature.ProductStock, ProfileFeature.Purchases, ProfileFeature.Deposits, ProfileFeature.MaintenanceReminders),
+            [],
+            [new("Adreste arıza tespiti", "Tespit", 60), new("Klima bakımı", "Bakım", 60), new("Klima montajı", "Montaj", 120), new("Gaz dolumu", "Onarım", 45), new("Parça değişimi", "Onarım", 60)],
+            [], [],
+            DataSensitivity.Standard,
+            true),
+        new(
+            BusinessProfileId.ElectronicsRepair,
+            "Elektronik Servis",
+            "Televizyon, ses sistemi ve küçük ev aletleri: servis fişi, cihaz geçmişi, parça stoku, fiyat onayı, teslim ve garanti.",
+            ServiceTerms,
+            Set(ProfileFeature.ServiceTickets, ProfileFeature.ProductStock, ProfileFeature.Sales, ProfileFeature.Purchases, ProfileFeature.Deposits),
+            [],
+            [new("Arıza tespiti", "Tespit", 30), new("Kart onarımı", "Onarım", 90), new("Parça değişimi", "Onarım", 60), new("Bakım", "Bakım", 45)],
+            [], [],
+            DataSensitivity.Standard,
+            true),
     ];
 
     public static IReadOnlyList<BusinessProfileDefinition> All => Profiles;
+
+    public static IEnumerable<BusinessProfileDefinition> Of(BusinessMode mode) => Profiles.Where(p => p.Mode == mode);
 
     public static BusinessProfileDefinition Get(BusinessProfileId id) =>
         Profiles.FirstOrDefault(p => p.Id == id) ?? throw new KeyNotFoundException($"Unknown business profile {id}.");

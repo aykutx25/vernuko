@@ -46,6 +46,22 @@ public sealed class InventoryService(AppServiceDeps deps) : AppServiceBase(deps)
                 }
             }
 
+            var trade = p.UpdateTrade(dto.Barcode, dto.VatRate, dto.Category, dto.ShelfLocation, dto.SupplierId);
+            if (trade.IsFailure)
+            {
+                return trade.Error;
+            }
+
+            if (p.Barcode is { } code && await db.Products.AsNoTracking().AnyAsync(x => x.Barcode == code && x.Id != p.Id, ct))
+            {
+                return Error.Conflict("product.barcode_taken", $"{code} barkodu başka bir üründe kayıtlı.");
+            }
+
+            if (p.SupplierId is { } sid && !await db.Suppliers.AsNoTracking().AnyAsync(s => s.Id == sid, ct))
+            {
+                return Error.NotFound("Tedarikçi");
+            }
+
             p.SetActive(dto.IsActive);
             await Audit.AppendAsync(db, "product.saved", "Product", p.Id, $"Ürün kaydedildi: {p.Name}", ct);
             return p.Id;
@@ -213,6 +229,12 @@ public sealed class InventoryService(AppServiceDeps deps) : AppServiceBase(deps)
         var products = await db.Products.AsNoTracking().Where(p => includeInactive || p.IsActive).OrderBy(p => p.Name).ToListAsync(ct);
         var stock = await db.StockMovements.AsNoTracking().GroupBy(m => m.ProductId).Select(g => new { g.Key, Qty = g.Sum(m => m.QuantityDelta) })
             .ToDictionaryAsync(x => x.Key, x => x.Qty, ct);
-        return products.Select(p => new ProductDto(p.Id, p.Name, p.Sku, p.Unit, p.SalePriceMinor, p.CostMinor, p.MinimumStock, p.IsActive, stock.GetValueOrDefault(p.Id))).ToList();
+        return products.Select(p => ToDto(p, stock.GetValueOrDefault(p.Id))).ToList();
     }
+
+    internal static ProductDto ToDto(Product p, int stock) =>
+        new(p.Id, p.Name, p.Sku, p.Unit, p.SalePriceMinor, p.CostMinor, p.MinimumStock, p.IsActive, stock, p.Barcode, p.VatRate, p.Category, p.ShelfLocation, p.SupplierId);
+
+    internal static async Task<int> StockOfAsync(VernukoDbContext db, Guid productId, CancellationToken ct) =>
+        await db.StockMovements.AsNoTracking().Where(m => m.ProductId == productId).SumAsync(m => (int?)m.QuantityDelta, ct) ?? 0;
 }

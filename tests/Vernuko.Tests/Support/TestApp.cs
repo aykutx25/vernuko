@@ -164,6 +164,19 @@ public sealed class TestApp : IAsyncDisposable
         return result.Value;
     }
 
+    /// <summary>A Stok or Teknik Servis business (no services needed): one staff member, login as owner.</summary>
+    public async Task<SetupResult> SetupModeAsync(BusinessProfileId profile, IReadOnlyList<SetupServiceItem>? services = null)
+    {
+        var result = await Get<Vernuko.Application.Services.SetupService>().CompleteAsync(new SetupRequest(
+            profile, "Yıldız Ticaret", "0212 555 44 33", "Bursa", TimeZones.Turkey, WeeklySchedule.DefaultBusinessWeek(),
+            [new SetupStaff("Okan Yıldız", "Teknisyen")], services ?? [], [], "Okan Yıldız", AdminUser, AdminPassword, false, null));
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.ToString() : null);
+        await Get<LicenseService>().RefreshAsync();
+        var login = await Get<AuthService>().LoginAsync(AdminUser, AdminPassword);
+        Assert.True(login.IsSuccess, login.IsFailure ? login.Error.ToString() : null);
+        return result.Value;
+    }
+
     public async Task<Catalog> CatalogAsync()
     {
         var c = Get<CatalogService>();

@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Vernuko.Appointments;
 using Vernuko.BusinessProfiles;
+using Vernuko.Commerce;
 using Vernuko.Core;
 using Vernuko.Customers;
 using Vernuko.Inventory;
 using Vernuko.Packages;
 using Vernuko.Payments;
 using Vernuko.Security;
+using Vernuko.ServiceDesk;
 
 namespace Vernuko.Persistence;
 
@@ -61,6 +63,24 @@ public sealed class VernukoDbContext : DbContext
     public DbSet<CommissionEntry> CommissionEntries => Set<CommissionEntry>();
 
     public DbSet<Product> Products => Set<Product>();
+
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
+
+    public DbSet<SupplierTransaction> SupplierTransactions => Set<SupplierTransaction>();
+
+    public DbSet<Sale> Sales => Set<Sale>();
+
+    public DbSet<SaleLine> SaleLines => Set<SaleLine>();
+
+    public DbSet<Purchase> Purchases => Set<Purchase>();
+
+    public DbSet<PurchaseLine> PurchaseLines => Set<PurchaseLine>();
+
+    public DbSet<ServiceTicket> ServiceTickets => Set<ServiceTicket>();
+
+    public DbSet<ServiceTicketLine> ServiceTicketLines => Set<ServiceTicketLine>();
+
+    public DbSet<ServiceTicketEvent> ServiceTicketEvents => Set<ServiceTicketEvent>();
 
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
 

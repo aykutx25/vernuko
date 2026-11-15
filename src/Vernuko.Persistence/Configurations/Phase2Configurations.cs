@@ -44,6 +44,11 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         b.Property(e => e.Sku).HasMaxLength(60);
         b.Property(e => e.Unit).HasMaxLength(12).IsRequired();
         b.HasIndex(e => e.Name);
+        b.Property(e => e.Barcode).HasMaxLength(32);
+        b.HasIndex(e => e.Barcode).IsUnique(); // NULLs do not collide
+        b.Property(e => e.VatRate).HasDefaultValue(20);
+        b.Property(e => e.Category).HasMaxLength(80);
+        b.Property(e => e.ShelfLocation).HasMaxLength(40);
     }
 }
 
@@ -61,6 +66,7 @@ internal sealed class StockMovementConfiguration : IEntityTypeConfiguration<Stoc
         b.Property(e => e.Note).HasMaxLength(300);
         b.HasIndex(e => new { e.ProductId, e.AtUtc });
         b.HasIndex(e => e.AppointmentId);
+        b.HasIndex(e => e.DocumentId);
         b.HasIndex(e => e.ReversesMovementId).IsUnique();
         b.HasOne<Product>().WithMany().HasForeignKey(e => e.ProductId).OnDelete(DeleteBehavior.Restrict);
     }

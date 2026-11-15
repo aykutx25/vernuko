@@ -22,7 +22,10 @@ public sealed record BusinessInfo(
     int AutoLockMinutes,
     bool IsDemo,
     Terminology Terms,
-    IReadOnlySet<ProfileFeature> Features);
+    IReadOnlySet<ProfileFeature> Features)
+{
+    public BusinessMode Mode => BusinessProfileDefinition.ModeOf(ProfileId);
+}
 
 public sealed class SettingsService(AppServiceDeps deps) : AppServiceBase(deps), ISettingsService
 {

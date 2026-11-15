@@ -34,6 +34,22 @@ public sealed record BusinessProfileDefinition(
 {
     public bool Has(ProfileFeature feature) => Features.Contains(feature);
 
+    public BusinessMode Mode => ModeOf(Id);
+
+    public static BusinessMode ModeOf(BusinessProfileId id) => id switch
+    {
+        BusinessProfileId.HardwareStore or BusinessProfileId.Stationery or BusinessProfileId.AutoParts or BusinessProfileId.Wholesale or BusinessProfileId.RetailStore => BusinessMode.Stok,
+        BusinessProfileId.PhoneRepair or BusinessProfileId.ComputerRepair or BusinessProfileId.ApplianceRepair or BusinessProfileId.ElectronicsRepair => BusinessMode.TeknikServis,
+        _ => BusinessMode.Randevu,
+    };
+
+    public static string ModeName(BusinessMode mode) => mode switch
+    {
+        BusinessMode.Stok => "Vernuko Stok",
+        BusinessMode.TeknikServis => "Vernuko Teknik Servis",
+        _ => "Vernuko Randevu",
+    };
+
     /// <summary>For special-category data (health, therapy) reminders must not reveal the service name.</summary>
     public bool HideServiceNameInMessages => Sensitivity == DataSensitivity.SpecialCategory;
 }

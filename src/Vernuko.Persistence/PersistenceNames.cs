@@ -5,4 +5,7 @@ public static class PersistenceNames
 {
     /// <summary>The idempotency key of the sale that created a package or a stock-out (null for other rows).</summary>
     public const string SaleKey = "SaleKey";
+
+    /// <summary>Idempotency key of a sale, return, goods receipt or service ticket (one per screen action).</summary>
+    public const string DocumentKey = "DocumentKey";
 }

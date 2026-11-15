@@ -29,6 +29,11 @@ public sealed class PaymentService(AppServiceDeps deps) : AppServiceBase(deps), 
                 return Error.Validation("transaction.gift_card", "Hediye kartıyla ödeme kart koduyla alınır (bakiye kartından düşülür).");
             }
 
+            if (r.Kind is TransactionKind.Return or TransactionKind.Reversal)
+            {
+                return Error.Validation("transaction.kind", "Ürün iadesi satış ekranından, düzeltme ise kaydın ters kaydıyla yapılır.");
+            }
+
             var (settings, _) = await BusinessContext.LoadAsync(db, ct);
             var customer = await db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == r.CustomerId, ct);
             if (customer is null)

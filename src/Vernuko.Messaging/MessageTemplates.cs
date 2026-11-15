@@ -12,6 +12,9 @@ public enum MessagePurpose
 
     /// <summary>A one-off message the business sends to itself to check the provider account.</summary>
     Test,
+
+    /// <summary>Teknik Servis: the device is ready (or goes back unrepaired) and can be collected.</summary>
+    ServiceReady,
 }
 
 /// <summary>Values that can be inserted into a template. Keep it minimal (data minimisation).</summary>
@@ -36,6 +39,7 @@ public static partial class MessageTemplates
         [MessagePurpose.AppointmentReminder] = "Merhaba {Ad}, {Tarih} {Saat} randevunuzu hatırlatırız. Değişiklik için {Telefon}. {Isletme}",
         [MessagePurpose.AppointmentRescheduled] = "Merhaba {Ad}, randevunuz {Tarih} {Saat} olarak güncellendi. {Isletme}",
         [MessagePurpose.AppointmentCancelled] = "Merhaba {Ad}, {Tarih} {Saat} randevunuz iptal edildi. Yeni randevu için {Telefon}. {Isletme}",
+        [MessagePurpose.ServiceReady] = "Merhaba {Ad}, servis fişi {Fis} olan cihazınız teslime hazır. Bilgi için {Telefon}. {Isletme}",
     };
 
     public static string Render(string template, MessageContext ctx, bool hideServiceName)

@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Vernuko.Application.Common;
+using Vernuko.BusinessProfiles;
 using Vernuko.Core;
 using Vernuko.Licensing;
 using Vernuko.Persistence;
@@ -19,8 +20,22 @@ public sealed class LicensingOptions
     /// </summary>
     public Uri? ServerUrl { get; init; }
 
-    /// <summary>Which Vernuko program this is; sent to the license server and checked in every license document.</summary>
-    public string Product { get; init; } = LicenseProducts.Randevu;
+    /// <summary>
+    /// Which Vernuko program this is; sent to the license server and checked in every license document. Null (the
+    /// normal case): the business's mode decides (Randevu, Stok or Teknik Servis, chosen at setup).
+    /// </summary>
+    public string? Product { get; init; }
+}
+
+/// <summary>The license product of each mode: a mode is sold with its own license.</summary>
+public static class ModeLicensing
+{
+    public static string ProductFor(BusinessMode mode) => mode switch
+    {
+        BusinessMode.Stok => LicenseProducts.Stok,
+        BusinessMode.TeknikServis => LicenseProducts.TeknikServis,
+        _ => LicenseProducts.Randevu,
+    };
 }
 
 /// <summary>
@@ -29,7 +44,7 @@ public sealed class LicensingOptions
 /// </summary>
 public sealed class LicenseService(IDbContextFactory<VernukoDbContext> factory, TimeProvider time, IDeviceIdentity device, LicensingOptions options, UserSession session, AuditWriter audit) : ILicenseGate, ILicenseService
 {
-    private readonly LicenseVerifier _verifier = new(options.PublicKeys, options.Product);
+    private string? _product = options.Product;
 
     public LicenseStatus Current { get; private set; } =
         new(LicenseState.Trial, AccessMode.Full, null, LicenseEvaluator.TrialDays, false, "Deneme sürümü.");
@@ -59,7 +74,7 @@ public sealed class LicenseService(IDbContextFactory<VernukoDbContext> factory, 
         var valid = true;
         if (signed is not null)
         {
-            var verified = _verifier.Verify(signed);
+            var verified = new LicenseVerifier(options.PublicKeys, await ProductAsync(db, ct)).Verify(signed);
             valid = verified.IsSuccess;
             doc = verified.IsSuccess ? verified.Value : null;
         }
@@ -100,7 +115,7 @@ public sealed class LicenseService(IDbContextFactory<VernukoDbContext> factory, 
     {
         await using var db = await factory.CreateDbContextAsync(ct);
         var signed = await SettingsStore.GetAsync(db, SettingKeys.LicenseSigned, ct);
-        return signed is not null && _verifier.Verify(signed) is { IsSuccess: true } v ? v.Value : null;
+        return signed is not null && new LicenseVerifier(options.PublicKeys, await ProductAsync(db, ct)).Verify(signed) is { IsSuccess: true } v ? v.Value : null;
     }
 
     /// <summary>After the seat was freed on the server: forget the local license (data stays; app becomes read-only).</summary>
@@ -142,9 +157,41 @@ public sealed class LicenseService(IDbContextFactory<VernukoDbContext> factory, 
         return await RefreshAsync(ct);
     }
 
+    /// <summary>
+    /// The license product this installation needs: its mode's (fixed at setup). Before setup there is no mode yet:
+    /// Randevu, not remembered, so the mode chosen at setup applies from then on.
+    /// </summary>
+    internal async Task<string> ProductAsync(VernukoDbContext? db, CancellationToken ct)
+    {
+        if (_product is not null)
+        {
+            return _product;
+        }
+
+        VernukoDbContext? own = null;
+        try
+        {
+            db ??= own = await factory.CreateDbContextAsync(ct);
+            var profile = await db.BusinessSettings.AsNoTracking().Where(s => s.SetupCompletedAtUtc != null).Select(s => (BusinessProfileId?)s.ProfileId).FirstOrDefaultAsync(ct);
+            if (profile is null)
+            {
+                return LicenseProducts.Randevu;
+            }
+
+            return _product = ModeLicensing.ProductFor(BusinessProfileDefinition.ModeOf(profile.Value));
+        }
+        finally
+        {
+            if (own is not null)
+            {
+                await own.DisposeAsync();
+            }
+        }
+    }
+
     private async Task<Result<LicenseStatus>> StoreAsync(string signedLicenseJson, string action, string verb, CancellationToken ct)
     {
-        var verified = _verifier.Verify(signedLicenseJson);
+        var verified = new LicenseVerifier(options.PublicKeys, await ProductAsync(null, ct)).Verify(signedLicenseJson);
         if (verified.IsFailure)
         {
             return verified.Error;

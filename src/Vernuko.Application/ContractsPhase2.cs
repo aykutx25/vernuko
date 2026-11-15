@@ -39,7 +39,8 @@ public sealed record CommissionReport(DateOnly From, DateOnly To, IReadOnlyList<
 }
 
 // ---------- Inventory ----------
-public sealed record ProductDto(Guid Id, string Name, string? Sku, string Unit, long SalePriceMinor, long CostMinor, int MinimumStock, bool IsActive, int Stock)
+public sealed record ProductDto(Guid Id, string Name, string? Sku, string Unit, long SalePriceMinor, long CostMinor, int MinimumStock, bool IsActive, int Stock,
+    string? Barcode = null, int VatRate = 20, string? Category = null, string? ShelfLocation = null, Guid? SupplierId = null)
 {
     public bool IsLow => IsActive && Stock <= MinimumStock;
 

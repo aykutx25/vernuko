@@ -39,6 +39,14 @@ public enum Permission
     InventoryView,
     InventoryManage,
     ProductsSell,
+
+    /// <summary>Goods receipts, suppliers and supplier payments.</summary>
+    PurchasesManage,
+
+    ServiceTicketsView,
+
+    /// <summary>Open, update and deliver service tickets.</summary>
+    ServiceTicketsManage,
 }
 
 public enum SystemRole
@@ -68,12 +76,14 @@ public static class RoleDefaults
             Permission.PaymentsView, Permission.PaymentsRecord,
             Permission.ReportsOperational, Permission.BackupsCreate, Permission.MessagingSend,
             Permission.ConsentsRecord, Permission.InventoryView, Permission.ProductsSell,
+            Permission.ServiceTicketsView, Permission.ServiceTicketsManage,
         },
         SystemRole.Specialist => new HashSet<Permission>
         {
             Permission.AppointmentsView, Permission.AppointmentsChangeStatus,
             Permission.CustomersView, Permission.PackagesView, Permission.PrivateNotesViewOwn,
             Permission.ConsentsRecord, Permission.CustomerFilesView, Permission.CustomerFilesManage, Permission.InventoryView,
+            Permission.ServiceTicketsView, Permission.ServiceTicketsManage,
         },
         SystemRole.Staff => new HashSet<Permission>
         {
@@ -84,6 +94,7 @@ public static class RoleDefaults
             Permission.AppointmentsView, Permission.CustomersView, Permission.PackagesView,
             Permission.PaymentsView, Permission.PaymentsRecord, Permission.PaymentsReverse,
             Permission.ReportsOperational, Permission.ReportsFinancial, Permission.InventoryView,
+            Permission.ServiceTicketsView,
         },
         SystemRole.Custom => new HashSet<Permission>(),
         _ => new HashSet<Permission>(),

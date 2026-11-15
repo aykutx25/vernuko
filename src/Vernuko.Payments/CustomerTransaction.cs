@@ -18,6 +18,9 @@ public enum TransactionKind
 
     /// <summary>Cancels the effect of an earlier entry (financial records are never deleted or edited).</summary>
     Reversal,
+
+    /// <summary>Goods brought back: what the customer was charged for them is taken back (iade).</summary>
+    Return,
 }
 
 public enum PaymentMethod
@@ -97,6 +100,7 @@ public sealed class CustomerTransaction
         TransactionKind.Refund => amount,
         TransactionKind.Payment => -amount,
         TransactionKind.Discount => -amount,
+        TransactionKind.Return => -amount,
         _ => 0,
     };
 
@@ -205,6 +209,7 @@ public sealed class CustomerTransaction
         TransactionKind.Refund => "İade",
         TransactionKind.Discount => "İndirim",
         TransactionKind.Reversal => "Düzeltme (ters kayıt)",
+        TransactionKind.Return => "Ürün iadesi",
         _ => kind.ToString(),
     };
 

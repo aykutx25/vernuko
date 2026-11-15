@@ -604,6 +604,382 @@ namespace Vernuko.Persistence.Migrations
                     b.ToTable("BusinessSettings", (string)null);
                 });
 
+            modelBuilder.Entity("Vernuko.Commerce.Purchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("DocumentDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentNo")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("NetMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("TotalMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("VatMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentKey")
+                        .IsUnique();
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("SupplierId", "OccurredAtUtc");
+
+                    b.ToTable("Purchases", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.PurchaseLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("DiscountMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LineNo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("NetMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PurchaseId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("UnitCostMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("VatMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("VatRate")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("PurchaseId", "LineNo")
+                        .IsUnique();
+
+                    b.ToTable("PurchaseLines", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.Sale", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CardMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("CashMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("DocumentDiscountMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DocumentKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("GrossMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("LineDiscountMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("OnAccountMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ReturnOfSaleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("TotalMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("TransferMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("VatMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("DocumentKey")
+                        .IsUnique();
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("OccurredAtUtc");
+
+                    b.HasIndex("ReturnOfSaleId");
+
+                    b.ToTable("Sales", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.SaleLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Barcode")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("DiscountMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LineNo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("NetTotalMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ReturnOfLineId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SaleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("TotalMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("UnitCostMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("UnitPriceMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("VatRate")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ReturnOfLineId");
+
+                    b.HasIndex("SaleId", "LineNo")
+                        .IsUnique();
+
+                    b.ToTable("SaleLines", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.Supplier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Iban")
+                        .HasMaxLength(34)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(11)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TaxOffice")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("Suppliers", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.SupplierTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("AmountMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("BalanceEffectMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Method")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PurchaseId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ReversesId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("ReversesId")
+                        .IsUnique();
+
+                    b.HasIndex("SupplierId", "OccurredAtUtc");
+
+                    b.ToTable("SupplierTransactions", (string)null);
+                });
+
             modelBuilder.Entity("Vernuko.Customers.ConsentTemplate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -924,6 +1300,14 @@ namespace Vernuko.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Barcode")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
                     b.Property<long>("CostMinor")
                         .HasColumnType("INTEGER");
 
@@ -944,8 +1328,15 @@ namespace Vernuko.Persistence.Migrations
                     b.Property<long>("SalePriceMinor")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ShelfLocation")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Sku")
                         .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SupplierId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Unit")
@@ -956,11 +1347,19 @@ namespace Vernuko.Persistence.Migrations
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("VatRate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(20);
+
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Barcode")
+                        .IsUnique();
 
                     b.HasIndex("Name");
 
@@ -999,6 +1398,9 @@ namespace Vernuko.Persistence.Migrations
                     b.Property<Guid?>("CustomerId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("DocumentId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -1030,6 +1432,8 @@ namespace Vernuko.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AppointmentId");
+
+                    b.HasIndex("DocumentId");
 
                     b.HasIndex("ReversesMovementId")
                         .IsUnique();
@@ -1722,6 +2126,246 @@ namespace Vernuko.Persistence.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("Vernuko.ServiceDesk.ServiceTicket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Accessories")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Approval")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ApprovalAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ApprovalBy")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ApprovalChannel")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Brand")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BroughtBy")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Complaint")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Condition")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeliveredAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeliveredTo")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Device")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Diagnosis")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("DiagnosticFeeMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DocumentKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("EstimateMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("OnSite")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ReceivedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ReceivedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Repaired")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SiteAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StatusChangedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TechnicianStaffId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("TotalChargedMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("UnlockCodeProtected")
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("UnrepairableReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("WarrantyOfTicketId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WorkDone")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("DocumentKey")
+                        .IsUnique();
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("SerialNumber");
+
+                    b.HasIndex("Status", "DueDate");
+
+                    b.ToTable("ServiceTickets", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.ServiceDesk.ServiceTicketEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId", "AtUtc");
+
+                    b.ToTable("ServiceTicketEvents", (string)null);
+                });
+
+            modelBuilder.Entity("Vernuko.ServiceDesk.ServiceTicketLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsRemoved")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LineNo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("StaffId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("StockMovementId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("UnitPriceMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("VatRate")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId", "LineNo")
+                        .IsUnique();
+
+                    b.ToTable("ServiceTicketLines", (string)null);
+                });
+
             modelBuilder.Entity("Vernuko.Appointments.Appointment", b =>
                 {
                     b.HasOne("Vernuko.BusinessProfiles.Branch", null)
@@ -1825,6 +2469,63 @@ namespace Vernuko.Persistence.Migrations
                     b.HasOne("Vernuko.Customers.Customer", null)
                         .WithMany()
                         .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.Purchase", b =>
+                {
+                    b.HasOne("Vernuko.Commerce.Supplier", null)
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.PurchaseLine", b =>
+                {
+                    b.HasOne("Vernuko.Inventory.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Vernuko.Commerce.Purchase", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("PurchaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.Sale", b =>
+                {
+                    b.HasOne("Vernuko.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.SaleLine", b =>
+                {
+                    b.HasOne("Vernuko.Inventory.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Vernuko.Commerce.Sale", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("SaleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.SupplierTransaction", b =>
+                {
+                    b.HasOne("Vernuko.Commerce.Supplier", null)
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -1951,6 +2652,33 @@ namespace Vernuko.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Vernuko.ServiceDesk.ServiceTicket", b =>
+                {
+                    b.HasOne("Vernuko.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.ServiceDesk.ServiceTicketEvent", b =>
+                {
+                    b.HasOne("Vernuko.ServiceDesk.ServiceTicket", null)
+                        .WithMany()
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Vernuko.ServiceDesk.ServiceTicketLine", b =>
+                {
+                    b.HasOne("Vernuko.ServiceDesk.ServiceTicket", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Vernuko.Appointments.Appointment", b =>
                 {
                     b.Navigation("Bookings");
@@ -1958,9 +2686,24 @@ namespace Vernuko.Persistence.Migrations
                     b.Navigation("History");
                 });
 
+            modelBuilder.Entity("Vernuko.Commerce.Purchase", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Vernuko.Commerce.Sale", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("Vernuko.Packages.CustomerPackage", b =>
                 {
                     b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("Vernuko.ServiceDesk.ServiceTicket", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

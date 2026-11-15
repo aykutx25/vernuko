@@ -36,6 +36,45 @@ public sealed class Product : Entity
 
     public bool IsActive { get; private set; }
 
+    /// <summary>EAN/UPC or the shop's own code read by the scanner. Unique among products.</summary>
+    public string? Barcode { get; private set; }
+
+    /// <summary>KDV rate in percent (0, 1, 10, 20). The sale price includes it.</summary>
+    public int VatRate { get; private set; } = 20;
+
+    public string? Category { get; private set; }
+
+    /// <summary>Shelf or bin ("Raf A-03").</summary>
+    public string? ShelfLocation { get; private set; }
+
+    /// <summary>Usual supplier (groups the order suggestion).</summary>
+    public Guid? SupplierId { get; private set; }
+
+    /// <summary>Barcode, KDV, category, shelf and usual supplier (Stok and Teknik Servis modes).</summary>
+    public Result UpdateTrade(string? barcode, int vatRate, string? category, string? shelfLocation, Guid? supplierId)
+    {
+        var code = string.IsNullOrWhiteSpace(barcode) ? null : barcode.Trim();
+        if (code is { Length: > 32 } || (code is not null && !code.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '.' or '/')))
+        {
+            return Error.Validation("product.barcode", "Barkod en fazla 32 karakter olabilir (harf, rakam, - . /).");
+        }
+
+        if (vatRate is not (0 or 1 or 10 or 20))
+        {
+            return Error.Validation("product.vat", "KDV oranı %0, %1, %10 veya %20 olmalı.");
+        }
+
+        Barcode = code;
+        VatRate = vatRate;
+        Category = string.IsNullOrWhiteSpace(category) ? null : category.Trim();
+        ShelfLocation = string.IsNullOrWhiteSpace(shelfLocation) ? null : shelfLocation.Trim();
+        SupplierId = supplierId;
+        return Result.Success();
+    }
+
+    /// <summary>Cost after a goods receipt (last purchase cost, without KDV).</summary>
+    public void SetCost(long costMinor) => CostMinor = Math.Max(0, costMinor);
+
     public static Result Validate(string? name, string? unit, long salePriceMinor, long costMinor, int minimumStock)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -119,13 +158,16 @@ public sealed class StockMovement
 
     public Guid? ReversesMovementId { get; private set; }
 
+    /// <summary>The sale, return, goods receipt, stock count or service ticket this movement belongs to.</summary>
+    public Guid? DocumentId { get; private set; }
+
     public string? Note { get; private set; }
 
     public Guid? UserId { get; private set; }
 
     public DateTime AtUtc { get; private set; }
 
-    public static Result<StockMovement> Create(Guid productId, StockMovementKind kind, int quantity, long? unitCostMinor, Guid? appointmentId, Guid? customerId, string? note, Guid? userId, DateTime nowUtc)
+    public static Result<StockMovement> Create(Guid productId, StockMovementKind kind, int quantity, long? unitCostMinor, Guid? appointmentId, Guid? customerId, string? note, Guid? userId, DateTime nowUtc, Guid? documentId = null)
     {
         if (kind == StockMovementKind.Reversal)
         {
@@ -162,6 +204,7 @@ public sealed class StockMovement
             CustomerId = customerId,
             Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
             UserId = userId,
+            DocumentId = documentId,
         };
     }
 

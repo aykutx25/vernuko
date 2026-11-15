@@ -11,7 +11,7 @@ public static class RpcContracts
     [
         typeof(IAuthService), typeof(IUserAdminService), typeof(ICustomerService), typeof(ICatalogService), typeof(IAppointmentService),
         typeof(IPackageService), typeof(IPaymentService), typeof(IReportService), typeof(IAuditService), typeof(ISettingsService),
-        typeof(IMessagingService), typeof(ICommissionService), typeof(IInventoryService), typeof(IWaitlistService),
+        typeof(IMessagingService), typeof(ICommissionService), typeof(IInventoryService), typeof(ICommerceService), typeof(IServiceDeskService), typeof(IWaitlistService),
         typeof(ICustomerRecordsService), typeof(IPrivateNotesService), typeof(IGiftCardService), typeof(IAutoMessagingService), typeof(IBackupService), typeof(ILicenseService),
     ];
 
