@@ -64,6 +64,11 @@ public sealed class RpcDispatcher(ILogger<RpcDispatcher> logger)
             return RpcReply.Fail(400, new Error("remote.bad_request", "İstek okunamadı."));
         }
 
+        if (RpcContracts.RemoteRefusal(key, args, sessionServices.GetRequiredService<Vernuko.Application.Common.UserSession>()) is { } refusal)
+        {
+            return RpcReply.Fail(403, refusal);
+        }
+
         var implementation = sessionServices.GetRequiredService(target.Contract);
         Task task;
         try

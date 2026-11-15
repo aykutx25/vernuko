@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Vernuko.Application.Common;
 using Vernuko.Application.Services;
 using Vernuko.Backups;
 using Vernuko.Presentation.Common;
@@ -10,7 +11,7 @@ namespace Vernuko.Presentation.Pages;
 /// Ayarlar › Güncellemeler. Before an update is applied an encrypted backup is taken automatically; the new version
 /// migrates the database with its own safety copy. Nothing is downloaded without the user's click.
 /// </summary>
-public sealed partial class UpdatesViewModel(IUpdateService updates, IBackupService backups, IDialogService dialogs) : ViewModelBase
+public sealed partial class UpdatesViewModel(IUpdateService updates, IBackupService backups, IDialogService dialogs, IMultiComputer computer) : ViewModelBase
 {
     [ObservableProperty]
     private string _statusText = string.Empty;
@@ -61,8 +62,9 @@ public sealed partial class UpdatesViewModel(IUpdateService updates, IBackupServ
             return;
         }
 
+        // A connected computer keeps no data: the main computer backs up before its own update.
         var status = await backups.GetStatusAsync();
-        if (status.KeyConfigured)
+        if (computer.Role != ComputerRole.Client && status.KeyConfigured)
         {
             var backup = await backups.CreateBackupAsync(BackupTrigger.PreUpdate);
             if (backup.IsFailure && !await dialogs.ConfirmAsync("Yedek alınamadı",
@@ -71,7 +73,7 @@ public sealed partial class UpdatesViewModel(IUpdateService updates, IBackupServ
                 return;
             }
         }
-        else if (!await dialogs.ConfirmAsync("Yedekleme kapalı", "Yedekleme açık olmadığı için güncelleme öncesi yedek alınamıyor. Önce Ayarlar › Yedekleme bölümünden yedeklemeyi açmanız önerilir. Yine de devam edilsin mi?", "Devam et", destructive: true))
+        else if (computer.Role != ComputerRole.Client && !await dialogs.ConfirmAsync("Yedekleme kapalı", "Yedekleme açık olmadığı için güncelleme öncesi yedek alınamıyor. Önce Ayarlar › Yedekleme bölümünden yedeklemeyi açmanız önerilir. Yine de devam edilsin mi?", "Devam et", destructive: true))
         {
             return;
         }

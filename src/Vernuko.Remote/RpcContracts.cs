@@ -36,6 +36,20 @@ public static class RpcContracts
 
     public static readonly Error HostOnlyError = new("remote.host_only", "Bu işlem yalnızca ana bilgisayarda yapılabilir.");
 
+    /// <summary>
+    /// Calls a connected computer may make only with certain arguments or rights:
+    /// - backups: only a manual one (automatic, pre-update and pre-migration backups are never cleaned up, so a caller
+    ///   could fill the main computer's disk with them);
+    /// - the license document: it holds the activation id and device hash the license server accepts, so only for
+    ///   users who manage settings (updates on that computer).
+    /// </summary>
+    public static Error? RemoteRefusal(string key, object?[] args, Vernuko.Application.Common.UserSession session) => key switch
+    {
+        "IBackupService/CreateBackupAsync" when args.Length == 0 || args[0] is not Vernuko.Backups.BackupTrigger.Manual => HostOnlyError,
+        "ILicenseService/GetDocumentAsync" when !session.Has(Vernuko.Security.Permission.SettingsManage) => Error.Forbidden,
+        _ => null,
+    };
+
     public static string Key(Type contract, MethodInfo method) => contract.Name + "/" + method.Name;
 
     /// <summary>Every remotable method by "IContract/Method". Overloads are not allowed (one name, one method).</summary>

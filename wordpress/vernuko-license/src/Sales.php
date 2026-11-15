@@ -213,6 +213,12 @@ final class Orders
     }
 
     /** iyzico's checkout token: lets the site ask iyzico later if the customer never came back to the site. */
+    /** Unpaid orders older than $beforeUnix hold personal data for nothing: they are deleted (paid ones never). */
+    public function purgeStale(int $beforeUnix): void
+    {
+        $this->db->execute("DELETE FROM {orders} WHERE status IN ('pending','failed') AND created_at < ?", [$beforeUnix]);
+    }
+
     public function setProviderToken(string $id, string $token): void
     {
         $this->db->execute('UPDATE {orders} SET provider_token = ? WHERE id = ?', [mb_substr($token, 0, 200), $id]);

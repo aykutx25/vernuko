@@ -57,7 +57,8 @@ Aynı site birden fazla Vernuko programının lisansını satar. Tanımlı progr
 5. WooCommerce › Ürünler › Yeni:
    - **Satış ürünü:** sanal ürün. Genel sekmesinde "Vernuko lisansı" işaretli, Tür "Yeni lisans"; paket adı, bilgisayar sayısı ve süre girilir.
    - **Yenileme ürünü:** aynı ayarlar, Tür "Yenileme". Müşteri bu ürünü yalnızca Hesabım › Lisanslarım'daki **Yenile** düğmesiyle sepete ekleyebilir.
-6. (İsteğe bağlı) Güncellemeleri siteden vermek için `wp-config.php` dosyasına web kökünün **dışındaki** bir klasörü yazın: `define('VERNUKO_LICENSE_RELEASES_DIR', '/home/kullanici/vernuko-releases');`. Velopack çıktısını bu klasöre koyun ve GitHub değişkenine `VERNUKO_UPDATE_URL=https://siteniz.com/wp-json/vernuko/v1/updates/feed` yazın.
+6. (Yalnızca site bir ters vekil ya da CDN arkasındaysa, ör. Cloudflare) Ziyaretçinin gerçek adresinin geldiği başlığı yazın: `define('VERNUKO_LICENSE_CLIENT_IP_HEADER', 'HTTP_CF_CONNECTING_IP');`. Yoksa bütün istekler vekilin adresinden gelmiş sayılır; masaüstü kurulumları tek bir sınırı paylaşır ve biri bu sınırı doldurabilir. Vekil bu başlığı her istekte kendisi yazmıyorsa tanımlamayın, yoksa ziyaretçi kendi adresini seçebilir.
+7. (İsteğe bağlı) Güncellemeleri siteden vermek için `wp-config.php` dosyasına web kökünün **dışındaki** bir klasörü yazın: `define('VERNUKO_LICENSE_RELEASES_DIR', '/home/kullanici/vernuko-releases');`. Velopack çıktısını bu klasöre koyun ve GitHub değişkenine `VERNUKO_UPDATE_URL=https://siteniz.com/wp-json/vernuko/v1/updates/feed` yazın.
 
 ## Kendi satış sayfası (WooCommerce gerekmez)
 1. `wp-config.php` dosyasına kullandığınız sağlayıcının bilgilerini ekleyin. Bilgiler sağlayıcının mağaza panelinde yazar; yalnızca bu dosyada durur.

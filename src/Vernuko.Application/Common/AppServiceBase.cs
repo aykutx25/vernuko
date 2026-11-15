@@ -29,6 +29,27 @@ public abstract class AppServiceBase(AppServiceDeps deps)
 
     protected Guid? UserId => deps.Session.UserId is { } id && id != Guid.Empty ? id : null;
 
+    /// <summary>
+    /// The signed-in account was changed since sign-in (role, permissions, password, deactivated): the session ends,
+    /// on this computer and on a connected one, instead of keeping its old rights.
+    /// </summary>
+    private async Task<bool> SessionRevokedAsync(VernukoDbContext db, CancellationToken ct)
+    {
+        if (Session.SecurityStamp is not { } stamp || Session.UserId is not { } id || id == Guid.Empty)
+        {
+            return false;
+        }
+
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, ct);
+        if (user is { IsActive: true } && user.SecurityStamp() == stamp)
+        {
+            return false;
+        }
+
+        Session.SignOut();
+        return true;
+    }
+
     protected Result Authorize(Permission permission) =>
         !Session.IsAuthenticated || Session.IsLocked ? Error.Forbidden : Session.Has(permission) ? Result.Success() : Error.Forbidden;
 
@@ -42,6 +63,11 @@ public abstract class AppServiceBase(AppServiceDeps deps)
         }
 
         await using var db = await Factory.CreateDbContextAsync(ct);
+        if (await SessionRevokedAsync(db, ct))
+        {
+            return AppErrors.SessionRevoked;
+        }
+
         return await work(db);
     }
 
@@ -61,6 +87,12 @@ public abstract class AppServiceBase(AppServiceDeps deps)
             {
                 await RecordDeniedAsync(p, ct);
                 return auth.Error;
+            }
+
+            await using var check = await Factory.CreateDbContextAsync(ct);
+            if (await SessionRevokedAsync(check, ct))
+            {
+                return AppErrors.SessionRevoked;
             }
         }
 
@@ -191,6 +223,8 @@ public static class AppErrors
     public static readonly Error SetupNotCompleted = new("setup.not_completed", "Kurulum henüz tamamlanmamış.");
     public static readonly Error SetupAlreadyCompleted = new("setup.completed", "Kurulum zaten tamamlanmış.");
     public static readonly Error InvalidCredentials = new("auth.invalid", "Kullanıcı adı veya parola hatalı.");
+    public static readonly Error SessionRevoked = new("auth.session_revoked", "Hesabınızda değişiklik yapıldı (rol, yetki, parola ya da durum). Lütfen yeniden giriş yapın.");
+
     public static readonly Error AccountLocked = new("auth.locked", "Çok sayıda hatalı deneme yapıldı. Hesap geçici olarak kilitlendi; birkaç dakika sonra tekrar deneyin.");
     public static readonly Error AccountInactive = new("auth.inactive", "Bu kullanıcı hesabı devre dışı.");
 }

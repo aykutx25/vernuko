@@ -374,11 +374,17 @@ final class Checkout
             $fail('Ödeme yöntemi seçin.');
             return;
         }
+        // Each attempt stores an order with personal data and calls the payment provider: 10 per hour per address.
+        if (!Plugin::allow('checkout|' . Plugin::clientIp(), 10, HOUR_IN_SECONDS)) {
+            $fail('Kısa sürede çok fazla deneme yapıldı. Lütfen bir saat sonra tekrar deneyin.');
+            return;
+        }
+        $orders->purgeStale(time() - 3 * DAY_IN_SECONDS);
         $form = [];
         foreach (['name', 'email', 'phone', 'company', 'tax_office', 'tax_number', 'address', 'city'] as $k) {
             $form[$k] = is_string($_POST['vk_' . $k] ?? null) ? sanitize_text_field(wp_unslash($_POST['vk_' . $k])) : '';
         }
-        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        $ip = Plugin::clientIp();
         try {
             $order = $orders->create($plan, $provider, $form, is_string($_POST['vk_license_key'] ?? null) ? (sanitize_text_field(wp_unslash($_POST['vk_license_key'])) ?: null) : null, $ip);
             $return = remove_query_arg(['vernuko_order', 'durum', 'vk_n'], self::currentUrl());
@@ -651,11 +657,12 @@ final class Checkout
         $email = is_string($_POST['vernuko_link_email'] ?? null) ? strtolower(sanitize_email(wp_unslash($_POST['vernuko_link_email']))) : '';
         $issuer = Plugin::issuer();
         $GLOBALS['vernuko_link_sent'] = true; // same answer whether or not the address has licenses
-        $ipKey = 'vk_link_' . md5(($_SERVER['REMOTE_ADDR'] ?? '-') . '|' . gmdate('YmdH'));
-        if ($issuer === null || !Validate::email($email) || (int) get_transient($ipKey) >= 5) {
+        // 5 per hour per address and 3 per hour per e-mail (a known customer's inbox cannot be flooded from many IPs).
+        if ($issuer === null || !Validate::email($email)
+            || !Plugin::allow('link-ip|' . Plugin::clientIp(), 5, HOUR_IN_SECONDS)
+            || !Plugin::allow('link-mail|' . $email, 3, HOUR_IN_SECONDS)) {
             return;
         }
-        set_transient($ipKey, (int) get_transient($ipKey) + 1, HOUR_IN_SECONDS);
         $owned = array_filter($issuer->licenses($email), static fn ($l) => strtolower((string) $l['customer_email']) === $email);
         if (!$owned) {
             return;

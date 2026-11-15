@@ -151,8 +151,9 @@
                                 <StackPanel><TextBlock Text="VERESİYE" Style="{StaticResource FieldLabel}" /><TextBlock Text="{Binding OnAccountMinor, Converter={StaticResource Money}}" FontSize="18" /></StackPanel>
                             </UniformGrid>
                             <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" TextWrapping="Wrap">
-                                <Run Text="{Binding SaleCount, Mode=OneWay}" /><Run Text=" satış, " /><Run Text="{Binding ReturnCount, Mode=OneWay}" /><Run Text=" iade. Havale " /><Run Text="{Binding TransferMinor, Mode=OneWay, Converter={StaticResource Money}}" /><Run Text=". Tahmini brüt kâr (KDV hariç satış − maliyet) " /><Run Text="{Binding GrossProfitMinor, Mode=OneWay, Converter={StaticResource Money}}" /><Run Text="." />
+                                <Run Text="{Binding SaleCount, Mode=OneWay}" /><Run Text=" satış, " /><Run Text="{Binding ReturnCount, Mode=OneWay}" /><Run Text=" iade. Havale " /><Run Text="{Binding TransferMinor, Mode=OneWay, Converter={StaticResource Money}}" /><Run Text="." />
                             </TextBlock>
+                            <TextBlock Style="{StaticResource Muted}" Visibility="{Binding ShowsCost, Converter={StaticResource VisibleWhen}}"><Run Text="Tahmini brüt kâr (KDV hariç satış − maliyet): " /><Run Text="{Binding GrossProfitMinor, Mode=OneWay, Converter={StaticResource Money}}" /></TextBlock>
                             <ItemsControl ItemsSource="{Binding Vat}" Margin="0,6,0,0" Focusable="False">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>

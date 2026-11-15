@@ -301,6 +301,9 @@ public sealed class Sale : Entity
 
     public string? Note { get; private set; }
 
+    /// <summary>KVKK erasure of the customer: free text about the sale may name people.</summary>
+    public void ClearNote() => Note = null;
+
     public static Result<Sale> Create(string number, Guid customerId, IReadOnlyList<LineInput> lines, long documentDiscountMinor, long cashMinor, long cardMinor, long transferMinor, bool allowOnAccount, string? note, Guid? userId, DateTime nowUtc) =>
         Build(SaleKind.Sale, number, customerId, null, lines, documentDiscountMinor, cashMinor, cardMinor, transferMinor, allowOnAccount, note, userId, nowUtc);
 

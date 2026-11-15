@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Vernuko.Core;
 
 namespace Vernuko.Security;
@@ -72,6 +74,13 @@ public sealed class UserAccount : Entity
     public void Rename(string displayName) => DisplayName = Guard.NotBlank(displayName).Trim();
 
     public void SetPasswordHash(string hash) => PasswordHash = Guard.NotBlank(hash);
+
+    /// <summary>
+    /// Changes whenever the role, permissions, password or active state change. A session remembers the stamp it
+    /// signed in with; once it differs, the session has to sign in again (a demoted or deactivated user is cut off).
+    /// </summary>
+    public string SecurityStamp() =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{Role}|{IsActive}|{PasswordHash}|{GrantedPermissions}|{DeniedPermissions}")))[..32];
 
     public void Deactivate() => IsActive = false;
 

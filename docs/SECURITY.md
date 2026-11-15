@@ -22,6 +22,9 @@
 - **Parola politikası:** en az 8 karakter, en az 4 farklı karakter, yaygın parola listesi, kullanıcı adını içermeme.
 - **Hesap kilidi:** 5 hatalı denemeden sonra 1, 2, 4… dakika (en çok 64) kilit; başarılı girişte sıfırlanır; hatalı denemeler denetim kaydında.
 - **Oturum kilidi:** boşta kalma süresi (ayarlanabilir), Ctrl+L ile elle kilit; kilit açma parolayla; kilitliyken tüm servis çağrıları reddedilir.
+- **Açık oturumun geri alınması (0.16.1):** her oturum, girişteki hesabın güvenlik damgasını (rol, izinler, parola, etkinlik) tutar. Hesap değişince (rolü düşürülen, devre dışı bırakılan, parolası sıfırlanan kullanıcı) bir sonraki işlemde oturum kapanır; bağlı bilgisayardaki oturum da. Kişinin kendi parolasını değiştirmesi kendi oturumunu kapatmaz. Parola değiştirmede yanlış mevcut parola da kilit sayacına sayılır.
+- **Bağlı bilgisayarların sınırları (0.16.1):** ağdan yalnızca elle yedek istenebilir (otomatik, güncelleme öncesi ve migration öncesi yedekler kendiliğinden silinmediği için diski doldurabilirdi); lisans belgesindeki etkinleştirme kimliği ve cihaz özeti yalnızca ayar yetkisi olan kullanıcıya gider; yedek klasörünün yolu yalnızca yedek yetkisi olanlara gösterilir.
+- **Para ve maliyet yetkileri (0.16.1):** gün sonunda maliyet ve brüt kâr yalnızca mali rapor yetkisiyle; tedarikçi bakiyeleri, ekstreleri ve alış belgeleri alış ya da mali rapor yetkisiyle; servis fişinde kapora ve teslimde ödeme tahsilat yetkisiyle.
 - **Yetki:** 34 işlem izni, 7 rol (Faz 2 ile: stok görüntüleme/yönetme, ürün satışı, onam kaydı, müşteri dosyası görüntüleme/yönetme); her servis metodu izin kontrolü yapar (arayüz gizlemesine güvenilmez). Sahip hesabını yalnızca sahip değiştirebilir; son aktif sahip devre dışı bırakılamaz.
 - **Hassas alanlar:** T.C. kimlik no yetkisiz kullanıcıya maskeli (`*******0146`); yetkisiz kullanıcının kaydetmesi alanı silmez.
 - **Yetkisiz erişim denemeleri** (finans raporları, kullanıcı yönetimi, geri yükleme, denetim, dışa aktarma, hassas veri) denetim kaydına yazılır.
@@ -40,7 +43,7 @@
 | Veri minimizasyonu | T.C. kimlik, doğum tarihi, adres, e-posta isteğe bağlı; mesajlarda asgari bilgi | ✅ |
 | Yetki ayrımı | Rol/işlem izinleri; hassas alan maskesi; gizli notlar (P1) | ✅ / P1 |
 | Saklama ve imha | Arşiv, anonimleştirme (geri alınamaz, gerekçeli, denetimli); işletme tanımlı otomatik saklama süresi | ✅ / P1 |
-| İlgili kişi hakları (md. 11) | Müşteri bazlı tam JSON dışa aktarım; anonimleştirme | ✅ |
+| İlgili kişi hakları (md. 11) | Müşteri bazlı tam JSON dışa aktarım (0.16.1'den itibaren servis fişleri ve satışlar dahil); anonimleştirme (servis fişindeki getiren, onaylayan, teslim alan, adres, cihaz şifresi, eski geçmiş satırlarındaki adlar ve satış notları dahil; cihaz, arıza ve yapılan işlem kimliksiz kalır, SSHY m.16) | ✅ |
 | İşlem geçmişi | Hash zincirli denetim kaydı | ✅ |
 | Aydınlatma ve onay kayıtları | Pazarlama izni tarih + kaynakla; sürümlü onam/bilgilendirme formları, müşteri bazlı onay kaydı (yöntem, tarih, kaydeden; geri alma gerekçeli ve silinmez). Metinleri Vernuko sağlamaz ⚖️ | ✅ |
 | Özel nitelikli veri (sağlık, fotoğraf, terapi notu) | Sağlık profillerinde mesajda hizmet adı gizli; fotoğraflar şifreli ve ayrı yetkili (sekreter varsayılan olarak göremez); anonimleştirmede tüm dosyalar silinir; gizli uzman notları P1 | ✅ / P1 |

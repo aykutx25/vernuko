@@ -109,16 +109,33 @@ public sealed class AuthService(IDbContextFactory<VernukoDbContext> factory, Pas
 
     public async Task<Result> ChangeOwnPasswordAsync(string currentPassword, string newPassword, CancellationToken ct = default)
     {
-        if (session.UserId is not { } id || id == Guid.Empty)
+        if (session.UserId is not { } id || id == Guid.Empty || session.IsLocked)
         {
             return Error.Forbidden;
         }
 
+        // The same lock-out as login and unlock: otherwise this was a way to guess the password without limit.
+        var now = time.GetUtcNow().UtcDateTime;
         await using var db = await factory.CreateDbContextAsync(ct);
         await using var tx = await db.Database.BeginTransactionAsync(ct);
         var user = await db.Users.FirstAsync(u => u.Id == id, ct);
+        if (!user.IsActive || user.IsLockedOut(now))
+        {
+            return AppErrors.AccountLocked;
+        }
+
         if (!hasher.Verify(currentPassword ?? string.Empty, user.PasswordHash))
         {
+            user.RegisterFailedLogin(now);
+            await audit.AppendAsAsync(db, user.Id, user.Username, "auth.password_change_failed", "User", user.Id, $"Parola değiştirmede hatalı mevcut parola ({user.FailedLoginCount})", ct);
+            await db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+            if (user.IsLockedOut(now))
+            {
+                session.SignOut();
+                return AppErrors.AccountLocked;
+            }
+
             return AppErrors.InvalidCredentials;
         }
 
@@ -129,9 +146,11 @@ public sealed class AuthService(IDbContextFactory<VernukoDbContext> factory, Pas
         }
 
         user.SetPasswordHash(hasher.Hash(newPassword));
+        user.RegisterSuccessfulLogin(now);
         await audit.AppendAsync(db, "auth.password_changed", "User", user.Id, "Parola değiştirildi", ct);
         await db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
+        session.RefreshSecurityStamp(user); // this session stays; others of the same user must sign in again
         return Result.Success();
     }
 

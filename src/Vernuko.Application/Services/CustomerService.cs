@@ -242,6 +242,25 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
                 card.ClearRecipient();
             }
 
+            // Service tickets: who brought, approved and collected the device, the site address and the unlock code;
+            // older history lines that named them. The device, fault and work stay (service record, SSHY m.16).
+            foreach (var ticket in await db.ServiceTickets.Where(t => t.CustomerId == id).ToListAsync(ct))
+            {
+                var names = ticket.ClearPersonalDetails();
+                foreach (var e in await db.ServiceTicketEvents.Where(e => e.TicketId == ticket.Id).ToListAsync(ct))
+                {
+                    foreach (var name in names.Append($"{c.FirstName} {c.LastName}".Trim()))
+                    {
+                        e.Redact(name);
+                    }
+                }
+            }
+
+            foreach (var sale in await db.Sales.Where(s => s.CustomerId == id && s.Note != null).ToListAsync(ct))
+            {
+                sale.ClearNote();
+            }
+
             await CustomerRecordsService.DeleteAllForCustomerAsync(db, env, c.Id, now, ct);
             c.Anonymize(now);
             foreach (var note in await db.PrivateNotes.Where(n => n.CustomerId == c.Id && n.DeletedAtUtc == null).ToListAsync(ct))
@@ -267,6 +286,8 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
                 .ToListAsync(ct);
             var packages = await db.CustomerPackages.AsNoTracking().Include(p => p.Entries).Where(p => p.CustomerId == id).ToListAsync(ct);
             var transactions = await db.Transactions.AsNoTracking().Where(t => t.CustomerId == id).OrderBy(t => t.OccurredAtUtc).ToListAsync(ct);
+            var tickets = await db.ServiceTickets.AsNoTracking().Include(t => t.Lines).Where(t => t.CustomerId == id).OrderBy(t => t.ReceivedAtUtc).ToListAsync(ct);
+            var sales = await db.Sales.AsNoTracking().Include(s => s.Lines).Where(s => s.CustomerId == id).OrderBy(s => s.OccurredAtUtc).ToListAsync(ct);
             var export = new
             {
                 exportedAtUtc = UtcNow,
@@ -278,6 +299,17 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
                 appointments,
                 packages = packages.Select(p => new { p.Name, p.BodyArea, p.TotalSessions, p.UsedSessions, p.RemainingSessions, p.PurchasedAtUtc, p.ExpiresAtUtc, Status = p.Status.ToString() }),
                 transactions = transactions.Select(t => new { Kind = t.Kind.ToString(), Amount = t.AmountMinor / 100m, Method = t.Method?.ToString(), t.IsDeposit, t.Description, t.OccurredAtUtc }),
+                serviceTickets = tickets.Select(t => new
+                {
+                    t.Number, Device = t.Device.ToString(), t.Brand, t.Model, t.SerialNumber, t.Complaint, t.Accessories, t.Condition, t.BroughtBy, t.OnSite, t.SiteAddress,
+                    t.ReceivedAtUtc, Status = t.Status.ToString(), t.Diagnosis, t.WorkDone, t.ApprovalBy, t.DeliveredAtUtc, t.DeliveredTo,
+                    Lines = t.Lines.Where(l => !l.IsRemoved).Select(l => new { l.Description, l.Quantity, UnitPrice = l.UnitPriceMinor / 100m }),
+                }),
+                sales = sales.Select(s => new
+                {
+                    s.Number, Kind = s.Kind.ToString(), s.OccurredAtUtc, Total = s.TotalMinor / 100m, s.Note,
+                    Lines = s.Lines.Select(l => new { l.ProductName, l.Quantity, Total = l.NetTotalMinor / 100m }),
+                }),
             };
             await Audit.AppendAsync(db, "customer.exported", "Customer", c.Id, $"Müşteri #{c.Number} verileri dışa aktarıldı", ct);
             return JsonSerializer.Serialize(export, ExportJson);

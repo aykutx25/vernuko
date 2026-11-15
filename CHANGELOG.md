@@ -2,6 +2,69 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.16.1] — 2026-11-15 — Genel denetim: hata, görünüm ve güvenlik düzeltmeleri
+
+Üç ayrı inceleme yapıldı: hata, güvenlik, görünüm. Her hata düzeltmesinin testi var. Toplam 301 test geçiyor, 2 test yalnızca Windows'ta çalıştığı için atlanıyor.
+
+### Görünüm
+- **Üst çubuk:** küçült/büyüt/kapat düğmeleri artık kullanıcı menüsüyle aynı hizada.
+  - Önceden pencerenin en üstüne yapışıktılar; kullanıcı menüsü sola kaymış, sağı boş görünüyordu.
+  - Aradaki ince ayırıcı çizgiyle ayrılıyorlar. Ekran testinde de çiziliyorlar.
+- **Yazı kutuları:** yazılan metin, ipucu metninden 10 px sağda başlıyordu (iç boşluk iki kez uygulanıyordu). Düzeltildi.
+- **Sekmeler:**
+  - Seçili sekmenin kalın yazısı içeriğe de geçiyordu; sekmeli ekranlardaki bütün tablolar yarı kalın görünüyordu.
+  - İki satıra taşan sekmeler tıklanınca yer değiştiriyordu.
+- **Tablolar:** dar sütundaki metin "…" ile biter; tam metin, üzerine gelince açılan ipucunda görünür.
+- **Satış ekranı:** "Satışı tamamla" 1366×768'de ekranın dışında kalıyordu. Toplam ve düğmeler artık kartın altına sabit.
+- **Diğer ekranlar:**
+  - Randevular dar pencerede okunur.
+  - Ana sayfa tam genişlikte.
+  - Kurulum sihirbazında "Devam" düğmesi her adımda aynı yerde.
+  - Müşteri kartında düğme yükseklikleri eşit; "Arşivle" ile "Arşivden çıkar" aynı anda görünmez.
+  - Menü öğeleri biraz daha kısa; seçili öğe görünür alana kaydırılır.
+  - Personel sayfasının başlığı programa göre "Uzmanlar" ya da "Teknisyenler".
+  - Boş listelerde yönlendirme metni var.
+- **Tarihler:** ekranda işletme saatiyle (Türkiye) gösterilir. Önceden bilgisayarın saat dilimi kullanılıyordu; servis belgesindeki saatle farklı çıkabiliyordu.
+- **Servis belgeleri:** tutarlar sağa hizalı.
+
+### Hatalar
+- **İade:**
+  - Aynı satış satırı bir iadede iki kez yazılınca satılandan fazlası geri alınabiliyordu.
+  - Parça parça iadeler toplamda ödenenden fazlasını geri ödeyebiliyordu.
+- **Kayıtsız satış:** "Perakende Satış" hesabı elle seçilince satış veresiyeye yazılabiliyordu. Bu hesap artık müşteri aramasında çıkmıyor.
+- **Belge indirimi:** ücretsiz bir satıra pay düşmez, hiçbir satır eksiye inmez, paylar toplama tam eşit olur.
+- **Garanti bağlantısı:** yalnızca aynı seri numaralı cihaz için ve 12 ay içinde kurulabilir. Önceden her eski fiş seçilebiliyordu.
+- **Servis fişi:**
+  - Teslim edilmiş fişe kapora alınamaz.
+  - Kapora alınmış fişin müşterisi değiştirilemez.
+  - Ücretsiz teslimin tekrarı hata vermez.
+  - Bağlantı zaman aşımından sonra yeniden deneyince parça stoktan iki kez düşmez.
+  - Başka fişe geçince önceki fişin teklif, ödeme ve işçilik alanları taşınmaz.
+- **Ürün kartı:** pasif tedarikçili ürün kaydedilince tedarikçi silinmez.
+- **Veritabanı:** tedarikçi hesabı, satış satırları ve alış belgeleri değiştirilemez ve silinemez. Satışlar ve servis geçmişi silinemez. Bunlar veritabanı güncellemesiyle (migration) geliyor.
+
+### Güvenlik
+- **Açık oturumlar:** rolü düşürülen, devre dışı bırakılan ya da parolası sıfırlanan kullanıcının açık oturumu bir sonraki işlemde kapanır. Bağlı bilgisayardaki oturum da kapanır.
+- **Parola değiştirme:** yanlış mevcut parola girmek de kilit sayacına sayılır.
+- **Bağlı bilgisayarlar:**
+  - Yalnızca elle yedek isteyebilir (önceden ana bilgisayarın diski yedekle doldurulabilirdi).
+  - Lisansın kimlik bilgilerini yalnızca ayar yetkisi olan kullanıcı alabilir.
+  - Yedek klasörünün yolu yalnızca yedek yetkisi olana görünür.
+- **Para ve maliyet yetkileri:**
+  - Gün sonunda maliyet ve brüt kâr yalnızca mali rapor yetkisiyle görünür.
+  - Tedarikçi bakiyesi ve ekstresi alış ya da mali rapor yetkisi ister.
+  - Kapora ve teslimde ödeme almak için tahsilat yetkisi gerekir.
+- **KVKK:**
+  - Müşteri anonimleştirilince servis fişlerindeki ad ve adres alanları, cihaz şifresi, eski geçmiş satırlarındaki adlar ve satış notları da silinir.
+  - Kişisel veri dışa aktarımına servis fişleri ve satışlar da girer.
+  - Servis geçmişine ve denetim kaydına artık kişi adı yazılmaz. Önceden denetim kaydına yazılmış adlar, kayıt değiştirilemediği için kalır.
+- **Lisans eklentisi 1.4.1:**
+  - Satın alma formu adres başına saatte 10 deneme ile sınırlı.
+  - Giriş bağlantısı e-posta başına saatte 3 kez gönderilir.
+  - Site bir vekil ya da CDN arkasındaysa gerçek ziyaretçi adresi okunabilir: `VERNUKO_LICENSE_CLIENT_IP_HEADER`.
+  - Ödenmemiş eski siparişler 3 gün sonra silinir.
+  - Bilgisayarda hızlı bir önbellek (Redis/Memcached) varsa sayaçlar tam doğru sayar.
+
 ## [0.16.0] — 2026-11-15 — Vernuko Stok ve Vernuko Teknik Servis
 
 Kurulum dosyası artık üç programdır. Kurulumda seçilen işletme türü programı belirler. Her program kendi lisansıyla çalışır (`vernuko-desktop`, `vernuko-stok`, `vernuko-teknik-servis`). Ayrıntılar: [docs/MODES.md](docs/MODES.md). Rakip ve mevzuat araştırması: [docs/research/stock-mode-tr.md](docs/research/stock-mode-tr.md), [docs/research/service-mode-tr.md](docs/research/service-mode-tr.md).

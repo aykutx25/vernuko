@@ -388,7 +388,7 @@ public sealed partial class ShellViewModel : ViewModelBase
     [
         new("sales", "Satış", "IconCart", typeof(SalesViewModel), Permission.ProductsSell),
         new("inventory", "Ürünler ve Stok", "IconTag", typeof(InventoryViewModel), Permission.InventoryView),
-        new("purchases", "Alış ve Tedarikçiler", "IconTruck", typeof(PurchasesViewModel), Permission.InventoryView),
+        new("purchases", "Alış ve Tedarikçiler", "IconTruck", typeof(PurchasesViewModel), Permission.PurchasesManage),
         new("stocktools", "Sayım ve Sipariş", "IconClipboard", typeof(StockToolsViewModel), Permission.InventoryView),
         new("customers", terms.Customers, "IconUsers", typeof(CustomersViewModel), Permission.CustomersView),
     ];
@@ -409,7 +409,7 @@ public sealed partial class ShellViewModel : ViewModelBase
         items.Add(new("inventory", "Parça ve Stok", "IconTag", typeof(InventoryViewModel), Permission.InventoryView));
         if (features.Contains(ProfileFeature.Purchases))
         {
-            items.Add(new("purchases", "Alış ve Tedarikçiler", "IconTruck", typeof(PurchasesViewModel), Permission.InventoryView));
+            items.Add(new("purchases", "Alış ve Tedarikçiler", "IconTruck", typeof(PurchasesViewModel), Permission.PurchasesManage));
         }
 
         items.Add(new("catalog", "İşçilik", "IconLayers", typeof(CatalogViewModel), Permission.AppointmentsView));

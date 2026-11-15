@@ -148,16 +148,47 @@ final class Plugin
         return $response;
     }
 
-    /** 30 requests per minute per IP (transients; the IP itself is not stored). */
+    /** 30 requests per minute per IP (the IP itself is not stored). */
     private static function rateLimit(): bool
     {
-        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '-');
-        $key = 'vk_rl_' . md5($ip . '|' . gmdate('YmdHi'));
+        return self::allow('api|' . self::clientIp(), 30, 60);
+    }
+
+    /**
+     * The visitor's address. Behind a reverse proxy or CDN every request comes from the proxy, so all desktop
+     * installations would share one limit (and one visitor could use it up): the site owner names the header that
+     * carries the real address with VERNUKO_LICENSE_CLIENT_IP_HEADER (e.g. 'HTTP_CF_CONNECTING_IP'). Only set it when
+     * the proxy overwrites that header; otherwise visitors could pick their own address.
+     */
+    public static function clientIp(): string
+    {
+        if (defined('VERNUKO_LICENSE_CLIENT_IP_HEADER') && is_string(VERNUKO_LICENSE_CLIENT_IP_HEADER)) {
+            $raw = (string) ($_SERVER[VERNUKO_LICENSE_CLIENT_IP_HEADER] ?? '');
+            $first = trim(explode(',', $raw)[0]);
+            if (filter_var($first, FILTER_VALIDATE_IP) !== false) {
+                return $first;
+            }
+        }
+        return (string) ($_SERVER['REMOTE_ADDR'] ?? '-');
+    }
+
+    /**
+     * At most $limit hits per $window seconds for $bucket. With a persistent object cache (Redis, Memcached) the
+     * counter is atomic; without one, transients are used (good enough against floods, not exact under races).
+     */
+    public static function allow(string $bucket, int $limit, int $window): bool
+    {
+        $key = 'vk_rl_' . md5($bucket . '|' . intdiv(time(), $window));
+        if (wp_using_ext_object_cache()) {
+            wp_cache_add($key, 0, 'vernuko', $window * 2);
+            $count = wp_cache_incr($key, 1, 'vernuko');
+            return $count !== false && $count <= $limit;
+        }
         $count = (int) get_transient($key);
-        if ($count >= 30) {
+        if ($count >= $limit) {
             return false;
         }
-        set_transient($key, $count + 1, 120);
+        set_transient($key, $count + 1, $window * 2);
         return true;
     }
 

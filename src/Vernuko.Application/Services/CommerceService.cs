@@ -43,7 +43,10 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
         ReadAsync<IReadOnlyList<SupplierDto>>(Permission.InventoryView, async db =>
         {
             var suppliers = await db.Suppliers.AsNoTracking().Where(s => includeInactive || s.IsActive).OrderBy(s => s.Name).ToListAsync(ct);
-            var balances = await db.SupplierTransactions.AsNoTracking().GroupBy(t => t.SupplierId).Select(g => new { g.Key, Sum = g.Sum(t => t.BalanceEffectMinor) }).ToDictionaryAsync(x => x.Key, x => x.Sum, ct);
+            // Names for product forms are for everyone with stock access; what is owed to suppliers only for purchasing.
+            var balances = SeesSupplierMoney
+                ? await db.SupplierTransactions.AsNoTracking().GroupBy(t => t.SupplierId).Select(g => new { g.Key, Sum = g.Sum(t => t.BalanceEffectMinor) }).ToDictionaryAsync(x => x.Key, x => x.Sum, ct)
+                : [];
             return Result.Success<IReadOnlyList<SupplierDto>>(suppliers.Select(s => ToDto(s, balances.GetValueOrDefault(s.Id))).ToList());
         }, ct);
 
@@ -86,6 +89,11 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
     public Task<Result<SupplierStatementDto>> GetSupplierStatementAsync(Guid supplierId, CancellationToken ct = default) =>
         ReadAsync<SupplierStatementDto>(Permission.InventoryView, async db =>
         {
+            if (!SeesSupplierMoney)
+            {
+                return Error.Forbidden;
+            }
+
             var s = await db.Suppliers.AsNoTracking().FirstOrDefaultAsync(x => x.Id == supplierId, ct);
             if (s is null)
             {
@@ -397,6 +405,11 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
     public Task<Result<IReadOnlyList<PurchaseSummaryDto>>> GetPurchasesAsync(DateOnly from, DateOnly to, CancellationToken ct = default) =>
         ReadAsync<IReadOnlyList<PurchaseSummaryDto>>(Permission.InventoryView, async db =>
         {
+            if (!SeesSupplierMoney)
+            {
+                return Error.Forbidden;
+            }
+
             var (_, zone) = await BusinessContext.LoadAsync(db, ct);
             var start = TimeZones.DayRange(from, zone).Start;
             var end = TimeZones.DayRange(to, zone).End;
@@ -406,7 +419,7 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
         }, ct);
 
     public Task<Result<PurchaseDto>> GetPurchaseAsync(Guid purchaseId, CancellationToken ct = default) =>
-        ReadAsync<PurchaseDto>(Permission.InventoryView, db => LoadPurchaseAsync(db, purchaseId, ct), ct);
+        ReadAsync<PurchaseDto>(Permission.InventoryView, db => SeesSupplierMoney ? LoadPurchaseAsync(db, purchaseId, ct) : Task.FromResult<Result<PurchaseDto>>(Error.Forbidden), ct);
 
     // ------------------------------------------------------------------ stock count
 
@@ -477,9 +490,11 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
             long Sign(Sale s) => s.Kind == SaleKind.Sale ? 1 : -1;
             var vat = docs.SelectMany(d => d.Lines.Select(l => (d, l))).GroupBy(x => x.l.VatRate).OrderBy(g => g.Key)
                 .Select(g => new VatBreakdownDto(g.Key, g.Sum(x => Sign(x.d) * x.l.NetTotalMinor), g.Sum(x => Sign(x.d) * Vat.IncludedIn(x.l.NetTotalMinor, x.l.VatRate)))).ToList();
-            var cost = docs.Sum(d => Sign(d) * d.Lines.Sum(l => l.UnitCostMinor * l.Quantity));
+            // Cost of goods and profit are financial figures: only for users who may see financial reports.
+            var showCost = Session.Has(Permission.ReportsFinancial);
+            var cost = showCost ? docs.Sum(d => Sign(d) * d.Lines.Sum(l => l.UnitCostMinor * l.Quantity)) : 0;
             return new DayEndDto(day, sales.Count, returns.Count, sales.Sum(s => s.TotalMinor), returns.Sum(s => s.TotalMinor),
-                docs.Sum(d => Sign(d) * d.CashMinor), docs.Sum(d => Sign(d) * d.CardMinor), docs.Sum(d => Sign(d) * d.TransferMinor), docs.Sum(d => Sign(d) * d.OnAccountMinor), cost, vat);
+                docs.Sum(d => Sign(d) * d.CashMinor), docs.Sum(d => Sign(d) * d.CardMinor), docs.Sum(d => Sign(d) * d.TransferMinor), docs.Sum(d => Sign(d) * d.OnAccountMinor), cost, vat, showCost);
         }, ct);
 
     /// <summary>Products at or below their critical level, grouped by usual supplier: refill to twice the critical level.</summary>
@@ -506,6 +521,9 @@ public sealed class CommerceService(AppServiceDeps deps) : AppServiceBase(deps),
         }, ct);
 
     // ------------------------------------------------------------------ helpers
+
+    /// <summary>Supplier balances, statements and purchase costs: for purchasing and for accounting (financial reports).</summary>
+    private bool SeesSupplierMoney => Session.Has(Permission.PurchasesManage) || Session.Has(Permission.ReportsFinancial);
 
     /// <summary>The account kayıtsız (walk-in) sales are booked to; created on first use.</summary>
     internal static async Task<Guid> WalkInCustomerAsync(VernukoDbContext db, DateTime nowUtc, CancellationToken ct)

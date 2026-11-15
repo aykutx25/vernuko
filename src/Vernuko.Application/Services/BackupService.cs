@@ -71,7 +71,19 @@ public sealed class BackupService(
 
     private static readonly SemaphoreSlim Gate = new(1, 1);
 
+    /// <summary>
+    /// For the status bar and settings. Folder paths (local and cloud) are shown only to users who manage or take
+    /// backups: a connected computer's user without that right sees whether backups run, not where they are.
+    /// </summary>
     public async Task<BackupStatus> GetStatusAsync(CancellationToken ct = default)
+    {
+        var status = await ReadStatusAsync(ct);
+        return session.Has(Permission.BackupsManage) || session.Has(Permission.BackupsCreate)
+            ? status
+            : status with { Folder = string.Empty, LastFile = null, CloudFolder = null };
+    }
+
+    private async Task<BackupStatus> ReadStatusAsync(CancellationToken ct)
     {
         await using var db = await factory.CreateDbContextAsync(ct);
         var retention = await SettingsStore.GetAsync(db, SettingKeys.BackupRetention, ct);
@@ -132,7 +144,7 @@ public sealed class BackupService(
             return Error.Validation("backup.cloud_write", "Bulut klasörüne yazılamadı. Klasör izinlerini ve bulut uygulamasının çalıştığını kontrol edin.");
         }
 
-        var localFolder = Path.GetFullPath((await GetStatusAsync(ct)).Folder);
+        var localFolder = Path.GetFullPath((await ReadStatusAsync(ct)).Folder);
         if (string.Equals(localFolder.TrimEnd(Path.DirectorySeparatorChar), target.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
         {
             return Error.Validation("backup.cloud_same", "Bulut kopyası, yerel yedek klasörüyle aynı olamaz.");
@@ -348,7 +360,7 @@ public sealed class BackupService(
 
     public async Task<bool> IsScheduledBackupDueAsync(CancellationToken ct = default)
     {
-        var status = await GetStatusAsync(ct);
+        var status = await ReadStatusAsync(ct);
         if (!status.KeyConfigured)
         {
             return false;
@@ -395,7 +407,12 @@ public sealed class BackupService(
 
     public async Task<IReadOnlyList<BackupListItem>> ListBackupsAsync(CancellationToken ct = default)
     {
-        var status = await GetStatusAsync(ct);
+        if (!session.Has(Permission.BackupsManage) && !session.Has(Permission.BackupsCreate))
+        {
+            return [];
+        }
+
+        var status = await ReadStatusAsync(ct);
         var target = new LocalFolderBackupTarget(status.Folder);
         var result = new List<BackupListItem>();
         foreach (var file in await target.ListAsync(ct))

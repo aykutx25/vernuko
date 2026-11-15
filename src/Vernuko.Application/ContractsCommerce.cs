@@ -117,7 +117,8 @@ public sealed record DayEndDto(
     long TransferMinor,
     long OnAccountMinor,
     long CostMinor,
-    IReadOnlyList<VatBreakdownDto> Vat)
+    IReadOnlyList<VatBreakdownDto> Vat,
+    bool ShowsCost = true)
 {
     public long NetSalesMinor => SalesMinor - ReturnsMinor;
 

@@ -441,6 +441,21 @@ public sealed class ServiceTicket : Entity
 
     public void LinkWarranty(Guid? earlierTicketId) => WarrantyOfTicketId = earlierTicketId;
 
+    /// <summary>
+    /// KVKK erasure of the customer: names and the address go, the device, fault and work stay for the 3-year
+    /// service record (SSHY m.16) without identity. Returns the names removed, to clear them from the history too.
+    /// </summary>
+    public IReadOnlyList<string> ClearPersonalDetails()
+    {
+        var names = new[] { BroughtBy, DeliveredTo, ApprovalBy, SiteAddress }.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n!).ToList();
+        BroughtBy = null;
+        ApprovalBy = null;
+        SiteAddress = OnSite ? "(silindi)" : null;
+        DeliveredTo = DeliveredTo is null ? null : "(silindi)";
+        UnlockCodeProtected = null;
+        return names;
+    }
+
     public Result<ServiceTicketLine> AddLine(TicketLineKind kind, Guid? productId, string description, int quantity, long unitPriceMinor, int vatRate, Guid? staffId, Guid? stockMovementId)
     {
         if (!IsOpen)
@@ -611,6 +626,15 @@ public sealed class ServiceTicketEvent
     public Guid? UserId { get; private set; }
 
     public DateTime AtUtc { get; private set; }
+
+    /// <summary>KVKK erasure: a name in an older history line is replaced (the line itself stays).</summary>
+    public void Redact(string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            Text = Text.Replace(value, "(silindi)", StringComparison.Ordinal);
+        }
+    }
 
     public static ServiceTicketEvent Create(Guid ticketId, TicketEventKind kind, string text, Guid? userId, DateTime nowUtc) => new()
     {

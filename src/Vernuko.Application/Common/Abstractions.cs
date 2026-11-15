@@ -60,6 +60,9 @@ public sealed class UserSession
 
     public bool IsLocked { get; private set; }
 
+    /// <summary>The account's <see cref="UserAccount.SecurityStamp"/> at sign-in (null for system and remote copies).</summary>
+    public string? SecurityStamp { get; private set; }
+
     public event EventHandler? Changed;
 
     public bool Has(Permission permission) => IsAuthenticated && !IsLocked && _permissions.Contains(permission);
@@ -72,8 +75,18 @@ public sealed class UserSession
         Role = user.Role;
         StaffMemberId = user.StaffMemberId;
         _permissions = user.EffectivePermissions();
+        SecurityStamp = user.SecurityStamp();
         IsLocked = false;
         Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>After the user changed their own password: the session stays valid.</summary>
+    public void RefreshSecurityStamp(UserAccount user)
+    {
+        if (user.Id == UserId)
+        {
+            SecurityStamp = user.SecurityStamp();
+        }
     }
 
     /// <summary>The user signed in on the main computer (connected computer): a copy for showing/hiding screens only.</summary>
@@ -125,6 +138,7 @@ public sealed class UserSession
         Role = null;
         StaffMemberId = null;
         _permissions = new HashSet<Permission>();
+        SecurityStamp = null;
         IsLocked = false;
         Changed?.Invoke(this, EventArgs.Empty);
     }

@@ -245,6 +245,11 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
                 return Error.Validation("ticket.closed", "Teslim edilmiş fişe kapora alınamaz.");
             }
 
+            if (!Session.Has(Permission.PaymentsRecord))
+            {
+                return Error.Forbidden; // taking money is a cash-desk right, not a workshop one
+            }
+
             var (settings, _) = await BusinessContext.LoadAsync(db, ct);
             var tx = CustomerTransaction.Create(Branch.DefaultId, t.CustomerId, TransactionKind.Payment, new Money(amountMinor, settings.Currency), method, true, null, null, $"Servis {t.Number} kaporası", UserId, UtcNow, key);
             if (tx.IsFailure)
@@ -276,6 +281,11 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
             if (r.CashMinor < 0 || r.CardMinor < 0 || r.TransferMinor < 0)
             {
                 return Error.Validation("ticket.payment", "Ödeme tutarı negatif olamaz.");
+            }
+
+            if (r.CashMinor + r.CardMinor + r.TransferMinor > 0 && !Session.Has(Permission.PaymentsRecord))
+            {
+                return Error.Forbidden; // the device may be handed over, the money is taken by someone with the cash-desk right
             }
 
             var delivered = t.Deliver(r.DeliveredTo, UtcNow);
