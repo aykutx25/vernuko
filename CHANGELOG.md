@@ -12,7 +12,9 @@ Kurulum dosyası artık üç programdır. Kurulumda seçilen işletme türü pro
   - **Teknik Servis:** telefon ve tablet, bilgisayar, beyaz eşya ve klima, elektronik.
 - Kurulum sihirbazında işletme türleri üç program altında gruplanır. Stok'ta çalışma günü, saat, personel ve hizmet adımları atlanır.
 - Menü ve açılış ekranı programa göre değişir. Teknik Servis, profilinde varsa satış ve alış ekranlarını da gösterir.
-- Üst çubuk, giriş ve sihirbaz logonun yanına programın adını yazar. Pencere başlığı "Vernuko".
+- **Her programın kendi adı var:** logonun yanında (üst çubuk, giriş, sihirbaz) ve pencere başlığında "Vernuko Randevu", "Vernuko Stok" ya da "Vernuko Teknik Servis" yazar.
+- **Randevuya özgü yerler Stok ve Teknik Servis'te görünmez:** takvim, paketler, bekleme listesi, randevu raporları, müşteri kartındaki randevu düğmesi ve sekmeleri, randevu ayarları ve hatırlatmaları. Teknik Servis'te Hizmetler ekranı "İşçilik" olur (süre, oda ve cihaz alanları olmadan).
+- **Her programın kendi demosu:** `demo-stok.cmd` (`--demo-stok`) ve `demo-servis.cmd` (`--demo-servis`), ayrı demo veritabanlarıyla.
 - Lisansın ürünü moda göre seçilir. Başka programın anahtarı kabul edilmez.
 
 ### Eklendi — Vernuko Stok
@@ -43,7 +45,7 @@ Kurulum dosyası artık üç programdır. Kurulumda seçilen işletme türü pro
 - **Fiyat teklifi ve onay:**
   - Onayın nasıl, kimden ve ne zaman alındığı kaydedilir. Onaysız cihaz "onarımda" veya "hazır" yapılamaz.
   - Teklif reddedilirse önceden belirtilen arıza tespit ücreti alınır.
-- **Parça ve işçilik:** parça stoktan düşer, satır kaldırılınca stoğa döner. Kapora alınabilir.
+- **Parça ve işçilik:** parça stoktan düşer, satır kaldırılınca stoğa döner. İşçilik, kayıtlı işçilik listesinden seçilebilir. Kapora alınabilir.
 - **Teslim:** nakit veya kartla ödenir; kalan tutar hesaba yazılır.
 - **Garanti:**
   - Aynı arıza 12 ay içinde işçilik ücreti alınmadan onarılır. Aynı seri numarası gelince fiş bunu önerir.
@@ -60,8 +62,8 @@ Kurulum dosyası artık üç programdır. Kurulumda seçilen işletme türü pro
 - Veritabanı iki migration alır: `StockMode`, `TechnicalServiceMode`.
 
 ### Test
-- 14 yeni test (servis katmanında 11, ekranlarda uçtan uca 3). Toplam 282 geçen, 2 atlanan (yalnızca Windows'ta çalışanlar).
-- Windows smoke testi yeni dört ekranı ve iki belgeyi çizer.
+- 18 yeni test: 11'i servis katmanında, 7'si ekranlarda. Ekran testleri iki demoyu ve her programın adını, menüsünü ve sayfalarını da kapsıyor. Toplam 286 test geçiyor, 2'si atlanıyor (yalnızca Windows'ta çalışanlar).
+- Windows smoke testi Stok ve Teknik Servis'i kendi demolarıyla açar. Program adını, menüyü, tüm sayfaları ve servis belgelerini denetler.
 - Gerçek bir dükkânda barkod okuyucu ve yazıcıyla denenmedi.
 
 ## [0.15.0] — 2026-11-15 — Yeni Vernuko logosu

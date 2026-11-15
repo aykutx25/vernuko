@@ -233,6 +233,7 @@ public sealed partial class SettingsViewModel(
     public override Task OnNavigatedToAsync(object? parameter) => RunAsync(async () =>
     {
         NewUserRole = Roles.First(r => r.Value == SystemRole.Secretary);
+        Messaging.ShowReminders = Shell?.IsAppointmentMode ?? true;
         await LoadBusinessAsync();
         await LoadUsersAsync();
         await LoadBackupAsync();

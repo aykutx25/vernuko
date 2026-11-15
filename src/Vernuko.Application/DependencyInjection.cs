@@ -48,6 +48,7 @@ public static class DependencyInjection
         services.AddSingleton<AutoMessagingService>();
         services.TryAddSingleton<IMessageTransportFactory>(_ => new HttpMessageTransportFactory(new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
         services.AddSingleton<DemoDataSeeder>();
+        services.AddSingleton<ModeDemoSeeder>();
         services.AddSingleton<CommissionService>();
         services.AddSingleton<InventoryService>();
         services.AddSingleton<CommerceService>();

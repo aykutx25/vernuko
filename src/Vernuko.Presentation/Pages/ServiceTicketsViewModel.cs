@@ -124,6 +124,10 @@ public sealed partial class ServiceTicketsViewModel(IServiceDeskService desk, IC
     [ObservableProperty]
     private string _laborPrice = "0";
 
+    /// <summary>A labour item from the İşçilik list: fills the description and the price (both can still be changed).</summary>
+    [ObservableProperty]
+    private ServiceDto? _laborItem;
+
     [ObservableProperty]
     private string _deposit = "0";
 
@@ -150,6 +154,8 @@ public sealed partial class ServiceTicketsViewModel(IServiceDeskService desk, IC
     public ObservableCollection<StaffDto> Staff { get; } = [];
 
     public ObservableCollection<ProductDto> Parts { get; } = [];
+
+    public ObservableCollection<ServiceDto> LaborItems { get; } = [];
 
     public ObservableCollection<TicketSummaryDto> DeviceHistory { get; } = [];
 
@@ -205,10 +211,25 @@ public sealed partial class ServiceTicketsViewModel(IServiceDeskService desk, IC
             Parts.Add(p);
         }
 
+        LaborItems.Clear();
+        foreach (var s in (await catalog.GetServicesAsync()).OrEmpty())
+        {
+            LaborItems.Add(s);
+        }
+
         await LoadListAsync();
     });
 
     partial void OnOpenOnlyChanged(bool value) => _ = LoadListAsync();
+
+    partial void OnLaborItemChanged(ServiceDto? value)
+    {
+        if (value is not null)
+        {
+            LaborText = value.Name;
+            LaborPrice = (value.PriceMinor / 100m).ToString("0.00", TurkishText.Culture);
+        }
+    }
 
     partial void OnSearchChanged(string value) => _ = _searchDebounce.RunAsync(_ => LoadListAsync());
 
@@ -424,6 +445,7 @@ public sealed partial class ServiceTicketsViewModel(IServiceDeskService desk, IC
     [RelayCommand]
     private Task AddLaborAsync() => Apply(id => desk.AddLaborAsync(id, LaborText, Minor(LaborPrice), Technician?.Id ?? Ticket?.Intake.TechnicianStaffId), "İşçilik eklendi.", () =>
     {
+        LaborItem = null;
         LaborText = string.Empty;
         LaborPrice = "0";
     });

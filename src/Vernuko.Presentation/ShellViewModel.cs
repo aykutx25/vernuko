@@ -84,13 +84,19 @@ public sealed partial class ShellViewModel : ViewModelBase
     private string _connectionText = "Yerel veritabanı — internetsiz çalışır";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ProgramName), nameof(ProgramFullName))]
+    [NotifyPropertyChangedFor(nameof(ProgramName), nameof(ProgramFullName), nameof(IsAppointmentMode), nameof(ShowCustomerFiles))]
     private BusinessInfo? _business;
 
     /// <summary>Next to the logo in the header: Randevu, Stok or Teknik Servis.</summary>
     public string ProgramName => BusinessProfileDefinition.ModeShortName(Business?.Mode ?? BusinessMode.Randevu);
 
     public string ProgramFullName => BusinessProfileDefinition.ModeName(Business?.Mode ?? BusinessMode.Randevu);
+
+    /// <summary>Vernuko Randevu: calendar, packages and appointment settings are shown. Stok and Teknik Servis hide them.</summary>
+    public bool IsAppointmentMode => (Business?.Mode ?? BusinessMode.Randevu) == BusinessMode.Randevu;
+
+    /// <summary>The customer card's "Onam ve dosyalar" tab: appointment businesses and profiles that keep customer photos.</summary>
+    public bool ShowCustomerFiles => IsAppointmentMode || (Business?.Features.Contains(ProfileFeature.CustomerPhotos) ?? false);
 
     public ShellViewModel(IServiceProvider services, UserSession session, ISettingsService settings, ILicenseService license, IBackupService backups, IAuthService auth, TimeProvider time, IAppEnvironment env)
     {
@@ -146,7 +152,8 @@ public sealed partial class ShellViewModel : ViewModelBase
             ComputerRole.Host => "Ana bilgisayar — veriler bu bilgisayarda",
             _ => "Yerel veritabanı — internetsiz çalışır",
         };
-        if (_session.Has(Permission.SettingsManage) && _services.GetService(typeof(IAutoMessagingService)) is IAutoMessagingService messaging
+        // Appointment reminders exist only in Vernuko Randevu.
+        if (IsAppointmentMode && _session.Has(Permission.SettingsManage) && _services.GetService(typeof(IAutoMessagingService)) is IAutoMessagingService messaging
             && await messaging.GetSettingsAsync() is { IsSuccess: true } m)
         {
             MessagingStatusText = m.Value.RemindersEnabled
@@ -335,7 +342,12 @@ public sealed partial class ShellViewModel : ViewModelBase
         };
 
         items.Add(new("payments", mode == BusinessMode.Randevu ? "Ödemeler" : "Kasa ve Ödemeler", "IconCard", typeof(PaymentsViewModel), Permission.PaymentsView));
-        items.Add(new("reports", "Raporlar", "IconChart", typeof(ReportsViewModel), Permission.ReportsOperational));
+        if (mode == BusinessMode.Randevu)
+        {
+            // The report page is about appointments; Stok has its day-end report on the sales screen.
+            items.Add(new("reports", "Raporlar", "IconChart", typeof(ReportsViewModel), Permission.ReportsOperational));
+        }
+
         items.Add(new("settings", "Ayarlar", "IconSettings", typeof(SettingsViewModel), null));
         foreach (var item in items.Where(i => i.Permission is null || _session.Has(i.Permission.Value)))
         {
@@ -381,13 +393,12 @@ public sealed partial class ShellViewModel : ViewModelBase
         new("customers", terms.Customers, "IconUsers", typeof(CustomersViewModel), Permission.CustomersView),
     ];
 
-    /// <summary>Vernuko Teknik Servis: tickets first; sales and stock screens of the Stok mode where the profile has them.</summary>
+    /// <summary>Vernuko Teknik Servis: tickets first; sales and stock screens of the Stok mode where the profile has them. No calendar.</summary>
     private static List<NavItem> ServiceNavigation(Terminology terms, IReadOnlySet<ProfileFeature> features)
     {
         var items = new List<NavItem>
         {
             new("servicetickets", "Servis Fişleri", "IconWrench", typeof(ServiceTicketsViewModel), Permission.ServiceTicketsView),
-            new("appointments", "Randevular", "IconCalendar", typeof(AppointmentsViewModel), Permission.AppointmentsView),
             new("customers", terms.Customers, "IconUsers", typeof(CustomersViewModel), Permission.CustomersView),
         };
         if (features.Contains(ProfileFeature.Sales))

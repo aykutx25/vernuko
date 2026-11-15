@@ -15,6 +15,14 @@ namespace Vernuko.Presentation.Pages;
 /// </summary>
 public sealed partial class MessagingSettingsViewModel(IAutoMessagingService messaging) : ViewModelBase
 {
+    /// <summary>Appointment reminders exist only in Vernuko Randevu; Stok and Teknik Servis keep the provider, limit and quiet hours.</summary>
+    [ObservableProperty]
+    private bool _showReminders = true;
+
+    public string RulesTitle => ShowReminders ? "Otomatik randevu hatırlatma" : "Mesaj kuralları";
+
+    partial void OnShowRemindersChanged(bool value) => OnPropertyChanged(nameof(RulesTitle));
+
     [ObservableProperty]
     private bool _remindersEnabled;
 

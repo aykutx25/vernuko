@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Vernuko.Application.Common;
 using Vernuko.Application.Services;
+using Vernuko.BusinessProfiles;
 using Vernuko.Core;
 using Vernuko.Presentation;
 using Vernuko.Presentation.Common;
@@ -73,7 +74,7 @@ internal static class SmokeTest
         public Task<string?> PickSaveFileAsync(string title, string defaultFileName, string filter) => Task.FromResult<string?>(null);
     }
 
-    public static async Task<int> RunAsync(IServiceProvider services, string outputDirectory)
+    public static async Task<int> RunAsync(IServiceProvider services, string outputDirectory, Func<BusinessMode, Task<ServiceProvider>> createProgram)
     {
         Directory.CreateDirectory(outputDirectory);
         var listener = new BindingErrorListener();
@@ -147,68 +148,15 @@ internal static class SmokeTest
                 report.AppendLine($"page {item.Key}: ok ({tabs} tabs rendered)");
             }
 
-            // Stok and Teknik Servis screens. The demo business is a Randevu one, so they are opened inside its shell
-            // with a little sample data (a supplier, a goods receipt, a sale and an open service ticket).
-            var samples = await SeedModeSamplesAsync(services);
-            report.AppendLine("mode sample data: " + samples);
-            var modeFailures = samples.Contains("HATA", StringComparison.Ordinal) ? 1 : 0;
-            foreach (var item in new NavItem[]
+            // Vernuko Stok and Vernuko Teknik Servis as themselves: each with its own demo database, its own name next to the
+            // logo and in the window title, its own menu.
+            foreach (var (mode, prefix) in new[] { (BusinessMode.Stok, "stok"), (BusinessMode.TeknikServis, "servis") })
             {
-                new("sales", "Satış", "IconCart", typeof(SalesViewModel), null),
-                new("purchases", "Alış ve Tedarikçiler", "IconTruck", typeof(PurchasesViewModel), null),
-                new("stocktools", "Sayım ve Sipariş", "IconClipboard", typeof(StockToolsViewModel), null),
-                new("servicetickets", "Servis Fişleri", "IconWrench", typeof(ServiceTicketsViewModel), null),
-            })
-            {
-                await shell.NavigateAsync(item, null);
-                switch (shell.CurrentPage)
+                await using var program = await createProgram(mode);
+                if (await RunProgramAsync(program, mode, outputDirectory, prefix, report) > 0)
                 {
-                    case ServiceTicketsViewModel tickets when tickets.Tickets.Count > 0:
-                        tickets.Selected = tickets.Tickets[0];
-                        await Task.Delay(300);
-                        break;
-                    case PurchasesViewModel purchases when purchases.Suppliers.Count > 0:
-                        purchases.SelectedSupplier = purchases.Suppliers[0];
-                        await Task.Delay(300);
-                        break;
-                    case SalesViewModel sales:
-                        sales.Code = "8690000000017";
-                        await sales.AddCodeCommand.ExecuteAsync(null);
-                        break;
+                    return Finish(outputDirectory, report, listener, 9);
                 }
-
-                var tabs = await RenderAsync(root, 1366, 768, Path.Combine(outputDirectory, $"page-{item.Key}-1366.png"), renderAllTabs: true);
-                await RenderAsync(root, 1920, 1080, Path.Combine(outputDirectory, $"page-{item.Key}-1920.png"));
-                await RenderAsync(root, MinimumWidth, MinimumHeight, Path.Combine(outputDirectory, $"page-{item.Key}-min.png"));
-                var pageError = shell.CurrentPage?.ErrorMessage;
-                modeFailures += pageError is null ? 0 : 1;
-                report.AppendLine($"page {item.Key}: {(pageError is null ? "ok" : "HATA " + pageError)} ({tabs} tabs rendered)");
-            }
-
-            if (shell.CurrentPage is ServiceTicketsViewModel ticketsPage)
-            {
-                ticketsPage.NewTicketCommand.Execute(null);
-                await RenderAsync(root, 1366, 768, Path.Combine(outputDirectory, "servicetickets-intake.png"));
-            }
-
-            // The printed slips are laid out with the same FlowDocument the printer gets (written as images here).
-            var desk = services.GetRequiredService<IServiceDeskService>();
-            if ((await desk.GetTicketsAsync(openOnly: false)).OrEmpty() is [var first, ..])
-            {
-                foreach (var kind in new[] { Vernuko.Application.SlipKind.Intake, Vernuko.Application.SlipKind.Delivery })
-                {
-                    var slip = await desk.GetSlipAsync(first.Id, kind);
-                    if (slip.IsSuccess)
-                    {
-                        var viewer = new System.Windows.Controls.FlowDocumentScrollViewer { Document = Services.ServiceSlipPrinter.Build(slip.Value), VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Disabled };
-                        await RenderAsync(viewer, 794, 1123, Path.Combine(outputDirectory, $"slip-{kind}.png"));
-                    }
-                }
-            }
-
-            if (modeFailures > 0)
-            {
-                return Finish(outputDirectory, report, listener, 9);
             }
 
             await shell.NavigateAsync("appointments", new OpenNewAppointment(null));
@@ -273,37 +221,99 @@ internal static class SmokeTest
         return Finish(outputDirectory, report, listener, 0);
     }
 
-    private static async Task<string> SeedModeSamplesAsync(IServiceProvider services)
+    /// <summary>Login, every menu page (all tabs, three sizes) and the program's own extras. Returns the number of problems.</summary>
+    private static async Task<int> RunProgramAsync(IServiceProvider services, BusinessMode mode, string dir, string prefix, StringBuilder report)
     {
-        var commerce = services.GetRequiredService<ICommerceService>();
-        var inventory = services.GetRequiredService<IInventoryService>();
-        var desk = services.GetRequiredService<IServiceDeskService>();
-        var customers = services.GetRequiredService<ICustomerService>();
-        var supplier = await commerce.SaveSupplierAsync(new Vernuko.Application.SupplierDto(Guid.Empty, "Demir Toptan Hırdavat", "Nilüfer", "1234567890", "0224 555 10 20", null, null, null, null, true, 0));
-        if (supplier.IsFailure)
+        var problems = 0;
+        var expected = BusinessProfileDefinition.ModeName(mode);
+        var root = services.GetRequiredService<RootViewModel>();
+        await root.StartAsync();
+        await RenderAsync(root, 1366, 768, Path.Combine(dir, $"{prefix}-login.png"));
+        problems += Expect(report, $"{prefix} login title", root.WindowTitle, expected);
+
+        var login = await services.GetRequiredService<IAuthService>().LoginAsync(DemoDataSeeder.DemoUsername, DemoDataSeeder.DemoPassword);
+        if (login.IsFailure)
         {
-            return "supplier HATA " + supplier.Error.Message;
+            report.AppendLine($"{prefix}: HATA giriş {login.Error}");
+            return problems + 1;
         }
 
-        var drill = await inventory.SaveProductAsync(new Vernuko.Application.ProductDto(Guid.Empty, "Matkap ucu seti", "M-13", "adet", 45_000, 0, 5, true, 0, "8690000000017", 20, "El aletleri", "A-03", supplier.Value));
-        var screen = await inventory.SaveProductAsync(new Vernuko.Application.ProductDto(Guid.Empty, "Ekran T12", "EK-T12", "adet", 150_000, 0, 2, true, 0, "8690000000031", 20, "Yedek parça", "C-01", supplier.Value));
-        if (drill.IsFailure || screen.IsFailure)
+        await root.ShowShellAsync();
+        var shell = root.Shell!;
+        problems += Expect(report, $"{prefix} header", "Vernuko " + shell.ProgramName, expected);
+        problems += Expect(report, $"{prefix} window title", root.WindowTitle, expected);
+        report.AppendLine($"{prefix} menu: {string.Join(", ", shell.NavItems.Select(n => n.Title))}");
+        if (shell.NavItems.Any(n => n.Key is "appointments" or "packages" or "waitlist" or "reports"))
         {
-            return "products HATA " + (drill.IsFailure ? drill.Error.Message : screen.Error.Message);
+            report.AppendLine($"{prefix}: HATA randevu ekranı menüde");
+            problems++;
         }
 
-        var receipt = await commerce.CreatePurchaseAsync(new Vernuko.Application.CreatePurchaseRequest(supplier.Value, "ABC2026000123", DateOnly.FromDateTime(DateTime.Today),
-            [new(drill.Value, 12, 25_000, 20), new(screen.Value, 3, 90_000, 20)], true, 100_000, Vernuko.Payments.PaymentMethod.BankTransfer, null, "smoke-receipt"));
-        var sale = await commerce.CreateSaleAsync(new Vernuko.Application.CreateSaleRequest(null, [new(drill.Value, 2, 45_000)], 0, 90_000, 0, 0, null, "smoke-sale"));
-        var customer = (await customers.SearchAsync(null, take: 1)).OrEmpty() is [var c, ..] ? c.Id : Guid.Empty;
-        var ticket = await desk.OpenTicketAsync(new Vernuko.Application.OpenTicketRequest(new Vernuko.Application.TicketIntakeRequest(customer, Vernuko.ServiceDesk.DeviceKind.Phone, "Telsa", "T12",
-            "352099001761481", "Ekran kırık, dokunmatik çalışmıyor", "Kılıf", "Arka kapakta çizik", null, false, null, null, null), "1234", "smoke-ticket"));
-        if (ticket.IsSuccess)
+        var products = (await services.GetRequiredService<IInventoryService>().GetProductsAsync()).OrEmpty();
+        foreach (var item in shell.NavItems.ToList())
         {
-            await desk.SetEstimateAsync(ticket.Value.Summary.Id, 200_000, 25_000);
+            await shell.NavigateAsync(item, null);
+            switch (shell.CurrentPage)
+            {
+                case CustomersViewModel customers when customers.Results.Count > 0:
+                    customers.Selected = customers.Results[0];
+                    break;
+                case SalesViewModel sales when products.FirstOrDefault(p => p.Barcode is not null) is { } product:
+                    sales.Code = product.Barcode!;
+                    await sales.AddCodeCommand.ExecuteAsync(null);
+                    break;
+                case PurchasesViewModel purchases when purchases.Suppliers.Count > 0:
+                    purchases.SelectedSupplier = purchases.Suppliers[0];
+                    break;
+                case ServiceTicketsViewModel tickets when tickets.Tickets.Count > 0:
+                    tickets.Selected = tickets.Tickets[0];
+                    break;
+            }
+
+            await Task.Delay(200);
+            var tabs = await RenderAsync(root, 1366, 768, Path.Combine(dir, $"{prefix}-page-{item.Key}-1366.png"), renderAllTabs: true);
+            await RenderAsync(root, 1920, 1080, Path.Combine(dir, $"{prefix}-page-{item.Key}-1920.png"));
+            await RenderAsync(root, MinimumWidth, MinimumHeight, Path.Combine(dir, $"{prefix}-page-{item.Key}-min.png"));
+            var error = shell.CurrentPage?.ErrorMessage;
+            problems += error is null ? 0 : 1;
+            report.AppendLine($"{prefix} page {item.Key}: {(error is null ? "ok" : "HATA " + error)} ({tabs} tabs rendered)");
         }
 
-        return string.Join(", ", new[] { ("receipt", receipt.IsSuccess), ("sale", sale.IsSuccess), ("ticket", ticket.IsSuccess) }.Select(x => $"{x.Item1} {(x.Item2 ? "ok" : "HATA")}"));
+        if (mode == BusinessMode.TeknikServis)
+        {
+            await shell.NavigateAsync("servicetickets");
+            if (shell.CurrentPage is ServiceTicketsViewModel page)
+            {
+                page.NewTicketCommand.Execute(null);
+                await RenderAsync(root, 1366, 768, Path.Combine(dir, $"{prefix}-intake.png"));
+            }
+
+            // The printed documents, laid out with the same FlowDocument the printer gets.
+            var desk = services.GetRequiredService<IServiceDeskService>();
+            var all = (await desk.GetTicketsAsync(openOnly: false)).OrEmpty();
+            foreach (var (ticket, kind) in new[] { (all.FirstOrDefault(t => t.Status == ServiceDesk.TicketStatus.Repairing), Vernuko.Application.SlipKind.Intake), (all.FirstOrDefault(t => t.Status == ServiceDesk.TicketStatus.Delivered), Vernuko.Application.SlipKind.Delivery) })
+            {
+                if (ticket is null || await desk.GetSlipAsync(ticket.Id, kind) is not { IsSuccess: true } slip)
+                {
+                    report.AppendLine($"{prefix}: HATA {kind} belgesi oluşmadı");
+                    problems++;
+                    continue;
+                }
+
+                var viewer = new System.Windows.Controls.FlowDocumentScrollViewer { Document = Services.ServiceSlipPrinter.Build(slip.Value), VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Disabled };
+                await RenderAsync(viewer, 794, 1123, Path.Combine(dir, $"{prefix}-slip-{kind}.png"));
+            }
+        }
+
+        await root.LastScreenChange;
+        return problems;
+    }
+
+    private static int Expect(StringBuilder report, string what, string actual, string expected)
+    {
+        var ok = actual == expected;
+        report.AppendLine($"{what}: {(ok ? "ok" : "HATA")} \"{actual}\"{(ok ? string.Empty : $" (beklenen \"{expected}\")")}");
+        return ok ? 0 : 1;
     }
 
     private static int Finish(string dir, StringBuilder report, BindingErrorListener listener, int code)

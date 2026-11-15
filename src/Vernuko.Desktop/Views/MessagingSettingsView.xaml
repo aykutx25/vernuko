@@ -11,17 +11,17 @@
             <!-- Reminder rules -->
             <Border Style="{StaticResource Card}" Padding="20" Margin="0,12,0,0">
                 <StackPanel>
-                    <TextBlock Text="Otomatik randevu hatırlatma" Style="{StaticResource SectionTitle}" />
-                    <CheckBox Content="Randevudan önce müşteriye otomatik hatırlatma gönder" IsChecked="{Binding RemindersEnabled}" />
+                    <TextBlock Text="{Binding RulesTitle}" Style="{StaticResource SectionTitle}" />
+                    <CheckBox Content="Randevudan önce müşteriye otomatik hatırlatma gönder" IsChecked="{Binding RemindersEnabled}" Visibility="{Binding ShowReminders, Converter={StaticResource VisibleWhen}}" />
                     <WrapPanel Margin="0,6,0,0">
-                        <StackPanel Margin="0,0,12,0"><TextBlock Text="KANAL" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Channels}" SelectedItem="{Binding Channel}" DisplayMemberPath="Label" Width="210" /></StackPanel>
-                        <StackPanel Margin="0,0,12,0"><TextBlock Text="KAÇ SAAT ÖNCE" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding HoursBefore, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
+                        <StackPanel Margin="0,0,12,0" Visibility="{Binding ShowReminders, Converter={StaticResource VisibleWhen}}"><TextBlock Text="KANAL" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding Channels}" SelectedItem="{Binding Channel}" DisplayMemberPath="Label" Width="210" /></StackPanel>
+                        <StackPanel Margin="0,0,12,0" Visibility="{Binding ShowReminders, Converter={StaticResource VisibleWhen}}"><TextBlock Text="KAÇ SAAT ÖNCE" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding HoursBefore, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
                         <StackPanel Margin="0,0,12,0"><TextBlock Text="SESSİZ SAAT BAŞI" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding QuietStart, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
                         <StackPanel Margin="0,0,12,0"><TextBlock Text="SESSİZ SAAT SONU" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding QuietEnd, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
                         <StackPanel Margin="0,0,12,0"><TextBlock Text="AYLIK MESAJ LİMİTİ" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding MonthlyLimit, UpdateSourceTrigger=PropertyChanged}" Width="120" /></StackPanel>
                         <StackPanel><TextBlock Text="SMS BİRİM FİYATINIZ (₺, tahmin için)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding SmsUnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="120" /></StackPanel>
                     </WrapPanel>
-                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,0"
+                    <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding ShowReminders, Converter={StaticResource VisibleWhen}}"
                                Text="Hatırlatma, müşteri kartında ilgili kanaldan bildirime izin verilmişse gönderilir. Randevu iptal edilir veya taşınırsa bekleyen hatırlatma iptal edilir; taşınan saate yeni hatırlatma planlanır." />
                 </StackPanel>
             </Border>

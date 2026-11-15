@@ -44,7 +44,7 @@
                                 <StackPanel Margin="0,0,8,0"><TextBlock Text="UNVAN" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding StaffTitle, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
                                 <StackPanel><TextBlock Text="TELEFON" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
                             </UniformGrid>
-                            <CheckBox Content="Aktif (randevu alabilir)" IsChecked="{Binding IsActive}" Margin="0,12,0,0" />
+                            <CheckBox Content="Aktif (listelerde seçilebilir)" IsChecked="{Binding IsActive}" Margin="0,12,0,0" />
                             <TextBlock Text="ÇALIŞMA SAATLERİ" Style="{StaticResource FieldLabel}" Margin="0,16,0,4" />
                             <CheckBox Content="İşletmenin çalışma saatlerini kullan" IsChecked="{Binding UseBusinessHours}" />
                             <ItemsControl ItemsSource="{Binding Hours}" Focusable="False" Margin="0,6,0,0" Visibility="{Binding UseBusinessHours, Converter={StaticResource VisibleWhen}, ConverterParameter=invert}">

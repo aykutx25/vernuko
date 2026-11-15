@@ -34,6 +34,38 @@ public sealed partial class RootViewModel : ViewModelBase
 
     public ShellViewModel? Shell => Screen as ShellViewModel;
 
+    /// <summary>The window and taskbar name: the program in use (Vernuko Randevu, Vernuko Stok, Vernuko Teknik Servis).</summary>
+    public string WindowTitle => Screen switch
+    {
+        ShellViewModel s => s.ProgramFullName,
+        LoginViewModel { ProgramName.Length: > 0 } l => "Vernuko " + l.ProgramName,
+        SetupWizardViewModel { ProgramName.Length: > 0 } w => "Vernuko " + w.ProgramName,
+        _ => "Vernuko",
+    };
+
+    partial void OnScreenChanged(ViewModelBase? oldValue, ViewModelBase? newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.PropertyChanged -= OnScreenPropertyChanged;
+        }
+
+        if (newValue is not null)
+        {
+            newValue.PropertyChanged += OnScreenPropertyChanged;
+        }
+
+        OnPropertyChanged(nameof(WindowTitle));
+    }
+
+    private void OnScreenPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ShellViewModel.ProgramFullName) or nameof(LoginViewModel.ProgramName) or null)
+        {
+            OnPropertyChanged(nameof(WindowTitle));
+        }
+    }
+
     /// <summary>The latest event-driven screen change (incl. a scheduled backup it started). Never faults.</summary>
     public Task LastScreenChange { get; private set; } = Task.CompletedTask;
 

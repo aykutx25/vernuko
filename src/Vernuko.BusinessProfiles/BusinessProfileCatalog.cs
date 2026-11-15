@@ -289,7 +289,7 @@ public static class BusinessProfileCatalog
         new(
             BusinessProfileId.ApplianceRepair,
             "Beyaz Eşya ve Klima Servisi",
-            "Adreste servis randevusu, servis fişi, cihaz geçmişi, parça stoku, fiyat onayı, periyodik bakım hatırlatması ve garanti.",
+            "Adreste veya atölyede servis fişi, cihaz geçmişi, parça stoku, fiyat onayı, kapora, teslim ve onarım garantisi.",
             ServiceTerms,
             Set(ProfileFeature.ServiceTickets, ProfileFeature.ProductStock, ProfileFeature.Purchases, ProfileFeature.Deposits, ProfileFeature.MaintenanceReminders),
             [],

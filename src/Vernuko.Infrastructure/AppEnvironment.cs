@@ -40,6 +40,13 @@ public sealed class AppEnvironment : IAppEnvironment
 
     public string AppVersion => typeof(AppEnvironment).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "0.0.0";
 
+    /// <summary>The demo of Vernuko Stok or Vernuko Teknik Servis: its own folder next to Randevu's "Demo".</summary>
+    public static AppEnvironment CreateDemo(string folderName)
+    {
+        var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create);
+        return new AppEnvironment(Path.Combine(root, AppIdentity.DataFolderName, folderName), isDemo: true);
+    }
+
     public static AppEnvironment CreateDefault(bool isDemo)
     {
         var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create);

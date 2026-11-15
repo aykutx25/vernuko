@@ -242,6 +242,87 @@ public class ModeViewModelTests
         Assert.StartsWith("Garanti kapsamında", page.WarrantyText, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(BusinessMode.Stok, "Vernuko Stok", "sales")]
+    [InlineData(BusinessMode.TeknikServis, "Vernuko Teknik Servis", "servicetickets")]
+    public async Task Each_program_shows_its_own_name_and_menu_and_hides_the_calendar(BusinessMode mode, string name, string startPage)
+    {
+        await using var app = await TestApp.CreateAsync();
+        var seeded = await app.Get<ModeDemoSeeder>().SeedAsync(mode);
+        Assert.True(seeded.IsSuccess, seeded.IsFailure ? seeded.Error.ToString() : null);
+        app.Get<IAuthService>().Logout();
+
+        var root = app.Get<RootViewModel>();
+        await root.StartAsync();
+        var login = Assert.IsType<LoginViewModel>(root.Screen);
+        Assert.Equal(name, "Vernuko " + login.ProgramName);
+        Assert.Equal(name, root.WindowTitle);
+        login.Username = DemoDataSeeder.DemoUsername;
+        login.Password = DemoDataSeeder.DemoPassword;
+        await login.LoginCommand.ExecuteAsync(null);
+        await root.LastScreenChange;
+
+        var shell = Assert.IsType<ShellViewModel>(root.Screen);
+        Assert.Equal(name, shell.ProgramFullName);
+        Assert.Equal(name, root.WindowTitle);
+        Assert.False(shell.IsAppointmentMode);
+        Assert.Equal(startPage, shell.NavItems.Single(n => n.IsSelected).Key);
+        Assert.DoesNotContain(shell.NavItems, n => n.Key is "appointments" or "packages" or "waitlist" or "reports" or "home");
+        Assert.Equal(string.Empty, shell.MessagingStatusText); // no appointment reminders in the status bar
+
+        foreach (var item in shell.NavItems.ToList())
+        {
+            await shell.NavigateAsync(item.Key);
+            Assert.True(shell.CurrentPage is { HasError: false }, $"{item.Key}: {shell.CurrentPage?.ErrorMessage}");
+        }
+
+        var settings = Assert.IsType<SettingsViewModel>((await Navigate(shell, "settings")).CurrentPage);
+        Assert.False(settings.Messaging.ShowReminders);
+        Assert.Equal("Mesaj kuralları", settings.Messaging.RulesTitle);
+        if (mode == BusinessMode.TeknikServis)
+        {
+            Assert.Equal("İşçilik", Assert.IsType<CatalogViewModel>((await Navigate(shell, "catalog")).CurrentPage).Title);
+            var tickets = Assert.IsType<ServiceTicketsViewModel>((await Navigate(shell, "servicetickets")).CurrentPage);
+            Assert.Equal(5, tickets.Tickets.Count); // open ones; the sixth was delivered
+            Assert.Contains(tickets.LaborItems, l => l.Name == "Ekran değişimi");
+            tickets.Selected = tickets.Tickets.First(t => t.Status == TicketStatus.Repairing);
+            await WaitUntil(() => tickets.Ticket is not null);
+            tickets.LaborItem = tickets.LaborItems.Single(l => l.Name == "Batarya değişimi");
+            Assert.Equal("Batarya değişimi", tickets.LaborText);
+            Assert.Equal("400,00", tickets.LaborPrice);
+        }
+        else
+        {
+            var sales = Assert.IsType<SalesViewModel>((await Navigate(shell, "sales")).CurrentPage);
+            Assert.Equal(4, sales.TodaySales.Count(s => s.Kind == Vernuko.Commerce.SaleKind.Sale));
+            Assert.Equal(1, sales.TodaySales.Count(s => s.Kind == Vernuko.Commerce.SaleKind.Return));
+            var tools = Assert.IsType<StockToolsViewModel>((await Navigate(shell, "stocktools")).CurrentPage);
+            Assert.Contains(tools.Reorder.SelectMany(g => g.Lines), l => l.ProductName.StartsWith("Su terazisi", StringComparison.Ordinal));
+        }
+    }
+
+    [Fact]
+    public async Task Randevu_keeps_its_name_calendar_and_reports()
+    {
+        await using var app = await TestApp.CreateAsync();
+        await app.SetupBeautyAsync();
+        var shell = app.Get<ShellViewModel>();
+        await shell.InitializeAsync();
+        Assert.Equal("Vernuko Randevu", shell.ProgramFullName);
+        Assert.True(shell.IsAppointmentMode);
+        Assert.Contains(shell.NavItems, n => n.Key == "appointments");
+        Assert.Contains(shell.NavItems, n => n.Key == "reports");
+    }
+
+    [Fact]
+    public void Demo_barcodes_are_valid_ean13() => Assert.Equal("8690000000012", ModeDemoSeeder.Ean13("869000000001"));
+
+    private static async Task<ShellViewModel> Navigate(ShellViewModel shell, string key)
+    {
+        await shell.NavigateAsync(key);
+        return shell;
+    }
+
     private static async Task WaitUntil(Func<bool> condition)
     {
         for (var i = 0; i < 100 && !condition(); i++)

@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vernuko.Application.Services;
+using Vernuko.BusinessProfiles;
 using Vernuko.Desktop.Services;
 using Vernuko.Infrastructure;
 using Vernuko.Persistence;
@@ -28,13 +29,24 @@ public partial class App : System.Windows.Application
     {
         UseTurkishCulture();
         base.OnStartup(e);
-        var demo = e.Args.Contains("--demo", StringComparer.OrdinalIgnoreCase);
+        // --demo: Vernuko Randevu; --demo-stok / --demo-servis: the other programs, each in its own demo database.
+        BusinessMode? demoMode = e.Args.Contains("--demo-stok", StringComparer.OrdinalIgnoreCase) ? BusinessMode.Stok
+            : e.Args.Contains("--demo-servis", StringComparer.OrdinalIgnoreCase) ? BusinessMode.TeknikServis
+            : e.Args.Contains("--demo", StringComparer.OrdinalIgnoreCase) ? BusinessMode.Randevu
+            : null;
+        var demo = demoMode is not null;
         var smokeIndex = Array.FindIndex(e.Args, a => a.Equals("--smoke-test", StringComparison.OrdinalIgnoreCase));
         var smoke = smokeIndex >= 0;
 
         if (!smoke)
         {
-            _singleInstance = new Mutex(true, demo ? "Vernuko.Desktop.Demo" : "Vernuko.Desktop", out var created);
+            _singleInstance = new Mutex(true, demoMode switch
+            {
+                BusinessMode.Stok => "Vernuko.Desktop.DemoStok",
+                BusinessMode.TeknikServis => "Vernuko.Desktop.DemoServis",
+                BusinessMode.Randevu => "Vernuko.Desktop.Demo",
+                _ => "Vernuko.Desktop",
+            }, out var created);
             if (!created)
             {
                 MessageBox.Show("Vernuko zaten açık.", "Vernuko", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -43,48 +55,16 @@ public partial class App : System.Windows.Application
             }
         }
 
-        var env = smoke
-            ? new AppEnvironment(Path.Combine(Path.GetTempPath(), "vernuko-smoke", Guid.NewGuid().ToString("N")), isDemo: true)
+        var env = smoke ? SmokeEnvironment()
+            : demoMode == BusinessMode.Stok ? AppEnvironment.CreateDemo("DemoStok")
+            : demoMode == BusinessMode.TeknikServis ? AppEnvironment.CreateDemo("DemoServis")
             : AppEnvironment.CreateDefault(demo);
         env.CleanTemp();
-
-        var services = new ServiceCollection();
-        if (smoke)
-        {
-            // Deterministic check run: business-day morning clock and auto-answered dialogs (nobody is at the keyboard).
-            services.AddSingleton<TimeProvider>(SmokeTest.CreateClock());
-            services.AddSingleton<IDialogService, SmokeTest.AutoDialogService>();
-        }
-        else
-        {
-            services.AddSingleton<IDialogService, WpfDialogService>();
-        }
-
-        // Smoke/demo runs never contact the license server.
-        services.AddSingleton(smoke || demo ? new LicensingOptions { PublicKeys = BuildSettings.LicenseKeys() } : BuildSettings.Licensing());
 
         // Faz 7: paired with a main computer → no local data, every call goes to the main computer.
         var endpoint = smoke || demo ? null : RemoteClientStore.Load(env, SecretProtectors.ForCurrentUser(env));
         var isClient = endpoint is not null;
-        if (endpoint is not null)
-        {
-            var connection = new RemoteConnection(endpoint);
-            services.AddVernukoPlatform(env);
-            services.AddVernukoRemoteClient(connection);
-            services.AddSingleton<IMultiComputer>(sp => new MultiComputerService(sp, connection, sp.GetRequiredService<ILogger<MultiComputerService>>()));
-            services.AddSingleton<ILicenseOnlineService, HostManagedLicenseOnline>();
-            services.AddSingleton<CloudFolderLocator>();
-        }
-        else
-        {
-            services.AddSingleton<IMultiComputer>(sp => new MultiComputerService(sp, sp.GetRequiredService<ILogger<MultiComputerService>>()));
-            services.AddVernuko(env);
-        }
-
-        services.AddVernukoPresentation();
-        services.AddSingleton<IPlatformServices, WpfPlatformServices>();
-        services.AddSingleton<IUpdateService, VelopackUpdateService>();
-        _services = services.BuildServiceProvider();
+        _services = BuildServices(env, smoke, demo, endpoint);
         var logger = _services.GetRequiredService<ILogger<App>>();
         ViewModelBase.UseLogger(logger);
         DispatcherUnhandledException += (_, args) =>
@@ -119,7 +99,9 @@ public partial class App : System.Windows.Application
 
         if (demo || smoke)
         {
-            var seeded = await _services.GetRequiredService<DemoDataSeeder>().SeedAsync();
+            var seeded = demoMode is BusinessMode.Stok or BusinessMode.TeknikServis
+                ? await _services.GetRequiredService<ModeDemoSeeder>().SeedAsync(demoMode.Value)
+                : await _services.GetRequiredService<DemoDataSeeder>().SeedAsync();
             if (seeded.IsFailure)
             {
                 logger.LogError("Demo seeding failed: {Code}", seeded.Error.Code);
@@ -137,7 +119,7 @@ public partial class App : System.Windows.Application
         if (smoke)
         {
             var output = smokeIndex + 1 < e.Args.Length ? e.Args[smokeIndex + 1] : Path.Combine(Environment.CurrentDirectory, "smoke-output");
-            var code = await SmokeTest.RunAsync(_services, output);
+            var code = await SmokeTest.RunAsync(_services, output, CreateSmokeProgramAsync);
             Shutdown(code);
             return;
         }
@@ -148,6 +130,64 @@ public partial class App : System.Windows.Application
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         window.Show();
         await root.StartAsync();
+    }
+
+    private static AppEnvironment SmokeEnvironment() =>
+        new(Path.Combine(Path.GetTempPath(), "vernuko-smoke", Guid.NewGuid().ToString("N")), isDemo: true);
+
+    private static ServiceProvider BuildServices(AppEnvironment env, bool smoke, bool demo, RemoteEndpoint? endpoint)
+    {
+        var services = new ServiceCollection();
+        if (smoke)
+        {
+            // Deterministic check run: business-day morning clock and auto-answered dialogs (nobody is at the keyboard).
+            services.AddSingleton<TimeProvider>(SmokeTest.CreateClock());
+            services.AddSingleton<IDialogService, SmokeTest.AutoDialogService>();
+        }
+        else
+        {
+            services.AddSingleton<IDialogService, WpfDialogService>();
+        }
+
+        // Smoke/demo runs never contact the license server.
+        services.AddSingleton(smoke || demo ? new LicensingOptions { PublicKeys = BuildSettings.LicenseKeys() } : BuildSettings.Licensing());
+
+        if (endpoint is not null)
+        {
+            var connection = new RemoteConnection(endpoint);
+            services.AddVernukoPlatform(env);
+            services.AddVernukoRemoteClient(connection);
+            services.AddSingleton<IMultiComputer>(sp => new MultiComputerService(sp, connection, sp.GetRequiredService<ILogger<MultiComputerService>>()));
+            services.AddSingleton<ILicenseOnlineService, HostManagedLicenseOnline>();
+            services.AddSingleton<CloudFolderLocator>();
+        }
+        else
+        {
+            services.AddSingleton<IMultiComputer>(sp => new MultiComputerService(sp, sp.GetRequiredService<ILogger<MultiComputerService>>()));
+            services.AddVernuko(env);
+        }
+
+        services.AddVernukoPresentation();
+        services.AddSingleton<IPlatformServices, WpfPlatformServices>();
+        services.AddSingleton<IUpdateService, VelopackUpdateService>();
+        return services.BuildServiceProvider();
+    }
+
+    /// <summary>The smoke test opens Vernuko Stok and Vernuko Teknik Servis as themselves: own demo database, own shell.</summary>
+    private static async Task<ServiceProvider> CreateSmokeProgramAsync(BusinessMode mode)
+    {
+        var env = SmokeEnvironment();
+        var services = BuildServices(env, smoke: true, demo: true, endpoint: null);
+        await services.GetRequiredService<DatabaseInitializer>().InitializeAsync(env.DatabasePath, env.SafetyDirectory, CancellationToken.None);
+        var seeded = await services.GetRequiredService<ModeDemoSeeder>().SeedAsync(mode);
+        if (seeded.IsFailure)
+        {
+            throw new InvalidOperationException($"{mode} demo data: {seeded.Error}");
+        }
+
+        services.GetRequiredService<IAuthService>().Logout();
+        await services.GetRequiredService<ILicenseService>().RefreshAsync();
+        return services;
     }
 
     /// <summary>

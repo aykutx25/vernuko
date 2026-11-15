@@ -8,9 +8,16 @@
 | Vernuko Stok | Hırdavat ve Yapı Malzemesi, Kırtasiye ve Kitapçı, Oto Yedek Parça, Toptan Satış, Mağaza (genel perakende) | `vernuko-stok` | Satış |
 | Vernuko Teknik Servis | Telefon ve Tablet Servisi, Bilgisayar Servisi, Beyaz Eşya ve Klima Servisi, Elektronik Servis | `vernuko-teknik-servis` | Servis Fişleri |
 
-- **Mod:** `BusinessProfileDefinition.ModeOf(profil)`. Üst çubuk, giriş ekranı ve sihirbaz logonun yanına programın adını yazar.
+- **Mod:** `BusinessProfileDefinition.ModeOf(profil)`.
+- **Her programın kendi adı var.** Logonun yanında (üst çubuk, giriş ekranı, kurulum sihirbazı) ve pencere başlığında "Vernuko Randevu", "Vernuko Stok" ya da "Vernuko Teknik Servis" yazar.
 - **Lisans:** `LicensingOptions.Product` boşsa lisansın ürünü moda göre belirlenir. Bir Vernuko Stok anahtarı Randevu kurulumunda kabul edilmez; tersi de geçerli.
 - **Menü:** ana mod menüyü belirler. Teknik Servis, profilinde varsa Stok'un satış ve alış ekranlarını da gösterir (telefon servisinde aksesuar satışı gibi).
+- **Randevuya özgü ekranlar yalnızca Vernuko Randevu'da var.** Stok ve Teknik Servis'te bunlar görünmez:
+  - takvim, paketler, bekleme listesi ve randevu raporları;
+  - müşteri kartında "Randevu ver", "Paket sat", randevu geçmişi ve paket sekmeleri;
+  - ayarlarda randevu aralığı, otomatik onay ve randevu hatırlatma;
+  - durum çubuğundaki hatırlatma bilgisi.
+- **İşçilik:** Teknik Servis'te Hizmetler ekranının adı "İşçilik"tir; süre, oda ve cihaz alanları yoktur. Servis fişinde işçilik bu listeden seçilebilir.
 - **Kurulum sihirbazı:** Stok modunda çalışma günü, çalışma saati, personel ve hizmet adımları atlanır. Teknik Servis'te "hizmetler" adımı "işçilik kalemleri" olarak görünür.
 - **Ortak olanlar:** müşteriler ve cari hesap, kasa, kullanıcılar ve roller, denetim günlüğü, şifreli yedek, çoklu bilgisayar, mesajlar (SMS).
 
@@ -77,9 +84,18 @@ Kaynaklar: [research/service-mode-tr.md](research/service-mode-tr.md).
 - Teknisyen primi.
 - e-Arşiv; çevrim içi durum sorgulama (yukarıdaki KVKK nedeniyle tasarım gerektirir).
 
+## Demolar
+Her programın kendi demosu ve kendi demo veritabanı vardır. Gerçek kayıtlara dokunmazlar:
+- Vernuko Randevu: `demo.cmd` ya da `--demo`.
+- Vernuko Stok: `demo-stok.cmd` ya da `--demo-stok`. Örnek veri: hırdavat dükkânı; ürünler, iki tedarikçi, mal kabul, bugünkü satışlar, veresiye, iade.
+- Vernuko Teknik Servis: `demo-servis.cmd` ya da `--demo-servis`. Örnek veri: telefon servisi; her durumda birer servis fişi (teslim alındı, onay bekliyor, onarımda, parça bekliyor, hazır, teslim edildi), parçalar, kapora, aksesuar satışı.
+
 ## Doğrulama durumu
 - İş kuralları ve ekranların view model'leri otomatik testlerle doğrulandı:
   - `StockModeTests` (6) ve `TechnicalServiceModeTests` (5) servis katmanını sınar.
   - `ModeViewModelTests` (3) ekranları uçtan uca sürer: sihirbazdan girişe ve menüye, oradan mal kabul, satış, iade ve sayıma; servis fişinde kabulden teslime ve garanti bağlantısına.
-- Windows smoke testi bu dört ekranı ve iki belgeyi çizer, bağlama hatalarını denetler (CI).
+- Windows smoke testi Stok ve Teknik Servis'i kendi demolarıyla açar ve şunları kontrol eder:
+  - giriş ekranında, üst çubukta ve pencere başlığında programın kendi adı yazıyor mu;
+  - menüde randevu ekranı var mı (olmamalı).
+- Ardından her menü sayfasının her sekmesini üç boyutta, servis belgelerini de çizer ve bağlama hatalarını denetler (CI).
 - **Gerçek bir dükkânda, barkod okuyucu ve yazıcıyla denenmedi.**

@@ -7,7 +7,7 @@ Windows için **çevrimdışı çalışan** işletme yazılımı. Türkiye önce
 - **Vernuko Teknik Servis:** telefon, bilgisayar, beyaz eşya ve elektronik servisleri; servis fişi, fiyat onayı, parça, teslim, onarım garantisi.
 
 > **Durum: geliştirme sürümü 0.16.0, ticari kullanıma hazır değil.**
-> İş kuralları, veritabanı, yedekleme, lisans ve ekranların view model'leri gerçek SQLite dosyaları üzerinde otomatik testlerle doğrulanıyor (282 test). Windows CI her ekranı çizip bağlama hatalarını denetliyor. Stok ve Teknik Servis ekranları yeni; gerçek bir dükkânda denenmedi (bkz. "Bilinen sınırlar").
+> İş kuralları, veritabanı, yedekleme, lisans ve ekranların view model'leri gerçek SQLite dosyaları üzerinde otomatik testlerle doğrulanıyor (286 test). Windows CI her ekranı çizip bağlama hatalarını denetliyor. Stok ve Teknik Servis ekranları yeni; gerçek bir dükkânda denenmedi (bkz. "Bilinen sınırlar").
 
 ## Ne çalışıyor (Faz 1)
 - **Kurulum sihirbazı** (10 adım, atlanabilir adımlar), 14 meslek profili; "Güzellik ve Lazer Merkezi" tek profil.
@@ -51,9 +51,17 @@ Windows'ta uygulamayı çalıştırma:
 ```bash
 dotnet run --project src/Vernuko.Desktop
 ```
-Örnek verilerle (gerçek verilerden tamamen ayrı demo veritabanı; giriş bilgisi giriş ekranında yazar):
+Örnek verilerle (gerçek verilerden tamamen ayrı demo veritabanı; giriş bilgisi giriş ekranında yazar). Vernuko Randevu:
 ```bash
 dotnet run --project src/Vernuko.Desktop -- --demo
+```
+Vernuko Stok:
+```bash
+dotnet run --project src/Vernuko.Desktop -- --demo-stok
+```
+Vernuko Teknik Servis:
+```bash
+dotnet run --project src/Vernuko.Desktop -- --demo-servis
 ```
 Tüm ekranların görüntüsünü alıp bağlama hatalarını denetleme (Windows):
 ```bash
@@ -62,7 +70,8 @@ dotnet run --project src/Vernuko.Desktop -- --smoke-test smoke-output
 Veriler: `%LOCALAPPDATA%\Vernuko\Data` (demo: `%LOCALAPPDATA%\Vernuko\Demo`); müşteri dosyaları aynı klasörde `attachments\` altında şifreli. Kurulan program `%LOCALAPPDATA%\VernukoApp` altındadır; kaldırmak verileri silmez. Varsayılan yedek klasörü: `Belgeler\Vernuko Yedekler` — harici disk önerilir.
 
 ## Windows'ta çalıştırma (kaynak koddan)
-- **`baslat.cmd`**: derler ve Vernuko'yu açar. **`demo.cmd`**: örnek verilerle (ayrı demo veritabanı) açar.
+- **`baslat.cmd`**: derler ve Vernuko'yu açar.
+- **`demo.cmd`**, **`demo-stok.cmd`**, **`demo-servis.cmd`**: Vernuko Randevu, Stok veya Teknik Servis'i örnek verilerle açar. Her birinin ayrı demo veritabanı vardır.
 - Program Microsoft imzalı `dotnet` üzerinden başlatılır. İmzasız `Vernuko.exe` yeni Windows 11 bilgisayarlarda **Akıllı Uygulama Denetimi** (Smart App Control) tarafından "Device Guard policy" mesajıyla engellenir. Kod imzalama sertifikası alınana kadar kurulum paketi de bu bilgisayarlarda açılmaz (bkz. [docs/RELEASE.md](docs/RELEASE.md)).
 
 ## Yerel kontrol (Windows)

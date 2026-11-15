@@ -230,6 +230,7 @@
                                         <Button Content="Parça ekle" Command="{Binding AddPartCommand}" VerticalAlignment="Bottom" IsEnabled="{Binding CanManage}" />
                                     </WrapPanel>
                                     <WrapPanel Margin="0,6,0,0">
+                                        <StackPanel Margin="0,0,8,0"><TextBlock Text="KAYITLI İŞÇİLİK" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{Binding LaborItems}" SelectedItem="{Binding LaborItem}" DisplayMemberPath="Name" Width="200" AutomationProperties.Name="Kayıtlı işçilik" /></StackPanel>
                                         <StackPanel Margin="0,0,8,0"><TextBlock Text="İŞÇİLİK" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding LaborText, UpdateSourceTrigger=PropertyChanged}" Width="240" Tag="Ör. ekran değişimi" /></StackPanel>
                                         <StackPanel Margin="0,0,8,0"><TextBlock Text="ÜCRET (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding LaborPrice, UpdateSourceTrigger=PropertyChanged}" Width="100" /></StackPanel>
                                         <Button Content="İşçilik ekle" Command="{Binding AddLaborCommand}" VerticalAlignment="Bottom" IsEnabled="{Binding CanManage}" />

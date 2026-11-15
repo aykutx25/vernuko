@@ -89,9 +89,14 @@ public sealed partial class CatalogViewModel(ICatalogService catalog, ISettingsS
     [ObservableProperty]
     private bool _showPackages;
 
-    public override string Title => "Hizmetler";
+    public override string Title => IsAppointmentMode ? "Hizmetler" : "İşçilik";
 
     public ShellViewModel? Shell { get; set; }
+
+    /// <summary>Vernuko Randevu: durations, preparation, rooms and devices. Teknik Servis keeps only labour items and prices.</summary>
+    public bool IsAppointmentMode => Shell?.IsAppointmentMode ?? true;
+
+    public string ItemTitle => IsAppointmentMode ? "Hizmet bilgileri" : "İşçilik kalemi";
 
     public ObservableCollection<ServiceDto> Services { get; } = [];
 

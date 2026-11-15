@@ -94,7 +94,7 @@
                             <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock Text="NOTLAR" Style="{StaticResource FieldLabel}" />
                             <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MultilineTextBox}" />
-                            <TextBlock Text="İLETİŞİM TERCİHLERİ (randevu bildirimleri)" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="İLETİŞİM TERCİHLERİ (bildirimler)" Style="{StaticResource FieldLabel}" />
                             <WrapPanel>
                                 <CheckBox Content="SMS" IsChecked="{Binding AllowSms}" Margin="0,4,18,4" />
                                 <CheckBox Content="WhatsApp" IsChecked="{Binding AllowWhatsApp}" Margin="0,4,18,4" />
@@ -122,7 +122,7 @@
                             <StackPanel>
                                 <DockPanel>
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                        <Button Style="{StaticResource PrimaryButton}" Content="Randevu ver" Command="{Binding NewAppointmentCommand}" Margin="0,0,8,0" />
+                                        <Button Style="{StaticResource PrimaryButton}" Content="Randevu ver" Command="{Binding NewAppointmentCommand}" Margin="0,0,8,0" Visibility="{Binding Shell.IsAppointmentMode, Converter={StaticResource VisibleWhen}}" />
                                         <Button Content="Düzenle" Command="{Binding EditCommand}" />
                                     </StackPanel>
                                     <!-- Name trims and the number/phone/e-mail line wraps: in a narrow window they ran under the buttons. -->
@@ -138,7 +138,7 @@
                                 </TextBlock>
                                 <DockPanel Margin="0,14,0,0">
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                        <Button Content="Paket sat" Command="{Binding SellPackageCommand}" Margin="0,0,8,0" />
+                                        <Button Content="Paket sat" Command="{Binding SellPackageCommand}" Margin="0,0,8,0" Visibility="{Binding Shell.IsAppointmentMode, Converter={StaticResource VisibleWhen}}" />
                                         <Button Content="Ödeme al" Command="{Binding TakePaymentCommand}" />
                                     </StackPanel>
                                     <Border Background="{StaticResource NeutralSoftBrush}" CornerRadius="8" Padding="12,6" HorizontalAlignment="Left"
@@ -150,7 +150,7 @@
                         </Border>
 
                         <TabControl Margin="0,12,0,0">
-                            <TabItem Header="Randevu geçmişi">
+                            <TabItem Header="Randevu geçmişi" Visibility="{Binding Shell.IsAppointmentMode, Converter={StaticResource VisibleWhen}}">
                                 <DataGrid ItemsSource="{Binding History}" MaxHeight="420">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn MinWidth="124" Header="Tarih" Binding="{Binding StartLocal, Converter={StaticResource DateFormat}}" Width="140" />
@@ -161,7 +161,7 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </TabItem>
-                            <TabItem Header="Paketler">
+                            <TabItem Header="Paketler" Visibility="{Binding Shell.IsAppointmentMode, Converter={StaticResource VisibleWhen}}">
                                 <DataGrid ItemsSource="{Binding CustomerPackages}" MaxHeight="420">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Paket" Binding="{Binding Label}" Width="*" />
@@ -184,7 +184,7 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </TabItem>
-                            <TabItem Header="Onam ve dosyalar">
+                            <TabItem Header="Onam ve dosyalar" Visibility="{Binding Shell.ShowCustomerFiles, Converter={StaticResource VisibleWhen}}">
                                 <ContentControl Content="{Binding Records}" Focusable="False" />
                             </TabItem>
                             <TabItem Header="Gizli notlar" Visibility="{Binding ShowPrivateNotes, Converter={StaticResource VisibleWhen}}">

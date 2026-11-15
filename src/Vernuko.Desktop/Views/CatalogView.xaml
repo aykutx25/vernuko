@@ -7,7 +7,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock Text="Hizmetler" Style="{StaticResource PageTitle}" />
+        <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" />
         <StackPanel Grid.Row="1">
             <Border Style="{StaticResource ErrorBanner}" Visibility="{Binding ErrorMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" /></Border>
             <Border Style="{StaticResource InfoBanner}" Visibility="{Binding InfoMessage, Converter={StaticResource VisibleWhen}}"><TextBlock Text="{Binding InfoMessage}" TextWrapping="Wrap" /></Border>
@@ -16,7 +16,7 @@
             </Border>
         </StackPanel>
         <TabControl Grid.Row="2">
-            <TabItem Header="Hizmetler">
+            <TabItem Header="{Binding Title}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -25,7 +25,7 @@
                     <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,14,0">
                         <DataGrid ItemsSource="{Binding Services}" SelectedItem="{Binding SelectedService}">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Hizmet" Binding="{Binding Name}" Width="*" />
+                                <DataGridTextColumn Header="Ad" Binding="{Binding Name}" Width="*" />
                                 <DataGridTextColumn Header="Kategori" Binding="{Binding Category}" Width="120" />
                                 <DataGridTextColumn Header="Süre (dk)" Binding="{Binding DurationMinutes}" Width="90" />
                                 <DataGridTextColumn Header="Fiyat" Binding="{Binding DisplayPrice}" Width="110" />
@@ -38,20 +38,20 @@
                             <StackPanel>
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="+ Yeni" Command="{Binding NewServiceCommand}" />
-                                    <TextBlock Text="Hizmet bilgileri" Style="{StaticResource SectionTitle}" />
+                                    <TextBlock Text="{Binding ItemTitle}" Style="{StaticResource SectionTitle}" />
                                 </DockPanel>
                                 <TextBlock Text="AD" Style="{StaticResource FieldLabel}" />
                                 <TextBox Text="{Binding ServiceName, UpdateSourceTrigger=PropertyChanged}" />
                                 <TextBlock Text="KATEGORİ" Style="{StaticResource FieldLabel}" />
                                 <TextBox Text="{Binding ServiceCategory, UpdateSourceTrigger=PropertyChanged}" />
                                 <UniformGrid Columns="2">
-                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="SÜRE (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServiceDuration, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel Margin="0,0,6,0" Visibility="{Binding IsAppointmentMode, Converter={StaticResource VisibleWhen}}"><TextBlock Text="SÜRE (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServiceDuration, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
                                     <StackPanel><TextBlock Text="FİYAT (₺)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServicePrice, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
-                                    <StackPanel Margin="0,0,6,0"><TextBlock Text="HAZIRLIK (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServicePrep, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
-                                    <StackPanel><TextBlock Text="TEMİZLİK (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServiceCleanup, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel Margin="0,0,6,0" Visibility="{Binding IsAppointmentMode, Converter={StaticResource VisibleWhen}}"><TextBlock Text="HAZIRLIK (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServicePrep, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                    <StackPanel Visibility="{Binding IsAppointmentMode, Converter={StaticResource VisibleWhen}}"><TextBlock Text="TEMİZLİK (dk)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding ServiceCleanup, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
                                 </UniformGrid>
-                                <TextBlock Text="GEREKEN KAYNAK" Style="{StaticResource FieldLabel}" />
-                                <ComboBox ItemsSource="{Binding RequirementOptions}" SelectedItem="{Binding ServiceRequires}" DisplayMemberPath="Label" />
+                                <TextBlock Text="GEREKEN KAYNAK" Style="{StaticResource FieldLabel}" Visibility="{Binding IsAppointmentMode, Converter={StaticResource VisibleWhen}}" />
+                                <ComboBox ItemsSource="{Binding RequirementOptions}" SelectedItem="{Binding ServiceRequires}" DisplayMemberPath="Label" Visibility="{Binding IsAppointmentMode, Converter={StaticResource VisibleWhen}}" />
                                 <StackPanel Visibility="{Binding ShowProcessing, Converter={StaticResource VisibleWhen}}">
                                     <TextBlock Text="BEKLEME SÜRESİ (personel boşta, koltuk/oda dolu)" Style="{StaticResource FieldLabel}" />
                                     <StackPanel Orientation="Horizontal">
@@ -63,8 +63,8 @@
                                     <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,2,0,0"
                                                Text="Ör. 90 dakikalık boya: 30. dakikadan sonra 40 dakika bekleme. Bu sürede uzman başka müşteriye randevu verebilir; koltuk dolu kalır. Bekleme yoksa 0 bırakın." />
                                 </StackPanel>
-                                <TextBlock Text="YALNIZCA ŞU ODA / CİHAZLARDA" Style="{StaticResource FieldLabel}" />
-                                <ItemsControl ItemsSource="{Binding ServiceResourceChoices}" Focusable="False">
+                                <TextBlock Text="YALNIZCA ŞU ODA / CİHAZLARDA" Style="{StaticResource FieldLabel}" Visibility="{Binding IsAppointmentMode, Converter={StaticResource VisibleWhen}}" />
+                                <ItemsControl ItemsSource="{Binding ServiceResourceChoices}" Focusable="False" Visibility="{Binding IsAppointmentMode, Converter={StaticResource VisibleWhen}}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
@@ -74,7 +74,7 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                                <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,2,0,0"
+                                <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,2,0,0" Visibility="{Binding IsAppointmentMode, Converter={StaticResource VisibleWhen}}"
                                            Text="Hiçbiri işaretli değilse her oda/cihaz kullanılabilir. İşaretlenen türde (oda, cihaz) yalnızca işaretliler seçilebilir; ör. lazer → Lazer Odası 1-2 + Lazer Cihazı." />
                                 <CheckBox Content="Aktif" IsChecked="{Binding ServiceActive}" Margin="0,12,0,0" />
                                 <Button Style="{StaticResource PrimaryButton}" Content="Kaydet" Command="{Binding SaveServiceCommand}" Margin="0,14,0,0" HorizontalAlignment="Left" MinWidth="120" />
@@ -83,7 +83,7 @@
                     </Border>
                 </Grid>
             </TabItem>
-            <TabItem Header="Odalar ve Cihazlar">
+            <TabItem Header="Odalar ve Cihazlar" Visibility="{Binding IsAppointmentMode, Converter={StaticResource VisibleWhen}}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
