@@ -50,4 +50,5 @@
 	blok('vernuko/fis', 'Vernuko fiyat fişi', 'money-alt', 'urun', programlar, 'Program');
 	blok('vernuko/urunler', 'Vernuko programları', 'screenoptions', 'haric', null, 'Listede gösterme');
 	blok('vernuko/urun-satis', 'Vernuko program satışı', 'cart', 'urun', programlar, 'Program');
+	blok('vernuko/urun-logo', 'Vernuko program logosu', 'awards', 'urun', programlar, 'Program');
 })(window.wp.blocks, window.wp.element, window.wp.serverSideRender, window.wp.blockEditor, window.wp.components);

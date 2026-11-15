@@ -24,9 +24,11 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Image Source="/Assets/vernuko-256.png" Width="30" Height="30" />
-                    <TextBlock Text="Vernuko" FontFamily="{StaticResource AppFontDisplay}" FontSize="24" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center" />
+                <!-- Vernuko logo + the program's name (the same lockup as on the website) -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" AutomationProperties.Name="Vernuko Randevu">
+                    <Path Data="{StaticResource LogoMark}" Fill="{StaticResource BrandLogoBrush}" Stretch="Uniform" Height="22" VerticalAlignment="Center" />
+                    <Path Data="{StaticResource LogoWordmark}" Fill="{StaticResource BrandLogoBrush}" Stretch="Uniform" Height="16" Margin="7,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock Text="Randevu" FontFamily="{StaticResource AppFontDisplay}" FontSize="20" Foreground="{StaticResource BrandLogoBrush}" Margin="6,0,0,1" VerticalAlignment="Center" />
                 </StackPanel>
                 <Border Grid.Column="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,0" Height="40" Margin="8,0,16,0" ToolTip="{Binding ProfileName}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

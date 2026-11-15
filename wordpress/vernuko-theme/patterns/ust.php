@@ -9,7 +9,7 @@
 <!-- wp:group {"tagName":"header","className":"vk-ust","layout":{"type":"constrained"}} -->
 <header class="wp-block-group vk-ust"><!-- wp:group {"align":"wide","style":{"spacing":{"padding":{"top":"0.9rem","bottom":"0.9rem"},"blockGap":"1.5rem"}},"layout":{"type":"flex","flexWrap":"nowrap","justifyContent":"space-between"}} -->
 <div class="wp-block-group alignwide" style="padding-top:0.9rem;padding-bottom:0.9rem"><!-- wp:html -->
-<a class="vk-logo" href="<?php echo esc_url(home_url('/')); ?>" aria-label="Vernuko, ana sayfa"><img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/vernuko.png'); ?>" alt="" width="34" height="34"><span>Vernuko</span></a>
+<a class="vk-logo" href="<?php echo esc_url(home_url('/')); ?>"><img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/vernuko-logo.svg'); ?>" alt="Vernuko, ana sayfa" width="174" height="30"></a>
 <!-- /wp:html -->
 
 <!-- wp:group {"style":{"spacing":{"blockGap":"1.75rem"}},"layout":{"type":"flex","flexWrap":"nowrap","justifyContent":"right"}} -->

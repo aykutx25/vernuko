@@ -15,6 +15,22 @@ Tasarımın nereden geldiği (pazar araştırması, renkler, yazı tipi, neden b
   - Sitenin vaadi programın vaadiyle aynıdır: ziyaretçinin bilgisi üçüncü bir şirkete gitmez.
 - **Yazı tipi:** Schibsted Grotesk, temanın içinde. SIL Open Font License 1.1: `assets/fonts/OFL.txt`.
 
+## Logo
+
+Vernuko logosu (iki yaprak + "Vernuko" yazısı) markanın verdiği görselden vektöre çevrildi; her boyutta keskin.
+
+| Dosya | Ne | Nerede |
+|---|---|---|
+| `assets/img/vernuko-logo.svg` | İşaret + yazı | Üst ve alt bölüm |
+| `assets/img/vernuko-yazi.svg` | Yalnızca yazı | Program adlarında: "Vernuko Randevu", "Vernuko Stok", "Vernuko Teknik Servis" |
+| `assets/img/vernuko-isaret.svg` | Yalnızca iki yaprak | Kaynak dosya |
+| `assets/img/favicon.svg` | Tarayıcı sekmesi simgesi | Koyu temalı sekmede beyaza döner |
+| `assets/img/apple-touch-icon.png` | 180 px, lacivert zemin üzerinde beyaz yapraklar | iPhone/iPad ana ekranı |
+
+- **Renk:** logonun kendi laciverti `#041538`. Koyu zeminde beyaz kullanılır; başka renk verilmez.
+- **Program adı:** Vernuko yazısının yanına programın adı, sitenin yazı tipiyle ve aynı büyük harf yüksekliğinde yazılır. Bunu `vernuko/urun-logo` bloğu yapar; ana sayfada ve program sayfalarında başlığın üstünde durur. Program listesinde de aynı biçim kullanılır.
+- **Site simgesi:** WordPress'te **Görünüm › Özelleştir › Site kimliği** ile bir simge yüklerseniz o kullanılır; yüklemezseniz tema yapraklı simgeyi verir.
+
 ## Vernuko programları (1.1.0)
 
 Tema üç programı tanır: Vernuko Randevu (satışta), Vernuko Stok ve Vernuko Teknik Servis (geliştiriliyor).
@@ -115,7 +131,7 @@ Dördüncü bir program için:
 | `theme.json` | Renkler, yazı tipi, boyutlar, boşluklar, düğme ve bağlantı stilleri |
 | `templates/`, `parts/` | Ana sayfa, sayfa, sade sayfa, geniş sayfa (program sayfaları), yazı, arşiv, arama, 404; üst ve alt bölüm |
 | `patterns/` | Ana sayfanın bölümleri, satın alma/indirme/Lisanslarım sayfaları, yasal taslaklar |
-| `inc/urunler.php` | Programlar: tanıtım bilgileri, satış durumu, `vernuko/urunler` ve `vernuko/urun-satis` blokları |
+| `inc/urunler.php` | Programlar: tanıtım bilgileri, satış durumu, program logosu; `vernuko/urunler`, `vernuko/urun-satis`, `vernuko/urun-logo` blokları |
 | `inc/pano.php` | Gün ekranları (Randevu, Stok, Teknik Servis): `vernuko/pano` bloğu ve `[vernuko_pano]` kısa kodu |
 | `inc/fis.php` | Fiyat fişi (programa göre): `vernuko/fis` bloğu ve `[vernuko_fis]` kısa kodu |
 | `assets/css/site.css` | Temanın tüm stilleri; eklentinin satın alma ve Lisanslarım çıktısına uyum dahil |

@@ -114,3 +114,11 @@ Vernuko Stok ve Vernuko Teknik Servis için hazırlık. İlk akla gelen, ana say
 - **Uygulamada olmayan özellik yazılmaz.** Satışta olmayan programın her şeyi "planlanan" diye etiketlidir.
 - **Durumu eklenti söyler.** Paket tanımlanınca sayfa kendiliğinden satışa geçer; tema sayfalarına elle "artık satışta" yazmak gerekmez.
 - **Kesik çizgi = henüz çizim.** "Kayıtlarınız nerede durur?" bandında kesik çizgi "sizin değil" demekti. Burada "henüz yapılmadı" der. İkisi de "elle tutulur değil" anlamına gelir.
+
+## 5. Logo (1.2.0)
+
+Marka logosu (iki yaprak + "Vernuko") görselden vektöre çevrildi. Sitede ve programda aynı dosyadan kullanılıyor.
+
+- **Program adlarında logo:** "Vernuko" yazısı ve programın adı yan yana durur. Programın adı sitenin yazı tipinde ve daha ince yazılır; büyük harf yüksekliği logoyla aynıdır. Örnekler: **Vernuko** Randevu, **Vernuko** Stok, **Vernuko** Teknik Servis. Böylece aile tek bir isim gibi okunur; her programa ayrı logo çizilmez.
+- **Renk:** logonun laciverti (`#041538`) yalnızca logoda ve program adlarında kullanılır. Metin rengi aynı kalır: mürekkep `#1B2640`. Koyu zeminde (masaüstündeki kurulum ekranı) logo beyazdır.
+- **Uygulama simgesi:** lacivert yuvarlak kare içinde beyaz yapraklar. Simge 16 piksele kadar küçülür; yazı orada okunmayacağı için simgede yalnızca yapraklar var. Tarayıcı simgesi aynı yapraklardır ve koyu temalı sekmede beyaza döner.

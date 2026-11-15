@@ -9,6 +9,7 @@
 	--vk-simdi: var(--wp--preset--color--simdi, #F2C230);
 	--vk-gri: var(--wp--preset--color--gri, #4F5A70);
 	--vk-cizgi: var(--wp--preset--color--cizgi, #D9DEE7);
+	--vk-marka: #041538; /* the logo's own navy; used only for the logo and program lockups */
 	/* status colours: the app's own */
 	--vk-yesil: #1F7347;
 	--vk-yesil-acik: #E8F5EE;
@@ -50,9 +51,14 @@
 	border-bottom: 1px solid var(--vk-cizgi);
 	background: var(--vk-defter);
 }
-.vk-logo { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--vk-murekkep); }
-.vk-logo img { width: 34px; height: 34px; display: block; }
-.vk-logo span { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+.vk-logo { display: inline-flex; align-items: center; text-decoration: none; }
+.vk-logo img { width: auto; height: 30px; display: block; }
+@media (max-width: 600px) { .vk-logo img { height: 26px; } }
+
+/* A program's name as a lockup: the Vernuko wordmark, then the program in the page's type, cap heights aligned. */
+.vk-urun-logo { display: inline-flex; align-items: baseline; gap: 0.32em; color: var(--vk-marka); font-weight: 600; letter-spacing: -0.01em; line-height: 1; white-space: nowrap; }
+.vk-urun-logo img { height: 0.77em; width: auto; display: block; align-self: baseline; transform: translateY(0.02em); }
+p.vk-urun-logo-blok { margin: 0 0 0.9rem; font-size: clamp(1.375rem, 1rem + 1vw, 1.75rem); }
 .vk-ust .wp-block-navigation a:where(:not(.wp-element-button)) { text-decoration: none; }
 .vk-ust .wp-block-navigation a:where(:not(.wp-element-button)):hover { text-decoration: underline; text-underline-offset: 0.25em; }
 /* Below this width the hero's own download button sits just below; the header keeps logo and menu on one line. */
@@ -89,7 +95,6 @@
 .vk-giris .wp-block-buttons { gap: 0.75rem 1.25rem; align-items: center; }
 @media (max-width: 781px) { .vk-giris h1.vk-giris__baslik br { display: none; } }
 /* A program page: the program's name above a slightly smaller statement (the lines are longer). */
-.vk-giris p.vk-urun-adi { font-size: var(--wp--preset--font-size--giris); font-weight: 700; color: var(--vk-gri); margin: 0 0 0.75rem; }
 .vk-giris h1.vk-giris__baslik--urun { font-size: clamp(2rem, 0.8rem + 4.4vw, 4.75rem); margin-top: 0; }
 
 /* ---------- the day board (the app's day screen) ---------- */
@@ -390,7 +395,7 @@
 /* ---------- the Vernuko programs, as rows of one ledger ---------- */
 p.vk-aile__giris { font-size: 1.25rem; max-width: 58ch; }
 /* wide (lines up with the heading) but never longer than ~60 characters a line */
-p.vk-aile__giris.alignwide { padding-right: max(0px, calc(100% - 60ch)); }
+p.vk-aile__giris.alignwide { box-sizing: border-box; padding-right: max(0px, calc(100% - 60ch)); }
 .vk-aile { list-style: none; margin: 2rem 0 0; padding: 0; border-top: 2px solid var(--vk-murekkep); }
 .vk-aile__satir {
 	position: relative;

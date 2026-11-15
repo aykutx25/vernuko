@@ -7,9 +7,7 @@
  */
 ?>
 <!-- wp:group {"align":"full","className":"vk-giris","style":{"spacing":{"padding":{"top":"var:preset|spacing|50","bottom":"var:preset|spacing|60"}}},"layout":{"type":"constrained"}} -->
-<div class="wp-block-group alignfull vk-giris" style="padding-top:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--60)"><!-- wp:paragraph {"align":"wide","className":"vk-urun-adi"} -->
-<p class="alignwide vk-urun-adi">Vernuko Teknik Servis</p>
-<!-- /wp:paragraph -->
+<div class="wp-block-group alignfull vk-giris" style="padding-top:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--60)"><!-- wp:vernuko/urun-logo {"urun":"vernuko-teknik-servis","align":"wide"} /-->
 
 <!-- wp:heading {"level":1,"align":"wide","className":"vk-giris__baslik vk-giris__baslik--urun"} -->
 <h1 class="wp-block-heading alignwide vk-giris__baslik vk-giris__baslik--urun">Servis fişleriniz <br>kendi bilgisayarınızda.</h1>

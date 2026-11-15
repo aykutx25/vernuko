@@ -7,7 +7,9 @@
  */
 ?>
 <!-- wp:group {"align":"full","className":"vk-giris","style":{"spacing":{"padding":{"top":"var:preset|spacing|50","bottom":"var:preset|spacing|60"}}},"layout":{"type":"constrained"}} -->
-<div class="wp-block-group alignfull vk-giris" style="padding-top:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--60)"><!-- wp:heading {"level":1,"align":"wide","className":"vk-giris__baslik"} -->
+<div class="wp-block-group alignfull vk-giris" style="padding-top:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--60)"><!-- wp:vernuko/urun-logo {"urun":"vernuko-desktop","align":"wide"} /-->
+
+<!-- wp:heading {"level":1,"align":"wide","className":"vk-giris__baslik"} -->
 <h1 class="wp-block-heading alignwide vk-giris__baslik">Randevu defteriniz <br>kendi bilgisayarınızda.</h1>
 <!-- /wp:heading -->
 

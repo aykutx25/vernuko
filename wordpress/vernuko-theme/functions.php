@@ -11,7 +11,7 @@ require_once __DIR__ . '/inc/urunler.php';
 require_once __DIR__ . '/inc/pano.php';
 require_once __DIR__ . '/inc/fis.php';
 
-const VERNUKO_TEMA_SURUM = '1.1.0';
+const VERNUKO_TEMA_SURUM = '1.2.0';
 
 add_action('after_setup_theme', static function (): void {
     add_theme_support('editor-styles');
@@ -65,6 +65,15 @@ add_action('init', static function (): void {
         'editor_script_handles' => ['vernuko-bloklar'],
         'supports' => ['html' => false, 'align' => ['wide']],
     ]);
+    register_block_type('vernuko/urun-logo', [
+        'api_version' => 3,
+        'title' => 'Vernuko program logosu',
+        'category' => 'widgets',
+        'attributes' => ['urun' => $urun],
+        'render_callback' => static fn (array $a = []): string => '<p ' . get_block_wrapper_attributes(['class' => 'vk-urun-logo-blok']) . '>' . vernuko_urun_logosu((string) ($a['urun'] ?? VERNUKO_RANDEVU)) . '</p>',
+        'editor_script_handles' => ['vernuko-bloklar'],
+        'supports' => ['html' => false, 'align' => ['wide']],
+    ]);
     register_block_type('vernuko/urun-satis', [
         'api_version' => 3,
         'title' => 'Vernuko program satışı (fiyat ve indirme ya da "geliştiriliyor")',
@@ -102,6 +111,16 @@ add_filter('wp_resource_hints', static function (array $urls, string $relation):
     return $relation === 'dns-prefetch' ? array_values(array_filter($urls, static fn ($u) => !str_contains(is_array($u) ? (string) ($u['href'] ?? '') : (string) $u, 's.w.org'))) : $urls;
 }, 10, 2);
 add_filter('pre_option_show_avatars', '__return_zero');
+
+/** The site's icon: the leaf mark (white in a dark browser tab). A Site Icon set in WordPress takes precedence. */
+add_action('wp_head', static function (): void {
+    if (function_exists('has_site_icon') && has_site_icon()) {
+        return;
+    }
+    $img = get_template_directory_uri() . '/assets/img/';
+    echo '<link rel="icon" href="' . esc_url($img . 'favicon.svg') . '" type="image/svg+xml">' . "\n";
+    echo '<link rel="apple-touch-icon" href="' . esc_url($img . 'apple-touch-icon.png') . '">' . "\n";
+}, 2);
 
 /** A small preload so the headline does not jump when the font arrives. */
 add_action('wp_head', static function (): void {

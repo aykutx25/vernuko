@@ -2,6 +2,18 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.15.0] — 2026-11-15 — Yeni Vernuko logosu
+
+### Değişti
+- **Masaüstü (Vernuko Randevu):**
+  - Üst çubukta, girişte ve kurulum sihirbazında yeni logo ve program adı var: "Vernuko Randevu". Logo vektör çizim olduğu için her ekran ölçeğinde keskin.
+  - Uygulama ve kurulum simgesi lacivert zemin üzerinde beyaz yapraklar oldu.
+  - Pencere başlığı "Vernuko Randevu" oldu.
+- **Satış teması 1.2.0:**
+  - Üst ve alt bölümde yeni logo var.
+  - Ana sayfada ve program sayfalarında başlığın üstünde program adı logoyla yazılı. Program listesinde de aynı biçim kullanılıyor.
+  - Tarayıcı sekmesi simgesi yapraklar; koyu temalı sekmede beyaz görünür. iPhone/iPad ana ekran simgesi de eklendi.
+
 ## [0.14.0] — 2026-11-14 — Programlar: her lisans bir programın; satış teması
 
 Vernuko Stok ve Vernuko Teknik Servis için lisans sistemi ve satış sitesi hazırlandı. Bu iki program henüz yok: sitede "geliştiriliyor" görünürler ve satılmazlar.

@@ -53,6 +53,16 @@ function vernuko_urunler(): array
     return (array) apply_filters('vernuko_tema_urunler', $urunler);
 }
 
+/** "Vernuko Stok" as a lockup: the wordmark (alt "Vernuko") and the program's short name; read aloud as one name. */
+function vernuko_urun_logosu(string $id): string
+{
+    $u = vernuko_urun($id);
+    if ($u === null) {
+        return '';
+    }
+    return '<span class="vk-urun-logo"><img src="' . esc_url(get_template_directory_uri() . '/assets/img/vernuko-yazi.svg') . '" alt="Vernuko" width="90" height="20"><span>' . esc_html($u['kisa']) . '</span></span>';
+}
+
 function vernuko_urun(string $id): ?array
 {
     return vernuko_urunler()[$id] ?? null;
@@ -92,7 +102,7 @@ function vernuko_urunler_html(string $haric = ''): string
         }
         $durum = vernuko_urun_durumu($id);
         $satirlar .= '<li class="vk-aile__satir" data-durum="' . esc_attr($durum) . '">'
-            . '<a class="vk-aile__ad" href="' . esc_url(home_url($u['sayfa'])) . '">' . esc_html($u['ad']) . '</a>'
+            . '<a class="vk-aile__ad" href="' . esc_url(home_url($u['sayfa'])) . '">' . vernuko_urun_logosu($id) . '</a>'
             . '<span class="vk-aile__ozet">' . esc_html($u['ozet']) . '</span>'
             . '<span class="vk-aile__kimler">' . esc_html($u['kimler']) . '</span>'
             . '<span class="vk-aile__durum">' . esc_html(vernuko_urun_durum_metni($durum)) . '</span>'

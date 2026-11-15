@@ -10,7 +10,7 @@
 <footer class="wp-block-group vk-alt" style="padding-top:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--50)"><!-- wp:columns {"align":"wide","style":{"spacing":{"blockGap":{"top":"2rem","left":"2.5rem"}}}} -->
 <div class="wp-block-columns alignwide"><!-- wp:column {"width":"30%"} -->
 <div class="wp-block-column" style="flex-basis:30%"><!-- wp:html -->
-<a class="vk-logo" href="<?php echo esc_url(home_url('/')); ?>"><img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/vernuko.png'); ?>" alt="" width="34" height="34"><span>Vernuko</span></a>
+<a class="vk-logo" href="<?php echo esc_url(home_url('/')); ?>"><img src="<?php echo esc_url(get_template_directory_uri() . '/assets/img/vernuko-logo.svg'); ?>" alt="Vernuko, ana sayfa" width="174" height="30"></a>
 <!-- /wp:html -->
 
 <!-- wp:paragraph {"className":"vk-alt__iz"} -->
