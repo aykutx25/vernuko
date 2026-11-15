@@ -173,6 +173,10 @@ public class ModeViewModelTests
         Assert.True(page.ShowDetail);
         Assert.True(page.Ticket!.HasUnlockCode);
         Assert.Single(page.Tickets);
+        Assert.Equal("0532 456 78 90", page.Tickets[0].CustomerPhone);
+        Assert.Single((await app.Get<IServiceDeskService>().GetTicketsAsync(true, "0532 456")).Value);
+        Assert.Single((await app.Get<IServiceDeskService>().GetTicketsAsync(true, "ayşe kara")).Value);
+        Assert.Empty((await app.Get<IServiceDeskService>().GetTicketsAsync(true, "Başka Biri")).Value);
 
         await page.PrintCommand.ExecuteAsync("Intake");
         var slip = Assert.Single(app.Get<FakePlatform>().PrintedSlips);
@@ -209,6 +213,7 @@ public class ModeViewModelTests
 
         await page.MoveCommand.ExecuteAsync("Ready");
         Assert.Equal(TicketStatus.Ready, page.Ticket!.Summary.Status);
+        Assert.Equal("Done", page.Tickets.Single().StatusGroup); // the status chip's colour (green)
 
         page.PayCash = "1500";
         await page.DeliverCommand.ExecuteAsync(null);

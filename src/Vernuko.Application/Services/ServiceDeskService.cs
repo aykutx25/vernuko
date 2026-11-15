@@ -312,7 +312,15 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
             {
                 var s = search.Trim();
                 var serial = ServiceRules.NormalizeSerial(s) ?? s;
-                var customerIds = db.Customers.Where(c => (c.FirstName + " " + c.LastName).Contains(s) || (c.CompanyName != null && c.CompanyName.Contains(s)) || (c.Phone != null && c.Phone.Contains(s))).Select(c => c.Id);
+                // Customers as the Customers screen finds them: Turkish-insensitive name, company, phone in any format.
+                var matching = db.Customers.AsQueryable();
+                foreach (var term in CustomerService.SearchTerms(s))
+                {
+                    var pattern = "%" + term + "%";
+                    matching = matching.Where(c => EF.Functions.Like(c.SearchKey, pattern));
+                }
+
+                var customerIds = matching.Select(c => c.Id);
                 q = q.Where(t => t.Number.Contains(s) || (t.SerialNumber != null && t.SerialNumber.Contains(serial)) || t.Brand.Contains(s) || (t.Model != null && t.Model.Contains(s)) || customerIds.Contains(t.CustomerId));
             }
 
@@ -369,7 +377,7 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
 
             var taxText = business.TaxOffice is null && business.TaxNumber is null ? null : $"{business.TaxOffice} V.D. {business.TaxNumber}".Trim();
             return new ServiceSlipDto(kind, business.BusinessName, business.Address, business.Phone, taxText, t.Summary.Number,
-                customer.CompanyName ?? $"{customer.FirstName} {customer.LastName}", customer.Phone, customer.Address,
+                customer.CompanyName ?? $"{customer.FirstName} {customer.LastName}", CustomerService.FormatPhone(customer.Phone), customer.Address,
                 t.Summary.DeviceText, t.Summary.SerialNumber, t.Intake.Complaint, t.Intake.Accessories, t.Intake.Condition, t.Intake.BroughtBy,
                 TimeZones.ToLocal(t.Summary.ReceivedAtUtc, zone), receivedBy, t.Summary.DueDate,
                 kind == SlipKind.Delivery ? t.Diagnosis : null, kind == SlipKind.Delivery ? t.WorkDone : null,
@@ -433,7 +441,7 @@ public sealed class ServiceDeskService(AppServiceDeps deps, ISecretProtector pro
         var customers = await db.Customers.AsNoTracking().Where(c => customerIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => new { Name = c.CompanyName ?? (c.FirstName + " " + c.LastName), c.Phone }, ct);
         var staffIds = tickets.Where(t => t.TechnicianStaffId != null).Select(t => t.TechnicianStaffId!.Value).Distinct().ToList();
         var staff = await db.Staff.AsNoTracking().Where(s => staffIds.Contains(s.Id)).ToDictionaryAsync(s => s.Id, s => s.DisplayName, ct);
-        return tickets.Select(t => new TicketSummaryDto(t.Id, t.Number, t.Status, customers.GetValueOrDefault(t.CustomerId)?.Name ?? "?", customers.GetValueOrDefault(t.CustomerId)?.Phone,
+        return tickets.Select(t => new TicketSummaryDto(t.Id, t.Number, t.Status, customers.GetValueOrDefault(t.CustomerId)?.Name ?? "?", CustomerService.FormatPhone(customers.GetValueOrDefault(t.CustomerId)?.Phone),
             t.Device, DeviceText(t), t.SerialNumber, t.ReceivedAtUtc, t.DueDate, t.TechnicianStaffId is { } sid ? staff.GetValueOrDefault(sid) : null,
             t.IsOpen && t.DueDate < today, t.Approval == ApprovalState.Pending)).ToList();
     }

@@ -311,7 +311,7 @@ public sealed class CustomerService(AppServiceDeps deps, Vernuko.Application.Com
     internal static string? FormatPhone(string? e164) =>
         e164 is null ? null : PhoneNumber.Parse(e164) is { IsSuccess: true } p ? p.Value.ToDisplayString() : e164;
 
-    private static IEnumerable<string> SearchTerms(string? query)
+    internal static IEnumerable<string> SearchTerms(string? query)
     {
         if (string.IsNullOrWhiteSpace(query))
         {

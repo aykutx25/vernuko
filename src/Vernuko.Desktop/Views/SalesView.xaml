@@ -19,13 +19,13 @@
             <TabItem Header="Yeni satış">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="360" />
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="*" MinWidth="290" MaxWidth="360" />
                     </Grid.ColumnDefinitions>
                     <Border Style="{StaticResource Card}" Margin="0,0,14,0">
                         <DockPanel>
                             <StackPanel DockPanel.Dock="Top">
-                                <TextBlock Text="BARKOD, ÜRÜN KODU VEYA AD" Style="{StaticResource FieldLabel}" Margin="0,0,0,4" />
+                                <TextBlock Text="BARKOD, ÜRÜN KODU VEYA AD (FİYATLAR KDV DAHİL)" Style="{StaticResource FieldLabel}" Margin="0,0,0,4" />
                                 <Grid>
                                     <TextBox x:Name="Code" Text="{Binding Code, UpdateSourceTrigger=PropertyChanged}" Tag="Barkodu okutun ya da yazıp Enter'a basın" Padding="34,0,10,0" FontSize="15" AutomationProperties.Name="Barkod veya ürün">
                                         <TextBox.InputBindings>
@@ -55,12 +55,12 @@
                             </Border>
                             <DataGrid ItemsSource="{Binding Cart}" Margin="0,12,0,0" IsReadOnly="False" CanUserAddRows="False" CanUserDeleteRows="False" AutomationProperties.Name="Sepet">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Ürün" Binding="{Binding Product.Name, Mode=OneWay}" Width="*" IsReadOnly="True" />
-                                    <DataGridTextColumn Header="Adet" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="70" />
-                                    <DataGridTextColumn Header="Fiyat (KDV dahil)" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="120" />
-                                    <DataGridTextColumn Header="İndirim" Binding="{Binding Discount, UpdateSourceTrigger=PropertyChanged}" Width="90" />
-                                    <DataGridTextColumn Header="Tutar" Binding="{Binding TotalText, Mode=OneWay}" Width="110" IsReadOnly="True" />
-                                    <DataGridTemplateColumn Width="70">
+                                    <DataGridTextColumn Header="Ürün" Binding="{Binding Product.Name, Mode=OneWay}" Width="*" MinWidth="130" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Adet" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="60" />
+                                    <DataGridTextColumn Header="Birim fiyat" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="100" />
+                                    <DataGridTextColumn Header="İndirim" Binding="{Binding Discount, UpdateSourceTrigger=PropertyChanged}" Width="80" />
+                                    <DataGridTextColumn Header="Tutar" Binding="{Binding TotalText, Mode=OneWay}" Width="100" IsReadOnly="True" />
+                                    <DataGridTemplateColumn Width="64">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Button Style="{StaticResource LinkButton}" Content="Kaldır" Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
@@ -126,8 +126,8 @@
             <TabItem Header="Bugün ve iade">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="400" />
+                        <ColumnDefinition Width="3*" />
+                        <ColumnDefinition Width="2*" MinWidth="300" MaxWidth="400" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />

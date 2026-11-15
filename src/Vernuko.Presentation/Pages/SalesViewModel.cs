@@ -145,6 +145,7 @@ public sealed partial class SalesViewModel(ICommerceService commerce, IInventory
     public string TotalText => Formatting.Money(TotalMinor);
 
     public string PaymentText => ChangeMinor > 0 ? $"Para üstü: {Formatting.Money(ChangeMinor)}"
+        : OnAccountMinor > 0 && PaidMinor == 0 && IsWalkIn ? $"Alınacak: {Formatting.Money(OnAccountMinor)}"
         : OnAccountMinor > 0 ? (IsWalkIn ? $"Eksik ödeme: {Formatting.Money(OnAccountMinor)}" : $"Hesaba yazılacak (veresiye): {Formatting.Money(OnAccountMinor)}")
         : "Ödeme tam.";
 

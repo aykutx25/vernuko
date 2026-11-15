@@ -41,6 +41,16 @@ public sealed record TicketSummaryDto(
     bool AwaitingApproval)
 {
     public string StatusText => ServiceRules.StatusName(Status);
+
+    /// <summary>The colour group of the status chip, the same words the appointment chips use.</summary>
+    public string StatusGroup => Status switch
+    {
+        TicketStatus.Ready or TicketStatus.Delivered => "Done",
+        TicketStatus.Diagnosing or TicketStatus.Repairing => "Active",
+        TicketStatus.AwaitingApproval or TicketStatus.AwaitingParts => "Pending",
+        TicketStatus.Unrepairable => "Off",
+        _ => "Planned",
+    };
 }
 
 public sealed record TicketLineDto(Guid Id, int LineNo, TicketLineKind Kind, Guid? ProductId, string Description, int Quantity, long UnitPriceMinor, int VatRate, long TotalMinor, string? StaffName);
