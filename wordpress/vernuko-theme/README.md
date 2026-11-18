@@ -132,7 +132,7 @@ Dördüncü bir program için:
 | Yol | Ne |
 |---|---|
 | `theme.json` | Renkler, yazı tipi, boyutlar, boşluklar, düğme ve bağlantı stilleri |
-| `templates/`, `parts/` | Ana sayfa, sayfa, sade sayfa, geniş sayfa (program sayfaları), yazı, arşiv, arama, 404; üst ve alt bölüm |
+| `templates/`, `parts/` | Ana sayfa, sayfa, sade sayfa, geniş sayfa (program sayfaları), yazı, arşiv, arama, 404, WooCommerce ödeme sayfası; üst, alt ve ödeme sayfası üst bölümü |
 | `patterns/` | Ana sayfanın bölümleri, satın alma/indirme/Lisanslarım sayfaları, yasal taslaklar |
 | `inc/urunler.php` | Programlar: tanıtım bilgileri, satış durumu, program logosu; `vernuko/urunler`, `vernuko/urun-satis`, `vernuko/urun-logo` blokları |
 | `inc/pano.php` | Gün ekranları (Randevu, Stok, Teknik Servis): `vernuko/pano` bloğu ve `[vernuko_pano]` kısa kodu |
@@ -160,6 +160,9 @@ Dördüncü bir program için:
 - **Satışa çıkış:** Stok paketleri ve kurulum dosyası eklenince Stok sayfası kendiliğinden satış bölümüne geçti. Fiş "Satış başına komisyon" ve "Ürün ve cari sınırı" satırlarıyla göründü. Ana sayfa listesi "Satışta" yazdı.
 - Fişten satın alma sayfasına gidildi, sahte iyzico ile ödendi, Stok anahtarı alındı.
 - Blok düzenleyicide program sayfası hatasız açıldı; bloklar önizlemeyle görünüyor.
+
+**1.3.1 (2026-11-17):** WooCommerce 11.3 ödeme sayfası temanın logosuyla açılıyor (`templates/page-checkout.html`, `parts/checkout-header.html`). Önceden WooCommerce'in kendi üst bölümü düz "Vernuko" yazısı gösteriyordu. Mağaza, ürün, sepet ve ödeme sayfaları 1440 ve 390 pikselde denendi; konsol hatası ve yatay kaydırma yok.
+- Sürüm numarası her desen eklenişinde artırılmalı: WordPress temanın desen listesini sürüme göre önbellekte tutar; sürüm aynı kalırsa yeni desen görünmez.
 
 **Denenmedi:**
 - MySQL/MariaDB üzerinde gerçek bir barındırma hizmeti.

@@ -171,7 +171,8 @@
 	},
 	"templateParts": [
 		{ "name": "header", "title": "Üst bölüm", "area": "header" },
-		{ "name": "footer", "title": "Alt bölüm", "area": "footer" }
+		{ "name": "footer", "title": "Alt bölüm", "area": "footer" },
+		{ "name": "checkout-header", "title": "Ödeme sayfası üst bölümü", "area": "header" }
 	],
 	"customTemplates": [
 		{ "name": "page-sade", "title": "Sade sayfa (satın alma, Lisanslarım, yasal metinler)", "postTypes": ["page"] },

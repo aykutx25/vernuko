@@ -11,7 +11,7 @@ require_once __DIR__ . '/inc/urunler.php';
 require_once __DIR__ . '/inc/pano.php';
 require_once __DIR__ . '/inc/fis.php';
 
-const VERNUKO_TEMA_SURUM = '1.3.0';
+const VERNUKO_TEMA_SURUM = '1.3.1';
 
 add_action('after_setup_theme', static function (): void {
     add_theme_support('editor-styles');

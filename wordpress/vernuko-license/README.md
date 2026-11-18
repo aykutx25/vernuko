@@ -60,6 +60,15 @@ Aynı site birden fazla Vernuko programının lisansını satar. Tanımlı progr
 6. (Yalnızca site bir ters vekil ya da CDN arkasındaysa, ör. Cloudflare) Ziyaretçinin gerçek adresinin geldiği başlığı yazın: `define('VERNUKO_LICENSE_CLIENT_IP_HEADER', 'HTTP_CF_CONNECTING_IP');`. Yoksa bütün istekler vekilin adresinden gelmiş sayılır; masaüstü kurulumları tek bir sınırı paylaşır ve biri bu sınırı doldurabilir. Vekil bu başlığı her istekte kendisi yazmıyorsa tanımlamayın, yoksa ziyaretçi kendi adresini seçebilir.
 7. (İsteğe bağlı) Güncellemeleri siteden vermek için `wp-config.php` dosyasına web kökünün **dışındaki** bir klasörü yazın: `define('VERNUKO_LICENSE_RELEASES_DIR', '/home/kullanici/vernuko-releases');`. Velopack çıktısını bu klasöre koyun ve GitHub değişkenine `VERNUKO_UPDATE_URL=https://siteniz.com/wp-json/vernuko/v1/updates/feed` yazın.
 
+### WooCommerce mağazasını açmadan önce
+Eklenti ve tema bunları yapmaz; hepsi WooCommerce'in kendi ayarıdır. Menü adları WooCommerce 11.3'ün Türkçe çevirisindeki gibidir.
+1. **Dil ve para birimi:** Ayarlar › Genel › Site dili "Türkçe". WooCommerce › Ayarlar › Genel: ülke Türkiye, para birimi Türk lirası, binlik ayırıcı `.`, ondalık ayırıcı `,`.
+2. **Ödeme yöntemi:** iyzico ya da PayTR'nin kendi WooCommerce eklentisini kurup mağaza bilgilerinizi girin. Havale/EFT de açılabilir; o zaman lisans, siparişi "Tamamlandı" yaptığınızda oluşur. Hiç yöntem yoksa ödeme sayfası "Kullanılabilir ödeme yöntemi yok" yazar.
+3. **Sözleşme onayı:** WooCommerce › Ayarlar › Gelişmiş › Sayfa kurulumu › "Şartlar ve koşullar" için mesafeli satış sözleşmesi sayfasını seçin. Gizlilik sayfası olarak KVKK aydınlatma metnini seçin (Ayarlar › Gizlilik). Ödeme sayfasını düzenleyicide açın; şartlar bloğunda "Onay kutusu gerektirir" seçeneğini açın. Müşteri kutuyu işaretlemeden sipariş veremez.
+4. **Ürün sayfası:** WooCommerce › Ayarlar › Ürünler › "Ürün değerlendirmelerini etkinleştir" kapatılabilir; lisans ürününde değerlendirme formu gereksiz. Ürünlere görsel ve "Programlar" gibi bir kategori verin; yoksa yer tutucu görsel ve "Uncategorized" görünür.
+5. **Adet:** Bir satırda 3 adet alınırsa 3 ayrı lisans oluşur (yenilemede süre 3 kez uzar). Bunu istemiyorsanız ürünün Envanter sekmesinde "Tek tek satış" işaretleyin.
+6. **Yayına alma:** Yeni kurulan mağaza "Çok yakında" modunda açılır; ziyaretçi mağaza yerine "Great things are on the horizon" sayfasını görür. Her şey hazır olunca WooCommerce › Ayarlar › Site görünürlüğü › **Yayında**.
+
 ## Kendi satış sayfası (WooCommerce gerekmez)
 1. `wp-config.php` dosyasına kullandığınız sağlayıcının bilgilerini ekleyin. Bilgiler sağlayıcının mağaza panelinde yazar; yalnızca bu dosyada durur.
    ```php
@@ -175,6 +184,10 @@ Gerçek WordPress'te, gerçek HTTP istekleriyle denendi. iyzico ve PayTR yerine,
   - Hesabım sayfası ve yönetici ekranı.
   - Masaüstü istemcisi gerçek siteden etkinleştirme, yenileme ve kaldırma yaptı.
   - İstek sınırı (30. istekten sonra 429).
+- Aynı sitede eklenti 1.4.1 ve tema 1.3.1 ile, Türkçe dil paketi ve Türk lirasıyla (2026-11-17):
+  - Randevu, Stok ve Teknik Servis ürünlerinin her birinden sipariş: ödeme tamamlanınca o programın lisansı oluştu, ikinci işlemde yenisi oluşmadı.
+  - Stok yenilemesi Stok lisansını 365 gün uzattı; Randevu lisansına uygulanamadı. İade edilen siparişin lisansı durdu.
+  - Mağaza, ürün, sepet ve ödeme sayfaları temayla açıldı (1440 ve 390 piksel): konsol hatası ve yatay kaydırma yok. Ödeme sayfasında temanın logosu var.
 
 **Denenmedi:**
 - MySQL/MariaDB üzerinde çalışan gerçek bir barındırma hizmeti.

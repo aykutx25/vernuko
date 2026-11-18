@@ -2,6 +2,14 @@
 
 Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/). Sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmadı] — Satış sitesi
+
+### Tema 1.3.1
+- WooCommerce ödeme sayfası artık temanın logosunu ve "Sepete dön" bağlantısını gösteriyor. Önceden WooCommerce'in kendi üst bölümü düz "Vernuko" yazısı çıkarıyordu.
+
+### Belgeler
+- Eklenti README'sine "WooCommerce mağazasını açmadan önce" listesi eklendi: dil ve para birimi, ödeme yöntemi, sözleşme onay kutusu, ürün sayfası, adet, "Çok yakında" modundan çıkış.
+
 ## [0.16.1] — 2026-11-15 — Genel denetim: hata, görünüm ve güvenlik düzeltmeleri
 
 Üç ayrı inceleme yapıldı: hata, güvenlik, görünüm. Her hata düzeltmesinin testi var. Toplam 301 test geçiyor, 2 test yalnızca Windows'ta çalıştığı için atlanıyor.
